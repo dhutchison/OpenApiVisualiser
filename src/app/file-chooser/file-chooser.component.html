@@ -1,0 +1,9 @@
+<label for="api-definition-fc">Choose an OpenAPI Definition:</label>
+
+<!-- Cannot use the "accept" attribute as there is not a mime type for YAML -->
+<input type="file"
+       id="api-definition-fc" name="api-definition-fc"
+       (change)="loadFile($event)">
+
+
+<p-tree [value]="apiPathNodes" layout="horizontal"></p-tree>
