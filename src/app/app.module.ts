@@ -7,11 +7,13 @@ import { TreeModule } from 'primeng/tree';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { FileChooserComponent } from './file-chooser/file-chooser.component';
+import { ApiPathTreeComponent } from './api-path-tree/api-path-tree.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    FileChooserComponent
+    FileChooserComponent,
+    ApiPathTreeComponent
   ],
   imports: [
     BrowserModule,
