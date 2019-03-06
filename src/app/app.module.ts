@@ -2,6 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
+import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -21,6 +22,7 @@ import { ApiPathTreeComponent } from './api-path-tree/api-path-tree.component';
 
     BrowserAnimationsModule,
 
+    TooltipModule,
     TreeModule
   ],
   providers: [],

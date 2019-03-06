@@ -166,15 +166,26 @@ export class ApiPathTreeComponent implements OnInit {
    */
   private createHttpMethodNode(method: string, operation: OperationObject): TreeNode {
 
-    const node: TreeNode = {
+    const node: OperationTreeNode = {
       label: method,
       leaf: true,
-
+      type: 'operation',
       styleClass: 'ui-treenode-http-method'
     };
+
+    /* Add a tooltip */
+    if (operation.description) {
+      node.tooltip = operation.description;
+    } else if (operation.summary) {
+      node.tooltip = operation.summary;
+    }
 
     return node;
 
   }
 
+}
+
+export interface OperationTreeNode extends TreeNode {
+  tooltip?: string;
 }

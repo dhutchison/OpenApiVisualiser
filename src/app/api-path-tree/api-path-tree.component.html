@@ -1,1 +1,5 @@
-<p-tree [value]="apiPathNodes" layout="horizontal"></p-tree>
+<p-tree [value]="apiPathNodes" layout="horizontal">
+  <ng-template let-node  pTemplate="operation">
+    <span pTooltip="{{ node.tooltip }}">{{ node.label }}</span>
+  </ng-template>
+</p-tree>
