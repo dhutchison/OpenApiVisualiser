@@ -1,12 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
-
-import { OpenApiSpec, PathsObject, getPath, PathItemObject, OperationObject } from '@loopback/openapi-v3-types';
-import { TreeNode } from 'primeng/api';
-
-import * as jsyaml from 'js-yaml';
-import { stringify } from '@angular/core/src/render3/util';
 import { FileReaderService } from '../services/file-reader.service';
+import { OpenapiTreenodeConverterService } from '../services/openapi-treenode-converter.service';
 
 @Component({
   selector: 'app-file-chooser',
@@ -15,24 +9,39 @@ import { FileReaderService } from '../services/file-reader.service';
 })
 export class FileChooserComponent implements OnInit {
 
-  constructor(private fileReaderService: FileReaderService) { }
+  readonly yamlFilenamePattern = /\.yaml/;
+
+  constructor(
+    private fileReaderService: FileReaderService,
+    private openApiConverterService: OpenapiTreenodeConverterService) { }
 
   ngOnInit() {
   }
 
   loadFile(event) {
     console.log(event);
-    const file = event.target.files[0];
 
-    const pattern = /\.yaml/;
+    /* Reset back to having no files loaded */
+    this.openApiConverterService.reset();
 
-    if (!file.name.match(pattern)) {
-      alert('You are trying to upload a non-YAML file. Please choose a YAML file.');
-      return;
-    }
-    console.log(file);
+    /* Process all the selected files.
+     * Note that a FileList isn't an array
+     * so we need to make it one first */
+    const files: FileList = event.target.files;
+    Array.from(files).forEach(file => {
 
-    this.fileReaderService.loadFile(file);
+
+      if (!file.name.match(this.yamlFilenamePattern)) {
+        // TODO: Update message to include offending file
+        alert(`You are trying to upload a non-YAML file (${file.name}). Please choose a YAML file.`);
+        return;
+      }
+      console.log(file);
+
+      this.fileReaderService.loadFile(file);
+    });
+
+
   }
 
 }
