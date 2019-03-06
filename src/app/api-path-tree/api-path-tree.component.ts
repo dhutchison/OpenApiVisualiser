@@ -168,7 +168,9 @@ export class ApiPathTreeComponent implements OnInit {
 
     const node: TreeNode = {
       label: method,
-      leaf: true
+      leaf: true,
+
+      styleClass: 'ui-treenode-http-method'
     };
 
     return node;
