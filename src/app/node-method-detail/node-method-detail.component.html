@@ -1,0 +1,53 @@
+<div *ngIf="node">
+  <p-panel styleClass="http-{{method | lowercase}}" [toggleable]="true">
+    <p-header>
+        <p-button label="{{method | uppercase}}" style="display: inline-block" ></p-button>
+        <p class="path" style="display: inline-block">{{path}}</p>
+        <p style="display: inline-block">{{node.summary}}</p>
+    </p-header>
+    <p>{{node.description}}</p>
+
+    <p-fieldset [toggleable]="true">
+        <p-header>Parameters</p-header>
+        <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of node.parameters">
+                <td class="key">
+                  <dl>
+                    <dt>{{p.name}} <span *ngIf="p.required" class="required">* <sup>required</sup></span></dt>
+                      <dd>({{p.in}})</dd>
+                  </dl>
+                </td>
+                <td>{{p.description}}</td>
+              </tr>
+            </tbody>
+          </table>
+    </p-fieldset>
+
+    <p-fieldset [toggleable]="true">
+        <p-header>
+          Responses
+        </p-header>
+        <table>
+            <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="key" *ngFor="let item of node.responses | keyvalue">
+                  <td>{{item.key}}</td>
+                  <td>{{item.value.description}}</td>
+                </tr>
+            </tbody>
+          </table>
+    </p-fieldset>
+  </p-panel>
+</div>

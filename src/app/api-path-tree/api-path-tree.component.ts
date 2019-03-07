@@ -14,6 +14,7 @@ export class ApiPathTreeComponent implements OnInit {
    * Object hoilding the tree nodes to display
    */
   apiPathNodes: TreeNode[] = [];
+  selectedNode: TreeNode;
 
   constructor(
     private fileReaderService: FileReaderService,
