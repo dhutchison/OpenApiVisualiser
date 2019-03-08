@@ -165,7 +165,7 @@ export class OpenapiTreenodeConverterService {
               if (apiPath[method]) {
                 /* Definition exists for the http method */
                 pathNode.children.push(
-                  this.createHttpMethodNode(method.toUpperCase(), apiPath[method]));
+                  this.createHttpMethodNode(key, method.toUpperCase(), apiPath[method]));
               }
             });
           }
@@ -196,13 +196,16 @@ export class OpenapiTreenodeConverterService {
    * @param method the HTTP method
    * @param operation the details of the Operation
    */
-  private createHttpMethodNode(method: string, operation: OperationObject): TreeNode {
+  private createHttpMethodNode(path:string, method: string, operation: OperationObject): TreeNode {
 
     const node: OperationTreeNode = {
       label: method,
       leaf: true,
       type: 'operation',
-      styleClass: 'ui-treenode-http-method'
+      styleClass: 'ui-treenode-http-method',
+      operation: operation,
+      method: method,
+      path: path
     };
 
     /* Add a tooltip */
@@ -220,4 +223,9 @@ export class OpenapiTreenodeConverterService {
 
 export interface OperationTreeNode extends TreeNode {
   tooltip?: string;
+
+  //Additional fields to supply details to Node Detail Rendering
+  method?:string;
+  path?:string;
+  operation?: OperationObject;
 }

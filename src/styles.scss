@@ -12,3 +12,52 @@
         border-radius: 10px;
     }
 }
+
+.http-post {
+    .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
+        border-color:#49cc90;
+        background:rgba(73,204,144,.1);
+    }
+
+    .ui-widget-header button {
+        background:#49cc90;
+        border-color:#49cc90;
+        padding: 0 0.5em
+    }
+}
+
+.http-put {
+    .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
+        border-color:#fca130;
+        background:rgba(252,161,48,.1);
+    }
+    .ui-widget-header .ui-button {
+        border-color:#fca130;
+        background: #fca130;
+        padding: 0 0.5em
+    }
+}
+
+.http-get {
+    .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
+        border-color:#61affe;
+        background:rgba(97,175,254,.1);
+    }
+    .ui-widget-header .ui-button {
+        border-color:#61affe;
+        background: #61affe;
+        padding: 0 0.5em
+    }
+}
+
+.http-delete {
+    .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
+        border-color:#f93e3e;
+        background:rgba(249,62,62,.1);
+    }
+    .ui-widget-header .ui-button {
+        border-color:#f93e3e;
+        background: #f93e3e;
+        padding: 0 0.5em
+    }
+}

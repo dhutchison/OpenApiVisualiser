@@ -1,5 +1,12 @@
-<p-tree [value]="apiPathNodes" layout="horizontal">
+<p-tree [value]="apiPathNodes" layout="horizontal"
+  selectionMode="single" [(selection)]="selectedNode">
   <ng-template let-node  pTemplate="operation">
     <span pTooltip="{{ node.tooltip }}">{{ node.label }}</span>
   </ng-template>
 </p-tree>
+
+<app-node-method-detail *ngIf="selectedNode"
+  [(method)]="selectedNode.method"
+  [(path)]="selectedNode.path"
+  [(node)]="selectedNode.operation">
+</app-node-method-detail>
