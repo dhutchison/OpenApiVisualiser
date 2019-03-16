@@ -12,10 +12,18 @@
             <dd>{{ api.info.contact.name }}</dd>
 
             <dt>URL</dt>
-            <dd>{{ api.info.contact.url }}</dd>
+            <dd>
+              <a href="{{ api.info.contact.url }}" target="_blank" *ngIf="api.info.contact.url">
+                {{ api.info.contact.url }}
+              </a>
+            </dd>
 
             <dt>Email</dt>
-            <dd>{{ api.info.contact.email }}</dd>
+            <dd>
+              <a href="mailto:{{ api.info.contact.email }}" *ngIf="api.info.contact.email">
+                {{ api.info.contact.email }}
+              </a>
+            </dd>
         </dl>
     </p-fieldset>
 
@@ -25,7 +33,11 @@
           <dd>{{ api.info.license.name }}</dd>
 
           <dt>URL</dt>
-          <dd>{{ api.info.license.url }}</dd>
+          <dd>
+            <a href="{{ api.info.license.url }}" target="_blank" *ngIf="api.info.license.url">
+              {{ api.info.license.url }}
+            </a>
+          </dd>
         </dl>
     </p-fieldset>
 </p-panel>
