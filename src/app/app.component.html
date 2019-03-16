@@ -7,6 +7,13 @@
 
 <div>
   <app-file-chooser></app-file-chooser>
-  <app-api-path-tree></app-api-path-tree>
+  <p-accordion [multiple]="true"> 
+    <p-accordionTab header="API Information">
+      <app-api-information></app-api-information>
+    </p-accordionTab>
+    <p-accordionTab header="API Paths">
+      <app-api-path-tree></app-api-path-tree>
+    </p-accordionTab>
+  </p-accordion>
 </div>
 <router-outlet></router-outlet>

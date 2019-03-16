@@ -1,0 +1,31 @@
+<p-panel styleClass="api-info" [toggleable]="true" *ngFor="let api of apiDefinitions">
+    <p-header>{{ api.info.title }} - {{ api.info.version }}</p-header>
+    <p>{{ api.info.description }}</p>
+
+    <p-fieldset legend="Terms of Service" *ngIf="api.info.termsOfService">
+      <p>{{ api.info.termsOfService }}</p>
+    </p-fieldset>
+
+    <p-fieldset legend="Contact" *ngIf="api.info.contact">
+        <dl>
+            <dt>Name</dt>
+            <dd>{{ api.info.contact.name }}</dd>
+
+            <dt>URL</dt>
+            <dd>{{ api.info.contact.url }}</dd>
+
+            <dt>Email</dt>
+            <dd>{{ api.info.contact.email }}</dd>
+        </dl>
+    </p-fieldset>
+
+    <p-fieldset legend="License" *ngIf="api.info.license">
+        <dl>
+          <dt>Name</dt>
+          <dd>{{ api.info.license.name }}</dd>
+
+          <dt>URL</dt>
+          <dd>{{ api.info.license.url }}</dd>
+        </dl>
+    </p-fieldset>
+</p-panel>
