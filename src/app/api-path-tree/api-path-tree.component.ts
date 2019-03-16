@@ -26,6 +26,11 @@ export class ApiPathTreeComponent implements OnInit {
       this.openApiConverterService.addApiSpecification(value);
     });
 
+    this.fileReaderService.resetFiles.subscribe(v => {
+      /* Reset the service which holds our current state */
+      this.openApiConverterService.reset();
+    });
+
     this.openApiConverterService.treeNodesChanged.subscribe(value => {
       this.apiPathNodes = value;
     });

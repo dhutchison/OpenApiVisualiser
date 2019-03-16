@@ -9,7 +9,16 @@ import * as jsyaml from 'js-yaml';
 })
 export class FileReaderService {
 
+  /**
+   * Subject used to notify that a new Api Specification has been read.
+   */
   readonly apiChanged = new Subject<OpenApiSpec>();
+
+  /**
+   * Subject used to notify that all files have been closed and components
+   * should reset any stored state.
+   */
+  readonly resetFiles = new Subject<void>();
 
   constructor() { }
 

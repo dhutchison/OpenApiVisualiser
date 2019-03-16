@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { FileReaderService } from '../services/file-reader.service';
-import { OpenapiTreenodeConverterService } from '../services/openapi-treenode-converter.service';
 
 @Component({
   selector: 'app-file-chooser',
@@ -12,8 +11,7 @@ export class FileChooserComponent implements OnInit {
   readonly yamlFilenamePattern = /\.yaml/;
 
   constructor(
-    private fileReaderService: FileReaderService,
-    private openApiConverterService: OpenapiTreenodeConverterService) { }
+    private fileReaderService: FileReaderService) { }
 
   ngOnInit() {
   }
@@ -22,7 +20,7 @@ export class FileChooserComponent implements OnInit {
     console.log(event);
 
     /* Reset back to having no files loaded */
-    this.openApiConverterService.reset();
+    this.fileReaderService.resetFiles.next();
 
     /* Process all the selected files.
      * Note that a FileList isn't an array
