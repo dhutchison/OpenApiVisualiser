@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { OpenApiSpec } from '@loopback/openapi-v3-types';
+
+import { HttpClient } from '@angular/common/http';
 
 import * as jsyaml from 'js-yaml';
 
@@ -20,7 +23,7 @@ export class FileReaderService {
    */
   readonly resetFiles = new Subject<void>();
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
 
   /**
    * Load the supplied file as a YAML OpenAPI specification
@@ -30,18 +33,40 @@ export class FileReaderService {
   loadFile(file: File) {
 
     const fileData = this.loadFileData(file);
-    fileData.subscribe(fileContent => {
-      console.log(fileContent);
+    fileData.subscribe(fileContent => this.loadData(fileContent));
+  }
 
-      const spec = this.convertYamlToOpenApiSpec(fileContent);
+  /**
+   * Load the supplied URL as a YAML OpenAPI specification
+   * and notify subscribers to the "apiChanged" subject in this service.
+   * @param url the url to load as a YAML specification
+   */
+  loadFileFromURL(url: string) {
+    const fileData = this.http.get(url, {responseType: 'text'})
+      .pipe(
+        tap( // Log the result or error
+          data => console.log(data),
+          error => console.error(error)
+        )
+      );
+    fileData.subscribe(fileContent => this.loadData(fileContent));
+  }
 
-      console.log(spec.paths);
-      console.log(Object.keys(spec.paths));
+  /**
+   * Load the supplied file content as a YAML OpenAPI specification
+   * and notify subscribers to the "apiChanged" subject in this service.
+   * @param fileContent the YAML to load as a YAML specification
+   */
+  private loadData(fileContent: string) {
+    console.log(fileContent);
 
-      /* Notify any subscribers of the updated spec */
-      this.apiChanged.next(spec);
-    });
+    const spec = this.convertYamlToOpenApiSpec(fileContent);
 
+    console.log(spec.paths);
+    console.log(Object.keys(spec.paths));
+
+    /* Notify any subscribers of the updated spec */
+    this.apiChanged.next(spec);
   }
 
   /**

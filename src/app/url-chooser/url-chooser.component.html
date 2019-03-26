@@ -1,0 +1,7 @@
+<form (ngSubmit)="onSubmit()" #urlForm="ngForm">
+  <span class="ui-float-label">
+    <input id="float-input" type="url" name='url' [(ngModel)]='url' pInputText required> 
+    <label for="float-input">URL</label>
+  </span>
+  <button type="submit" class="btn btn-success" [disabled]="!urlForm.form.valid">Load</button>
+</form>
