@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FileReaderService } from '../services/file-reader.service';
+import { FileReaderService } from '../../services/file-reader.service';
 
 @Component({
   selector: 'app-file-chooser',
@@ -22,13 +22,20 @@ export class FileChooserComponent implements OnInit {
     /* Reset back to having no files loaded */
     this.fileReaderService.resetFiles.next();
 
-    /* Process all the selected files.
-     * Note that a FileList isn't an array
-     * so we need to make it one first */
-    const files: FileList = event.target.files;
-    Array.from(files).forEach(file => {
+    let fileArray: File[];
+    if (event.files) {
+      /* Most likely coming from a PrimeNG Upload component - just use this array */
+      fileArray = event.files;
+    } else {
+      /* Assume event from a regular HTML file input 
+       * Note that a FileList isn't an array
+      * so we need to make it one first */
+      fileArray = Array.from(event.target.files);
+    }
+    
 
-
+    /* Process all the selected files. */
+    fileArray.forEach(file => {
       if (!file.name.match(this.yamlFilenamePattern)) {
         // TODO: Update message to include offending file
         alert(`You are trying to upload a non-YAML file (${file.name}). Please choose a YAML file.`);
