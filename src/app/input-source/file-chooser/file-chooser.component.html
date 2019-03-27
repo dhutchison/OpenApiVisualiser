@@ -1,0 +1,16 @@
+<!-- Cannot use the "accept" attribute as there is not a mime type for YAML -->
+<p-fileUpload 
+    name="myfile[]" 
+    mode="basic" 
+    chooseLabel="Import YAML File(s)"
+    auto="true"
+    multiple="multiple"
+    customUpload="true" 
+    (uploadHandler)="loadFile($event)"></p-fileUpload>
+<!--
+    Below is the HTML approach to doing this
+    <input type="file"
+       id="api-definition-fc" name="api-definition-fc"
+       multiple="multiple"
+       (change)="loadFile($event)">
+-->

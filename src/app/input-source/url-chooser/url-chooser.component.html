@@ -1,0 +1,21 @@
+
+<p-dialog header="Import YAML from URL" [(visible)]="display" [modal]="true"
+  [style]="{width: '350px', minWidth: '200px'}" [minY]="70">
+
+    <form (ngSubmit)="onSubmit()" #urlForm="ngForm">
+        <span class="ui-float-label">
+          <input id="float-input" type="url" name='url' [(ngModel)]='url' pInputText required> 
+          <label for="float-input">URL</label>
+        </span>
+        <p-footer>
+            <button type="submit" pButton icon="pi pi-check" 
+              [disabled]="!urlForm.form.valid" 
+              label="Import"></button>
+            <button type="button" pButton icon="pi pi-close" 
+              (click)="display=false" label="Cancel" 
+              class="ui-button-secondary"></button>
+        </p-footer>
+      </form>
+</p-dialog>
+
+<button type="button" (click)="showDialog()" pButton icon="pi pi-info-circle" label="Import YAML from URL"></button>

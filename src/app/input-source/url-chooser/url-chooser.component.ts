@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FileReaderService } from '../services/file-reader.service';
+import { FileReaderService } from '../../services/file-reader.service';
 
 @Component({
   selector: 'app-url-chooser',
@@ -9,6 +9,7 @@ import { FileReaderService } from '../services/file-reader.service';
 export class UrlChooserComponent implements OnInit {
 
   url: string;
+  display = false;
 
   constructor(
     private fileReaderService: FileReaderService) { }
@@ -16,7 +17,11 @@ export class UrlChooserComponent implements OnInit {
   ngOnInit() {
   }
 
-  onSubmit() { 
+  showDialog() {
+    this.display = true;
+  }
+
+  onSubmit() {
     console.log(this.url);
 
     /* Reset back to having no files loaded */
@@ -24,6 +29,10 @@ export class UrlChooserComponent implements OnInit {
 
     /* Process the supplied URL */
     this.fileReaderService.loadFileFromURL(this.url);
+
+    /* Hide the dialog and clear the url*/
+    this.display = false;
+    this.url = undefined;
   }
 
 }
