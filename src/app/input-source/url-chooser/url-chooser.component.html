@@ -11,11 +11,11 @@
             <button type="submit" pButton icon="pi pi-check" 
               [disabled]="!urlForm.form.valid" 
               label="Import"></button>
-            <button type="button" pButton icon="pi pi-close" 
+            <button type="button" pButton icon="pi pi-times" 
               (click)="display=false" label="Cancel" 
               class="ui-button-secondary"></button>
         </p-footer>
       </form>
 </p-dialog>
 
-<button type="button" (click)="showDialog()" pButton icon="pi pi-info-circle" label="Import YAML from URL"></button>
+<button type="button" (click)="showDialog()" pButton icon="pi pi-cloud-upload" label="Import YAML from URL"></button>
