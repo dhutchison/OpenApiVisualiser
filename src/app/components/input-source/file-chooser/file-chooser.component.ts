@@ -16,7 +16,7 @@ export class FileChooserComponent implements OnInit {
   ngOnInit() {
   }
 
-  loadFile(event) {
+  loadFile(event, fileUploadComponent) {
     console.log(event);
 
     /* Reset back to having no files loaded */
@@ -32,12 +32,11 @@ export class FileChooserComponent implements OnInit {
       * so we need to make it one first */
       fileArray = Array.from(event.target.files);
     }
-    
+
 
     /* Process all the selected files. */
     fileArray.forEach(file => {
       if (!file.name.match(this.yamlFilenamePattern)) {
-        // TODO: Update message to include offending file
         alert(`You are trying to upload a non-YAML file (${file.name}). Please choose a YAML file.`);
         return;
       }
@@ -46,6 +45,11 @@ export class FileChooserComponent implements OnInit {
       this.fileReaderService.loadFile(file);
     });
 
+    if (fileUploadComponent) {
+      /* Clear the selection */
+      console.log(fileUploadComponent);
+      fileUploadComponent.clear();
+    }
 
   }
 
