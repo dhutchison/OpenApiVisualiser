@@ -37,4 +37,12 @@ export class ApiPathTreeComponent implements OnInit {
       this.apiPathNodes = value;
     });
   }
+
+  get horizontalView(): boolean {
+    return this.preferenceService.horizontalView;
+  }
+
+  set horizontalView(value: boolean) {
+    this.preferenceService.horizontalView = value;
+  }
 }
