@@ -202,7 +202,7 @@ export class OpenapiTreenodeConverterService {
       label: method,
       leaf: true,
       type: 'operation',
-      styleClass: 'ui-treenode-http-method',
+      styleClass: 'ui-treenode-http-method-' + method.toLowerCase(),
       operation: operation,
       method: method,
       path: path

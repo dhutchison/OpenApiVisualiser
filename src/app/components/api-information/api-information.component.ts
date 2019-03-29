@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FileReaderService } from '../services/file-reader.service';
+import { FileReaderService } from '../../services/file-reader.service';
 import { OpenAPIObject } from 'openapi3-ts';
 
 @Component({
