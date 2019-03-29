@@ -16,14 +16,14 @@ before_script:
   - npm install -g @angular/cli
 script:
   - ng lint
-  - ng build --prod --output-path docs --base-href /OpenApiVisualiser/
-  - cp docs/index.html docs/404.html
+  - ng build --prod --output-path dist --base-href /OpenApiVisualiser/
+  - cp dist/index.html dist/404.html
 
 deploy:
   provider: pages
   skip_cleanup: true
   github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
   keep_history: true
-  local_dir: docs
+  local_dir: dist
   on:
     branch: master
