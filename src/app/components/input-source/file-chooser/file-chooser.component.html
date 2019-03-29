@@ -6,11 +6,5 @@
     auto="true"
     multiple="multiple"
     customUpload="true" 
-    (uploadHandler)="loadFile($event)"></p-fileUpload>
-<!--
-    Below is the HTML approach to doing this
-    <input type="file"
-       id="api-definition-fc" name="api-definition-fc"
-       multiple="multiple"
-       (change)="loadFile($event)">
--->
+    (uploadHandler)="loadFile($event, fileUpload)"
+    #fileUpload></p-fileUpload>
