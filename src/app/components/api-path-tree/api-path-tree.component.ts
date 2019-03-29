@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { TreeNode } from 'primeng/api';
-import { FileReaderService } from '../services/file-reader.service';
-import { OpenapiTreenodeConverterService } from '../services/openapi-treenode-converter.service';
+import { FileReaderService } from '../../services/file-reader.service';
+import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
+import { UserPreferenceControllerService } from 'src/app/controllers/user-preference-controller.service';
 
 @Component({
   selector: 'app-api-path-tree',
@@ -17,6 +18,7 @@ export class ApiPathTreeComponent implements OnInit {
   selectedNode: TreeNode;
 
   constructor(
+    private preferenceService: UserPreferenceControllerService,
     private fileReaderService: FileReaderService,
     private openApiConverterService: OpenapiTreenodeConverterService ) { }
 

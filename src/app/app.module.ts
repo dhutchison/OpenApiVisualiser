@@ -9,6 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { FieldsetModule } from 'primeng/fieldset';
 import { FileUploadModule } from 'primeng/fileupload';
+import { InputSwitchModule } from 'primeng/inputswitch';
 import { PanelModule } from 'primeng/panel';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
@@ -22,6 +23,7 @@ import { NodeMethodDetailComponent } from './components/node-detail/node-method-
 import { ApiInformationComponent } from './components/api-information/api-information.component';
 import { UrlChooserComponent } from './components/input-source/url-chooser/url-chooser.component';
 import { InputSourceComponent } from './components/input-source/input-source.component';
+import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
 
 @NgModule({
   declarations: [
@@ -31,7 +33,8 @@ import { InputSourceComponent } from './components/input-source/input-source.com
     NodeMethodDetailComponent,
     ApiInformationComponent,
     UrlChooserComponent,
-    InputSourceComponent
+    InputSourceComponent,
+    TreeOrientationEnumPipe
   ],
   imports: [
     BrowserModule,
@@ -47,9 +50,13 @@ import { InputSourceComponent } from './components/input-source/input-source.com
     DialogModule,
     FieldsetModule,
     FileUploadModule,
+    InputSwitchModule,
     PanelModule,
     TooltipModule,
     TreeModule
+  ],
+  exports: [
+    TreeOrientationEnumPipe
   ],
   providers: [],
   bootstrap: [AppComponent]
