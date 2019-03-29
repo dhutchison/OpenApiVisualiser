@@ -8,10 +8,10 @@ import { TreeNode } from 'primeng/api';
 })
 export class NodeMethodDetailComponent implements OnInit {
 
-    @Input() method: String;
+    @Input() method: string;
     @Input() path;
     @Input() node: TreeNode;
-  
+
     constructor() { }
 
     ngOnInit() {

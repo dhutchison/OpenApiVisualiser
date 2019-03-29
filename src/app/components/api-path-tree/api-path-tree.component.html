@@ -1,9 +1,9 @@
 
-<p-inputSwitch [(ngModel)]="preferenceService.horizontalView"></p-inputSwitch>
+<p-inputSwitch [(ngModel)]="horizontalView"></p-inputSwitch>
 
-<p-tree [value]="apiPathNodes" layout="{{preferenceService.horizontalView | treeorientation}}"
+<p-tree [value]="apiPathNodes" layout="{{horizontalView | treeorientation}}"
   selectionMode="single" [(selection)]="selectedNode"
-  [className]="preferenceService.horizontalView? 'tree-horizontal': 'tree-vertical'"
+  [className]="horizontalView? 'tree-horizontal': 'tree-vertical'"
   >
   <ng-template let-node  pTemplate="operation">
     <span pTooltip="{{ node.tooltip }}">{{ node.label }}</span>

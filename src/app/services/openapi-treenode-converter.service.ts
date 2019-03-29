@@ -196,16 +196,16 @@ export class OpenapiTreenodeConverterService {
    * @param method the HTTP method
    * @param operation the details of the Operation
    */
-  private createHttpMethodNode(path:string, method: string, operation: OperationObject): TreeNode {
+  private createHttpMethodNode(path: string, method: string, operation: OperationObject): TreeNode {
 
     const node: OperationTreeNode = {
       label: method,
       leaf: true,
       type: 'operation',
       styleClass: 'ui-treenode-http-method-' + method.toLowerCase(),
-      operation: operation,
-      method: method,
-      path: path
+      operation,
+      method,
+      path
     };
 
     /* Add a tooltip */
@@ -224,8 +224,8 @@ export class OpenapiTreenodeConverterService {
 export interface OperationTreeNode extends TreeNode {
   tooltip?: string;
 
-  //Additional fields to supply details to Node Detail Rendering
-  method?:string;
-  path?:string;
+  // Additional fields to supply details to Node Detail Rendering
+  method?: string;
+  path?: string;
   operation?: OperationObject;
 }
