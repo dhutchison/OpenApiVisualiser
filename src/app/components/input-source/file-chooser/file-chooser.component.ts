@@ -27,7 +27,7 @@ export class FileChooserComponent implements OnInit {
       /* Most likely coming from a PrimeNG Upload component - just use this array */
       fileArray = event.files;
     } else {
-      /* Assume event from a regular HTML file input 
+      /* Assume event from a regular HTML file input
        * Note that a FileList isn't an array
       * so we need to make it one first */
       fileArray = Array.from(event.target.files);

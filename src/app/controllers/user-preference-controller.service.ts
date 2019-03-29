@@ -5,7 +5,7 @@ import { Injectable } from '@angular/core';
 })
 export class UserPreferenceControllerService {
 
-  horizontalView: boolean = true;
+  horizontalView = true;
 
   constructor() { }
 }
