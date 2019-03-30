@@ -24,6 +24,8 @@ import { ApiInformationComponent } from './components/api-information/api-inform
 import { UrlChooserComponent } from './components/input-source/url-chooser/url-chooser.component';
 import { InputSourceComponent } from './components/input-source/input-source.component';
 import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
+import { ApiTagsComponent } from './components/api-tags/api-tags.component';
+import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
 
 @NgModule({
   declarations: [
@@ -34,7 +36,9 @@ import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
     ApiInformationComponent,
     UrlChooserComponent,
     InputSourceComponent,
-    TreeOrientationEnumPipe
+    TreeOrientationEnumPipe,
+    ApiTagsComponent,
+    ExternalDocsComponent
   ],
   imports: [
     BrowserModule,
