@@ -11,6 +11,7 @@ import { FieldsetModule } from 'primeng/fieldset';
 import { FileUploadModule } from 'primeng/fileupload';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { PanelModule } from 'primeng/panel';
+import { TabViewModule } from 'primeng/tabview';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
 
@@ -24,6 +25,8 @@ import { ApiInformationComponent } from './components/api-information/api-inform
 import { UrlChooserComponent } from './components/input-source/url-chooser/url-chooser.component';
 import { InputSourceComponent } from './components/input-source/input-source.component';
 import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
+import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
+import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
 
 @NgModule({
   declarations: [
@@ -34,7 +37,9 @@ import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
     ApiInformationComponent,
     UrlChooserComponent,
     InputSourceComponent,
-    TreeOrientationEnumPipe
+    TreeOrientationEnumPipe,
+    ApiComponentsDetailComponent,
+    SchemaDetailComponent
   ],
   imports: [
     BrowserModule,
@@ -52,6 +57,7 @@ import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
     FileUploadModule,
     InputSwitchModule,
     PanelModule,
+    TabViewModule,
     TooltipModule,
     TreeModule
   ],

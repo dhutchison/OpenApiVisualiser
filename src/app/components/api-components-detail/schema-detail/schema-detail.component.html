@@ -1,0 +1,23 @@
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let item of schema.properties | keyvalue">
+      <th>{{item.key}}
+        <strong class="required" *ngIf="schema.required.includes(item.key)"> *</strong>
+      </th>
+      <td>
+        {{item.value.type}} 
+        <ng-template [ngIf]="item.value.format">
+          <em>{{item.value.format}}</em>
+        </ng-template>
+      </td>
+      <td>{{item.value.description}}</td>
+    </tr>
+  </tbody>
+</table>
