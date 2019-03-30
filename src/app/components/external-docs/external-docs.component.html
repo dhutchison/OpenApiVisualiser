@@ -1,0 +1,9 @@
+<a href="{{document.url}}">
+  <ng-template [ngIf]="document.description" [ngIfElse]="urlOnly">
+    {{document.description}}
+  </ng-template>
+  
+  <ng-template #urlOnly>
+    {{document.url}}
+  </ng-template>
+</a>
