@@ -35,6 +35,9 @@ export class ApiComponentsDetailComponent implements OnInit {
     this.fileReaderService.resetFiles.subscribe(v => {
       /* Clear any held state */
       this.schemas = {};
+      this.items = [];
     });
   }
+
+  
 }
