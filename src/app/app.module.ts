@@ -11,6 +11,7 @@ import { FieldsetModule } from 'primeng/fieldset';
 import { FileUploadModule } from 'primeng/fileupload';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { PanelModule } from 'primeng/panel';
+import { TableModule } from 'primeng/table';
 import { TabViewModule } from 'primeng/tabview';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
@@ -61,6 +62,7 @@ import { ExternalDocsComponent } from './components/external-docs/external-docs.
     FileUploadModule,
     InputSwitchModule,
     PanelModule,
+    TableModule,
     TabViewModule,
     TooltipModule,
     TreeModule
