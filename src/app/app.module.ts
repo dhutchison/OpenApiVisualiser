@@ -25,6 +25,8 @@ import { UrlChooserComponent } from './components/input-source/url-chooser/url-c
 import { InputSourceComponent } from './components/input-source/input-source.component';
 import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
 import { ExportComponent } from './components/export/export.component';
+import { ApiTagsComponent } from './components/api-tags/api-tags.component';
+import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
 
 @NgModule({
   declarations: [
@@ -37,6 +39,8 @@ import { ExportComponent } from './components/export/export.component';
     InputSourceComponent,
     TreeOrientationEnumPipe,
     ExportComponent
+    ApiTagsComponent,
+    ExternalDocsComponent
   ],
   imports: [
     BrowserModule,
