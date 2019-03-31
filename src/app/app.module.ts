@@ -27,6 +27,8 @@ import { InputSourceComponent } from './components/input-source/input-source.com
 import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
 import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
 import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
+import { ApiTagsComponent } from './components/api-tags/api-tags.component';
+import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
 
 @NgModule({
   declarations: [
@@ -39,7 +41,9 @@ import { SchemaDetailComponent } from './components/api-components-detail/schema
     InputSourceComponent,
     TreeOrientationEnumPipe,
     ApiComponentsDetailComponent,
-    SchemaDetailComponent
+    SchemaDetailComponent,
+    ApiTagsComponent,
+    ExternalDocsComponent
   ],
   imports: [
     BrowserModule,
