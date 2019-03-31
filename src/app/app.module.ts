@@ -38,7 +38,7 @@ import { ExternalDocsComponent } from './components/external-docs/external-docs.
     UrlChooserComponent,
     InputSourceComponent,
     TreeOrientationEnumPipe,
-    ExportComponent
+    ExportComponent,
     ApiTagsComponent,
     ExternalDocsComponent
   ],
