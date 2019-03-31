@@ -21,7 +21,7 @@ export class UrlChooserComponent implements OnInit {
     this.display = true;
   }
 
-  onSubmit() {
+  import() {
     console.log(this.url);
 
     /* Reset back to having no files loaded */
