@@ -18,6 +18,8 @@ import { InputSourceModule } from './components/input-source/input-source.module
 import { ButtonModule } from 'primeng/button';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ExportComponent } from './components/export/export.component';
+import { DialogModule } from 'primeng/dialog';
 
 describe('AppComponent', () => {
 
@@ -30,6 +32,7 @@ describe('AppComponent', () => {
         AccordionModule,
         BrowserAnimationsModule,
         ButtonModule,
+        DialogModule,
         FieldsetModule,
         FormsModule,
         InputSwitchModule,
@@ -46,6 +49,7 @@ describe('AppComponent', () => {
         ApiInformationComponent,
         ApiPathTreeComponent,
         ApiTagsComponent,
+        ExportComponent,
         ExternalDocsComponent,
         NodeMethodDetailComponent,
         TreeOrientationPipe

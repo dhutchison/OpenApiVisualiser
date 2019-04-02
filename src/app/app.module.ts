@@ -23,6 +23,7 @@ import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
 import { TreeOrientationPipe } from './pipes/tree-orientation.pipe';
 import { InputSourceModule } from './components/input-source/input-source.module';
+import { DialogModule } from 'primeng/dialog';
 
 @NgModule({
   declarations: [
@@ -48,6 +49,7 @@ import { InputSourceModule } from './components/input-source/input-source.module
 
     AccordionModule,
     ButtonModule,
+    DialogModule,
     FieldsetModule,
     InputSwitchModule,
     PanelModule,
