@@ -33,7 +33,10 @@ export class FileReaderService {
   loadFile(file: File) {
 
     const fileData = this.loadFileData(file);
-    fileData.subscribe(fileContent => this.loadData(fileContent));
+
+    const yaml = (file.name.match(/\.yaml/) !== undefined);
+
+    fileData.subscribe(fileContent => this.loadData(fileContent, yaml));
   }
 
   /**
@@ -49,18 +52,28 @@ export class FileReaderService {
           error => console.error(error)
         )
       );
-    fileData.subscribe(fileContent => this.loadData(fileContent));
+
+    const yaml = (url.match(/\.yaml/) !== undefined);
+    fileData.subscribe(fileContent => this.loadData(fileContent, yaml));
   }
 
   /**
-   * Load the supplied file content as a YAML OpenAPI specification
+   * Load the supplied file content as a OpenAPI specification
    * and notify subscribers to the "apiChanged" subject in this service.
-   * @param fileContent the YAML to load as a YAML specification
+   * @param fileContent the file contents to load
+   * @param yaml boolean indicating if the file content is YAML (true) or not.
+   *       If this is false then it will be assumed to be JSON.
    */
-  private loadData(fileContent: string) {
+  private loadData(fileContent: string, yaml: boolean) {
     console.log(fileContent);
 
-    const spec = this.convertYamlToOpenApiSpec(fileContent);
+    let spec: OpenApiSpec;
+
+    if (yaml === true) {
+      spec = this.convertYamlToOpenApiSpec(fileContent);
+    } else {
+      spec = JSON.parse(fileContent);
+    }
 
     console.log(spec.paths);
     console.log(Object.keys(spec.paths));

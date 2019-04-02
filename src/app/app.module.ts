@@ -24,6 +24,7 @@ import { ApiInformationComponent } from './components/api-information/api-inform
 import { UrlChooserComponent } from './components/input-source/url-chooser/url-chooser.component';
 import { InputSourceComponent } from './components/input-source/input-source.component';
 import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
+import { ExportComponent } from './components/export/export.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
 
@@ -37,6 +38,7 @@ import { ExternalDocsComponent } from './components/external-docs/external-docs.
     UrlChooserComponent,
     InputSourceComponent,
     TreeOrientationEnumPipe,
+    ExportComponent,
     ApiTagsComponent,
     ExternalDocsComponent
   ],
