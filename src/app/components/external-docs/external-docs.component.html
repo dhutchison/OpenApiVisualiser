@@ -1,4 +1,4 @@
-<a href="{{document.url}}">
+<a href="{{document.url}}" *ngIf="document">
   <ng-template [ngIf]="document.description" [ngIfElse]="urlOnly">
     {{document.description}}
   </ng-template>

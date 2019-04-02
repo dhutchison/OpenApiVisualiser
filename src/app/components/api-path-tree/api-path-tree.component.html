@@ -1,7 +1,7 @@
 
 <p-inputSwitch [(ngModel)]="horizontalView"></p-inputSwitch>
 
-<p-tree [value]="apiPathNodes" layout="{{horizontalView | treeorientation}}"
+<p-tree [value]="apiPathNodes" layout="{{horizontalView | treeOrientation}}"
   selectionMode="single" [(selection)]="selectedNode"
   [className]="horizontalView? 'tree-horizontal': 'tree-vertical'"
   >

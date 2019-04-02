@@ -6,9 +6,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
 import { FieldsetModule } from 'primeng/fieldset';
-import { FileUploadModule } from 'primeng/fileupload';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { PanelModule } from 'primeng/panel';
 import { TooltipModule } from 'primeng/tooltip';
@@ -17,32 +15,29 @@ import { TreeModule } from 'primeng/tree';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { FileChooserComponent } from './components/input-source/file-chooser/file-chooser.component';
 import { ApiPathTreeComponent } from './components/api-path-tree/api-path-tree.component';
 import { NodeMethodDetailComponent } from './components/node-detail/node-method-detail/node-method-detail.component';
 import { ApiInformationComponent } from './components/api-information/api-information.component';
-import { UrlChooserComponent } from './components/input-source/url-chooser/url-chooser.component';
-import { InputSourceComponent } from './components/input-source/input-source.component';
-import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
+import { TreeOrientationPipe } from './pipes/tree-orientation.pipe';
+import { InputSourceModule } from './components/input-source/input-source.module';
 
 @NgModule({
   declarations: [
     AppComponent,
-    FileChooserComponent,
     ApiPathTreeComponent,
     NodeMethodDetailComponent,
     ApiInformationComponent,
-    UrlChooserComponent,
-    InputSourceComponent,
-    TreeOrientationEnumPipe,
     ApiTagsComponent,
-    ExternalDocsComponent
+    ExternalDocsComponent,
+    TreeOrientationPipe
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
+
+    InputSourceModule,
 
     AppRoutingModule,
     FormsModule,
@@ -51,16 +46,14 @@ import { ExternalDocsComponent } from './components/external-docs/external-docs.
 
     AccordionModule,
     ButtonModule,
-    DialogModule,
     FieldsetModule,
-    FileUploadModule,
     InputSwitchModule,
     PanelModule,
     TooltipModule,
     TreeModule
   ],
   exports: [
-    TreeOrientationEnumPipe
+    TreeOrientationPipe
   ],
   providers: [],
   bootstrap: [AppComponent]
