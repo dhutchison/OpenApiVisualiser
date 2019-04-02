@@ -1,21 +1,19 @@
 
-<p-dialog header="Import YAML from URL" [(visible)]="display" [modal]="true"
+<p-dialog header="Import from URL" [(visible)]="display" [modal]="true"
   [style]="{width: '350px', minWidth: '200px'}" [minY]="70">
-
-    <form (ngSubmit)="onSubmit()" #urlForm="ngForm">
-        <span class="ui-float-label">
-          <input id="float-input" type="url" name='url' [(ngModel)]='url' pInputText required> 
-          <label for="float-input">URL</label>
-        </span>
-        <p-footer>
-            <button type="submit" pButton icon="pi pi-check" 
-              [disabled]="!urlForm.form.valid" 
-              label="Import"></button>
-            <button type="button" pButton icon="pi pi-times" 
-              (click)="display=false" label="Cancel" 
-              class="ui-button-secondary"></button>
-        </p-footer>
-      </form>
+      <span class="ui-float-label">
+        <input id="float-input" type="url" name='url' [(ngModel)]='url' pInputText required> 
+        <label for="float-input">URL</label>
+      </span>
+      <p-footer>
+          <button type="submit" pButton icon="pi pi-check" 
+            label="Import"
+            [disabled]="!(url && url.length > 0)"
+            (click)="import()"></button>
+          <button type="button" pButton icon="pi pi-times" 
+            (click)="display=false" label="Cancel" 
+            class="ui-button-secondary"></button>
+      </p-footer>
 </p-dialog>
 
-<button type="button" (click)="showDialog()" pButton icon="pi pi-cloud-upload" label="Import YAML from URL"></button>
+<button type="button" (click)="showDialog()" pButton icon="pi pi-cloud-upload" label="Import from URL"></button>

@@ -18,6 +18,7 @@ import { AppComponent } from './app.component';
 import { ApiPathTreeComponent } from './components/api-path-tree/api-path-tree.component';
 import { NodeMethodDetailComponent } from './components/node-detail/node-method-detail/node-method-detail.component';
 import { ApiInformationComponent } from './components/api-information/api-information.component';
+import { ExportComponent } from './components/export/export.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
 import { TreeOrientationPipe } from './pipes/tree-orientation.pipe';
@@ -29,6 +30,7 @@ import { InputSourceModule } from './components/input-source/input-source.module
     ApiPathTreeComponent,
     NodeMethodDetailComponent,
     ApiInformationComponent,
+    ExportComponent,
     ApiTagsComponent,
     ExternalDocsComponent,
     TreeOrientationPipe
