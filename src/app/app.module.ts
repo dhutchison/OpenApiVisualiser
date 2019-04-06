@@ -28,6 +28,7 @@ import { InputSourceComponent } from './components/input-source/input-source.com
 import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
 import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
 import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
+import { ExportComponent } from './components/export/export.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
 
@@ -43,6 +44,7 @@ import { ExternalDocsComponent } from './components/external-docs/external-docs.
     TreeOrientationEnumPipe,
     ApiComponentsDetailComponent,
     SchemaDetailComponent,
+    ExportComponent,
     ApiTagsComponent,
     ExternalDocsComponent
   ],
