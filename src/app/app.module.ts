@@ -15,7 +15,7 @@ import { TableModule } from 'primeng/table';
 import { TabViewModule } from 'primeng/tabview';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
-
+import { TreeTableModule } from 'primeng/treetable';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -67,7 +67,8 @@ import { ExternalDocsComponent } from './components/external-docs/external-docs.
     TableModule,
     TabViewModule,
     TooltipModule,
-    TreeModule
+    TreeModule,
+    TreeTableModule
   ],
   exports: [
     TreeOrientationEnumPipe

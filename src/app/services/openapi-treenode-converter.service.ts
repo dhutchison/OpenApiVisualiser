@@ -3,7 +3,7 @@ import { TreeNode } from 'primeng/api';
 import { Subject } from 'rxjs';
 import {
           getPath, OpenApiSpec, OperationObject,
-          PathItemObject, PathsObject
+          PathItemObject, PathsObject, SchemaObject
         } from '@loopback/openapi-v3-types';
 
 @Injectable({
@@ -217,6 +217,50 @@ export class OpenapiTreenodeConverterService {
 
     return node;
 
+  }
+
+
+  /**
+   * Create a tree node for a component schema object with nested
+   * structure below it for any child components referenced by properties
+   * @param schema the schema object
+   */
+  public createComponentSchemaPropertiesToTreeNodes(schema: SchemaObject): TreeNode[] {
+    const nodes: TreeNode[] = [];
+    if (schema.properties) {
+      Object.keys(schema.properties).forEach(title => {
+        const node = this.createSchemaPropertyToTreeNode(title, schema.properties[title]);
+        if (node) {
+          nodes.push(node);
+        }
+      });
+    }    
+
+    return nodes;
+  }
+  
+  /**
+   * Create a tree node for the property component schema object with nested
+   * structure below it for any child components referenced by properties
+   * @param schema the schema object
+   */
+  private createSchemaPropertyToTreeNode(title: string, property: SchemaObject): TreeNode {
+    const node: TreeNode = {
+      label: title,
+      leaf: true,
+      expanded: false,
+      children: [],
+      data: property
+    };
+
+    Object.keys(property).forEach(key => {
+        if (key==='type' && property[key]==='array') {
+          //If we have an array type then start to recursively traverse and add child nodes
+          node.leaf = false;
+          node.children = this.createComponentSchemaPropertiesToTreeNodes(property['items']);
+        }
+    });
+    return node;
   }
 
 }

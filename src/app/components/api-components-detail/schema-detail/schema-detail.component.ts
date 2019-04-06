@@ -1,5 +1,7 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, SimpleChanges } from '@angular/core';
 import { SchemaObject } from 'openapi3-ts';
+import { TreeNode } from 'primeng/api';
+import { OpenapiTreenodeConverterService } from 'src/app/services/openapi-treenode-converter.service';
 
 @Component({
   selector: 'app-schema-detail',
@@ -9,10 +11,29 @@ import { SchemaObject } from 'openapi3-ts';
 export class SchemaDetailComponent implements OnInit {
 
   @Input() schema?: SchemaObject;
+  treeModel: TreeNode[] = [];
 
-  constructor() { }
+  constructor(private treeNodeService: OpenapiTreenodeConverterService) { }
 
   ngOnInit() {
   }
+
+
+  /**
+   * Lifecycle hook triggered when @Input() changes.
+   * Utilised to redraw the schema change rendering if the element swaps out underneath
+   * @param changes value of the property change event
+   */
+  ngOnChanges(changes: SimpleChanges) {
+    this.treeModel = [];
+    if (changes.schema.currentValue) {
+      this.treeModel = this.treeNodeService.createComponentSchemaPropertiesToTreeNodes(
+                                                changes.schema.currentValue
+                                            );
+    }
+  }
+
+  
+
 
 }
