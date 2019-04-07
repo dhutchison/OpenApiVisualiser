@@ -1,4 +1,12 @@
 
+<!--
+<ul>
+  <li *ngFor="let item of schema | keyvalue">
+      Key: <b>{{item.key}}</b> and Value: <b>{{item.value}}</b>
+  </li>
+</ul>
+-->
+
 <p-treeTable [value]="treeModel">
   <ng-template pTemplate="header">
       <tr>
@@ -25,6 +33,9 @@
               {{rowData.type}} 
               <ng-template [ngIf]="rowData.format">
                 <em>{{rowData.format}}</em>
+              </ng-template>
+              <ng-template [ngIf]="rowData.$ref">
+                <em><a href="{{rowData.$ref | replaceSlash }}">{{rowData.$ref}}</a></em>
               </ng-template>
           </td>
           <td>{{rowData.description}}</td>

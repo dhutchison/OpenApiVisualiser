@@ -31,6 +31,7 @@ import { SchemaDetailComponent } from './components/api-components-detail/schema
 import { ExportComponent } from './components/export/export.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
+import { StringReplacePipe } from './pipes/stringreplacepipe.pipe';
 
 @NgModule({
   declarations: [
@@ -46,7 +47,8 @@ import { ExternalDocsComponent } from './components/external-docs/external-docs.
     SchemaDetailComponent,
     ExportComponent,
     ApiTagsComponent,
-    ExternalDocsComponent
+    ExternalDocsComponent,
+    StringReplacePipe
   ],
   imports: [
     BrowserModule,

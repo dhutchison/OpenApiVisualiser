@@ -5,7 +5,9 @@
       <p-accordionTab
       *ngFor="let item of items"
       [header]="item" >
-        <app-schema-detail [schema]="schemas[item]"></app-schema-detail>
+        <app-schema-detail 
+          id="components_schemas_{{item}}"
+          [schema]="schemas[item]"></app-schema-detail>
       </p-accordionTab>
   </p-accordion>
 </div>

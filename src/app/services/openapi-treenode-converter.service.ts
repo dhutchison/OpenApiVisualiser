@@ -227,6 +227,19 @@ export class OpenapiTreenodeConverterService {
    */
   public createComponentSchemaPropertiesToTreeNodes(schema: SchemaObject): TreeNode[] {
     const nodes: TreeNode[] = [];
+    if(schema.type && schema.type === 'array') {
+      const node = this.createSchemaPropertyToTreeNode(schema.title, schema.items);
+      if (node) {
+        const root: TreeNode = {
+          label: schema.title,
+          leaf: false,
+          expanded: true,
+          children: [node],
+          data: schema
+        };
+        nodes.push(root);
+      }
+    }
     if (schema.properties) {
       Object.keys(schema.properties).forEach(title => {
         const node = this.createSchemaPropertyToTreeNode(title, schema.properties[title]);
@@ -234,8 +247,7 @@ export class OpenapiTreenodeConverterService {
           nodes.push(node);
         }
       });
-    }    
-
+    }
     return nodes;
   }
   
@@ -258,6 +270,9 @@ export class OpenapiTreenodeConverterService {
           //If we have an array type then start to recursively traverse and add child nodes
           node.leaf = false;
           node.children = this.createComponentSchemaPropertiesToTreeNodes(property['items']);
+        } else if (key === '$ref') {
+        } else {
+          // console.log(`Unrecognised property: [${key}]`);
         }
     });
     return node;
