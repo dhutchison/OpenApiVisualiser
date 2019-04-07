@@ -23,12 +23,12 @@ export class ApiComponentsDetailComponent implements OnInit {
     this.fileReaderService.apiChanged.subscribe(value => {
       /* Add this specification to our current state */
       if (value.components) {
-        for (let key in value.components.schemas) {
-          //Retaining a sorted list of the items for the time being so that can
-          //display in the same order as defined in the specification file
+        Object.keys(value.components.schemas).forEach(key => {
+          // Retaining a sorted list of the items for the time being so that can
+          // display in the same order as defined in the specification file
           this.items.push(key);
           this.schemas = value.components.schemas;
-        }
+        });
       }
     });
 
@@ -39,5 +39,4 @@ export class ApiComponentsDetailComponent implements OnInit {
     });
   }
 
-  
 }

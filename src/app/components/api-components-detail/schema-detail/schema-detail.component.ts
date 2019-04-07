@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, SimpleChanges, OnChanges } from '@angular/core';
 import { SchemaObject } from 'openapi3-ts';
 import { TreeNode } from 'primeng/api';
 import { OpenapiTreenodeConverterService } from 'src/app/services/openapi-treenode-converter.service';
@@ -8,7 +8,7 @@ import { OpenapiTreenodeConverterService } from 'src/app/services/openapi-treeno
   templateUrl: './schema-detail.component.html',
   styleUrls: ['./schema-detail.component.scss']
 })
-export class SchemaDetailComponent implements OnInit {
+export class SchemaDetailComponent implements OnInit, OnChanges {
 
   @Input() schema?: SchemaObject;
   treeModel: TreeNode[] = [];
@@ -32,8 +32,5 @@ export class SchemaDetailComponent implements OnInit {
                                             );
     }
   }
-
-  
-
 
 }

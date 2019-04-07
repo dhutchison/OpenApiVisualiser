@@ -227,7 +227,7 @@ export class OpenapiTreenodeConverterService {
    */
   public createComponentSchemaPropertiesToTreeNodes(schema: SchemaObject): TreeNode[] {
     const nodes: TreeNode[] = [];
-    if(schema.type && schema.type === 'array') {
+    if (schema.type && schema.type === 'array') {
       const node = this.createSchemaPropertyToTreeNode(schema.title, schema.items);
       if (node) {
         const root: TreeNode = {
@@ -250,7 +250,7 @@ export class OpenapiTreenodeConverterService {
     }
     return nodes;
   }
-  
+
   /**
    * Create a tree node for the property component schema object with nested
    * structure below it for any child components referenced by properties
@@ -266,11 +266,10 @@ export class OpenapiTreenodeConverterService {
     };
 
     Object.keys(property).forEach(key => {
-        if (key==='type' && property[key]==='array') {
-          //If we have an array type then start to recursively traverse and add child nodes
+        if (key === 'type' && property[key] === 'array') {
+          // If we have an array type then start to recursively traverse and add child nodes
           node.leaf = false;
-          node.children = this.createComponentSchemaPropertiesToTreeNodes(property['items']);
-        } else if (key === '$ref') {
+          node.children = this.createComponentSchemaPropertiesToTreeNodes(property.items);
         } else {
           // console.log(`Unrecognised property: [${key}]`);
         }
