@@ -6,9 +6,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
 import { FieldsetModule } from 'primeng/fieldset';
-import { FileUploadModule } from 'primeng/fileupload';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
@@ -19,30 +17,29 @@ import { TreeTableModule } from 'primeng/treetable';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { FileChooserComponent } from './components/input-source/file-chooser/file-chooser.component';
 import { ApiPathTreeComponent } from './components/api-path-tree/api-path-tree.component';
 import { NodeMethodDetailComponent } from './components/node-detail/node-method-detail/node-method-detail.component';
 import { ApiInformationComponent } from './components/api-information/api-information.component';
-import { UrlChooserComponent } from './components/input-source/url-chooser/url-chooser.component';
-import { InputSourceComponent } from './components/input-source/input-source.component';
-import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
-import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
-import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
 import { ExportComponent } from './components/export/export.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
+import { TreeOrientationPipe } from './pipes/tree-orientation.pipe';
+import { InputSourceModule } from './components/input-source/input-source.module';
+import { DialogModule } from 'primeng/dialog';
+import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
+import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
 import { StringReplacePipe } from './pipes/stringreplacepipe.pipe';
 
 @NgModule({
   declarations: [
     AppComponent,
-    FileChooserComponent,
     ApiPathTreeComponent,
     NodeMethodDetailComponent,
     ApiInformationComponent,
-    UrlChooserComponent,
-    InputSourceComponent,
-    TreeOrientationEnumPipe,
+    ExportComponent,
+    ApiTagsComponent,
+    ExternalDocsComponent,
+    TreeOrientationPipe,
     ApiComponentsDetailComponent,
     SchemaDetailComponent,
     ExportComponent,
@@ -54,6 +51,8 @@ import { StringReplacePipe } from './pipes/stringreplacepipe.pipe';
     BrowserModule,
     HttpClientModule,
 
+    InputSourceModule,
+
     AppRoutingModule,
     FormsModule,
 
@@ -63,7 +62,6 @@ import { StringReplacePipe } from './pipes/stringreplacepipe.pipe';
     ButtonModule,
     DialogModule,
     FieldsetModule,
-    FileUploadModule,
     InputSwitchModule,
     PanelModule,
     TableModule,
@@ -73,7 +71,7 @@ import { StringReplacePipe } from './pipes/stringreplacepipe.pipe';
     TreeTableModule
   ],
   exports: [
-    TreeOrientationEnumPipe
+    TreeOrientationPipe
   ],
   providers: [],
   bootstrap: [AppComponent]

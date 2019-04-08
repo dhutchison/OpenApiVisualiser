@@ -1,6 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ApiTagsComponent } from './api-tags.component';
+import { ExternalDocsComponent } from '../external-docs/external-docs.component';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('ApiTagsComponent', () => {
   let component: ApiTagsComponent;
@@ -8,7 +10,13 @@ describe('ApiTagsComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ApiTagsComponent ]
+      declarations: [
+        ApiTagsComponent,
+        ExternalDocsComponent
+      ],
+      imports: [
+        HttpClientTestingModule
+      ]
     })
     .compileComponents();
   }));

@@ -1,6 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { SchemaDetailComponent } from './schema-detail.component';
+import { TreeTableModule } from 'primeng/treetable';
+import { StringReplacePipe } from 'src/app/pipes/stringreplacepipe.pipe';
 
 describe('SchemaDetailComponent', () => {
   let component: SchemaDetailComponent;
@@ -8,7 +10,13 @@ describe('SchemaDetailComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SchemaDetailComponent ]
+      declarations: [
+        SchemaDetailComponent,
+        StringReplacePipe
+      ],
+      imports: [
+        TreeTableModule
+      ]
     })
     .compileComponents();
   }));

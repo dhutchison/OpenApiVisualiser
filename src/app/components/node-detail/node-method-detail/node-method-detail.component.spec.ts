@@ -1,6 +1,9 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NodeMethodDetailComponent } from './node-method-detail.component';
+import { ButtonModule } from 'primeng/button';
+import { FieldsetModule } from 'primeng/fieldset';
+import { PanelModule } from 'primeng/panel';
 
 describe('NodeMethodDetailComponent', () => {
   let component: NodeMethodDetailComponent;
@@ -8,7 +11,14 @@ describe('NodeMethodDetailComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NodeMethodDetailComponent ]
+      declarations: [
+        NodeMethodDetailComponent
+      ],
+      imports: [
+        ButtonModule,
+        FieldsetModule,
+        PanelModule
+      ]
     })
     .compileComponents();
   }));
