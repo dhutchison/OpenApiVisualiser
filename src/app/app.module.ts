@@ -11,9 +11,11 @@ import { FieldsetModule } from 'primeng/fieldset';
 import { FileUploadModule } from 'primeng/fileupload';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { PanelModule } from 'primeng/panel';
+import { TableModule } from 'primeng/table';
+import { TabViewModule } from 'primeng/tabview';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
-
+import { TreeTableModule } from 'primeng/treetable';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -24,9 +26,12 @@ import { ApiInformationComponent } from './components/api-information/api-inform
 import { UrlChooserComponent } from './components/input-source/url-chooser/url-chooser.component';
 import { InputSourceComponent } from './components/input-source/input-source.component';
 import { TreeOrientationEnumPipe } from './pipes/TreeOrientationEnumPipe';
+import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
+import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
 import { ExportComponent } from './components/export/export.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
+import { StringReplacePipe } from './pipes/stringreplacepipe.pipe';
 
 @NgModule({
   declarations: [
@@ -38,9 +43,12 @@ import { ExternalDocsComponent } from './components/external-docs/external-docs.
     UrlChooserComponent,
     InputSourceComponent,
     TreeOrientationEnumPipe,
+    ApiComponentsDetailComponent,
+    SchemaDetailComponent,
     ExportComponent,
     ApiTagsComponent,
-    ExternalDocsComponent
+    ExternalDocsComponent,
+    StringReplacePipe
   ],
   imports: [
     BrowserModule,
@@ -58,8 +66,11 @@ import { ExternalDocsComponent } from './components/external-docs/external-docs.
     FileUploadModule,
     InputSwitchModule,
     PanelModule,
+    TableModule,
+    TabViewModule,
     TooltipModule,
-    TreeModule
+    TreeModule,
+    TreeTableModule
   ],
   exports: [
     TreeOrientationEnumPipe
