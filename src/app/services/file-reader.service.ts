@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-import { tap } from 'rxjs/operators';
 import { OpenApiSpec } from '@loopback/openapi-v3-types';
 
 import { HttpClient } from '@angular/common/http';
@@ -45,16 +44,14 @@ export class FileReaderService {
    * @param url the url to load as a YAML specification
    */
   loadFileFromURL(url: string) {
-    const fileData = this.http.get(url, {responseType: 'text'})
-      .pipe(
-        tap( // Log the result or error
-          data => console.log(data),
-          error => console.error(error)
-        )
-      );
+    const fileData = this.http.get(url, {responseType: 'text'});
 
-    const yaml = (url.match(/\.yaml/) !== undefined);
-    fileData.subscribe(fileContent => this.loadData(fileContent, yaml));
+    const yaml = (url.match(/\.yaml/) !== null);
+    fileData.subscribe(
+      fileContent => this.loadData(fileContent, yaml),
+      // TODO: notification of the failure?
+      error => { console.error(error); }
+    );
   }
 
   /**
