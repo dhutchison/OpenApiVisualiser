@@ -20,6 +20,10 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ExportComponent } from './components/export/export.component';
 import { DialogModule } from 'primeng/dialog';
+import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
+import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
+import { TreeTableModule } from 'primeng/treetable';
+import { StringReplacePipe } from './pipes/stringreplacepipe.pipe';
 
 describe('AppComponent', () => {
 
@@ -39,6 +43,7 @@ describe('AppComponent', () => {
         PanelModule,
         TooltipModule,
         TreeModule,
+        TreeTableModule,
 
         HttpClientTestingModule,
         RouterTestingModule
@@ -46,12 +51,15 @@ describe('AppComponent', () => {
       declarations: [
         AppComponent,
 
+        ApiComponentsDetailComponent,
         ApiInformationComponent,
         ApiPathTreeComponent,
         ApiTagsComponent,
         ExportComponent,
         ExternalDocsComponent,
         NodeMethodDetailComponent,
+        SchemaDetailComponent,
+        StringReplacePipe,
         TreeOrientationPipe
       ]
     }).compileComponents();
