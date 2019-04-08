@@ -17,7 +17,10 @@ export class FileChooserComponent implements OnInit {
   ngOnInit() {
   }
 
-  loadFile(event, fileUploadComponent) {
+  loadFile(
+    event: { files?: File[]; target?: { files: Iterable<File> | ArrayLike<File>; }; }, 
+    fileUploadComponent?: { clear: () => void; }) {
+
     console.log(event);
 
     /* Reset back to having no files loaded */
