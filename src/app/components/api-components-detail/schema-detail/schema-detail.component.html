@@ -1,0 +1,60 @@
+
+<!--
+<ul>
+  <li *ngFor="let item of schema | keyvalue">
+      Key: <b>{{item.key}}</b> and Value: <b>{{item.value}}</b>
+  </li>
+</ul>
+-->
+
+<p-treeTable [value]="treeModel">
+  <ng-template pTemplate="header">
+      <tr>
+        <th class="ui-p-1">Name</th>
+        <th class="ui-p-1">Type</th>
+        <th class="ui-p-4">Description</th>
+        <!--
+        <th>Node</th>
+        <th>Data</th>
+        -->
+      </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+    
+      <tr [ttRow]="rowNode">
+          <td>
+              <ng-template [ngIf]="!rowNode.node.leaf">
+                <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
+              </ng-template>
+              {{rowNode.node.label}}
+              <strong class="required" *ngIf="schema.required && schema.required.includes(rowNode.node.label)"> *</strong>
+          </td>
+          <td>
+              {{rowData.type}} 
+              <ng-template [ngIf]="rowData.format">
+                <em>{{rowData.format}}</em>
+              </ng-template>
+              <ng-template [ngIf]="rowData.$ref">
+                <em><a href="{{rowData.$ref | replaceSlash }}">{{rowData.$ref}}</a></em>
+              </ng-template>
+          </td>
+          <td>{{rowData.description}}</td>
+          <!--
+          <td>
+              <ul>
+                <li *ngFor="let item of rowNode.node | keyvalue">
+                    Key: <b>{{item.key}}</b> and Value: <b>{{item.value}}</b>
+                </li>
+              </ul>
+          </td>
+          <td>
+              <ul>
+                <li *ngFor="let item of rowData | keyvalue">
+                    Key: <b>{{item.key}}</b> and Value: <b>{{item.value}}</b>
+                </li>
+              </ul>
+          </td>
+          -->
+      </tr>
+  </ng-template>
+</p-treeTable>

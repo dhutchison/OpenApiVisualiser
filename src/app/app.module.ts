@@ -9,9 +9,11 @@ import { ButtonModule } from 'primeng/button';
 import { FieldsetModule } from 'primeng/fieldset';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { PanelModule } from 'primeng/panel';
+import { TableModule } from 'primeng/table';
+import { TabViewModule } from 'primeng/tabview';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
-
+import { TreeTableModule } from 'primeng/treetable';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -24,6 +26,9 @@ import { ExternalDocsComponent } from './components/external-docs/external-docs.
 import { TreeOrientationPipe } from './pipes/tree-orientation.pipe';
 import { InputSourceModule } from './components/input-source/input-source.module';
 import { DialogModule } from 'primeng/dialog';
+import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
+import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
+import { StringReplacePipe } from './pipes/stringreplacepipe.pipe';
 
 @NgModule({
   declarations: [
@@ -34,7 +39,13 @@ import { DialogModule } from 'primeng/dialog';
     ExportComponent,
     ApiTagsComponent,
     ExternalDocsComponent,
-    TreeOrientationPipe
+    TreeOrientationPipe,
+    ApiComponentsDetailComponent,
+    SchemaDetailComponent,
+    ExportComponent,
+    ApiTagsComponent,
+    ExternalDocsComponent,
+    StringReplacePipe
   ],
   imports: [
     BrowserModule,
@@ -53,8 +64,11 @@ import { DialogModule } from 'primeng/dialog';
     FieldsetModule,
     InputSwitchModule,
     PanelModule,
+    TableModule,
+    TabViewModule,
     TooltipModule,
-    TreeModule
+    TreeModule,
+    TreeTableModule
   ],
   exports: [
     TreeOrientationPipe
