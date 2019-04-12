@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "build-deployment": "ng build --prod --output-path docs --base-href /OpenApiVisualiser/ && cp docs/index.html docs/404.html",
-    "test": "ng test",
+    "test": "ng test --codeCoverage=true",
+    "test-headless": "ng test --watch=false --browsers=ChromeHeadless --codeCoverage=true",
+    "test-headless-coveralls": "ng test --watch=false --browsers=ChromeHeadless --codeCoverage=true --reporters coveralls",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
@@ -50,6 +52,7 @@
     "karma": "~4.0.0",
     "karma-chrome-launcher": "~2.2.0",
     "karma-coverage-istanbul-reporter": "~2.0.1",
+    "karma-coveralls": "^2.1.0",
     "karma-jasmine": "~1.1.2",
     "karma-jasmine-html-reporter": "^0.2.2",
     "protractor": "~5.4.0",
