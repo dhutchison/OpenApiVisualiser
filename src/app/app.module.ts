@@ -29,6 +29,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
 import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
 import { StringReplacePipe } from './pipes/stringreplacepipe.pipe';
+import { MainComponent } from './components/main/main.component';
 
 @NgModule({
   declarations: [
@@ -45,7 +46,8 @@ import { StringReplacePipe } from './pipes/stringreplacepipe.pipe';
     ExportComponent,
     ApiTagsComponent,
     ExternalDocsComponent,
-    StringReplacePipe
+    StringReplacePipe,
+    MainComponent
   ],
   imports: [
     BrowserModule,
