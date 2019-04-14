@@ -4,13 +4,13 @@ import { ApiPathTreeComponent } from './api-path-tree.component';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { TreeModule } from 'primeng/tree';
 import { NodeMethodDetailComponent } from '../node-detail/node-method-detail/node-method-detail.component';
-import { TreeOrientationPipe } from 'src/app/pipes/tree-orientation.pipe';
 import { TooltipModule } from 'primeng/tooltip';
 import { FormsModule } from '@angular/forms';
 import { PanelModule } from 'primeng/panel';
 import { ButtonModule } from 'primeng/button';
 import { FieldsetModule } from 'primeng/fieldset';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { PipesModule } from 'src/app/pipes/pipes.module';
 
 describe('ApiPathTreeComponent', () => {
   let component: ApiPathTreeComponent;
@@ -21,7 +21,6 @@ describe('ApiPathTreeComponent', () => {
       declarations: [
         ApiPathTreeComponent,
         NodeMethodDetailComponent,
-        TreeOrientationPipe
       ],
       imports: [
         ButtonModule,
@@ -29,6 +28,7 @@ describe('ApiPathTreeComponent', () => {
         InputSwitchModule,
         FormsModule,
         PanelModule,
+        PipesModule,
         TooltipModule,
         TreeModule,
 

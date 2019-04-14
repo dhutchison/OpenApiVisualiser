@@ -1,6 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ExternalDocsComponent } from './external-docs.component';
+import { PipesModule } from 'src/app/pipes/pipes.module';
 
 describe('ExternalDocsComponent', () => {
   let component: ExternalDocsComponent;
@@ -8,7 +9,12 @@ describe('ExternalDocsComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ExternalDocsComponent ]
+      declarations: [
+        ExternalDocsComponent
+      ],
+      imports: [
+        PipesModule
+      ]
     })
     .compileComponents();
   }));

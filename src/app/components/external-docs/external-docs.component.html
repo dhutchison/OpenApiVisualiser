@@ -1,6 +1,6 @@
 <a href="{{document.url}}" *ngIf="document">
   <ng-template [ngIf]="document.description" [ngIfElse]="urlOnly">
-    {{document.description}}
+    <div [innerHTML]="(document.description | markdownify)"></div>
   </ng-template>
   
   <ng-template #urlOnly>

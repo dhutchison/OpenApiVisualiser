@@ -23,8 +23,7 @@ import { ExportComponent } from '../export/export.component';
 import { ExternalDocsComponent } from '../external-docs/external-docs.component';
 import { NodeMethodDetailComponent } from '../node-detail/node-method-detail/node-method-detail.component';
 import { SchemaDetailComponent } from '../api-components-detail/schema-detail/schema-detail.component';
-import { StringReplacePipe } from 'src/app/pipes/stringreplacepipe.pipe';
-import { TreeOrientationPipe } from 'src/app/pipes/tree-orientation.pipe';
+import { PipesModule } from 'src/app/pipes/pipes.module';
 
 describe('MainComponent', () => {
   let component: MainComponent;
@@ -43,11 +42,10 @@ describe('MainComponent', () => {
         ExternalDocsComponent,
         NodeMethodDetailComponent,
         SchemaDetailComponent,
-        StringReplacePipe,
-        TreeOrientationPipe
       ],
       imports: [
         InputSourceModule,
+        PipesModule,
 
         AccordionModule,
         BrowserAnimationsModule,

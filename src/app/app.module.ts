@@ -23,13 +23,12 @@ import { ApiInformationComponent } from './components/api-information/api-inform
 import { ExportComponent } from './components/export/export.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
-import { TreeOrientationPipe } from './pipes/tree-orientation.pipe';
 import { InputSourceModule } from './components/input-source/input-source.module';
 import { DialogModule } from 'primeng/dialog';
 import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
 import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
-import { StringReplacePipe } from './pipes/stringreplacepipe.pipe';
 import { MainComponent } from './components/main/main.component';
+import { PipesModule } from './pipes/pipes.module';
 
 @NgModule({
   declarations: [
@@ -40,20 +39,19 @@ import { MainComponent } from './components/main/main.component';
     ExportComponent,
     ApiTagsComponent,
     ExternalDocsComponent,
-    TreeOrientationPipe,
     ApiComponentsDetailComponent,
     SchemaDetailComponent,
     ExportComponent,
     ApiTagsComponent,
     ExternalDocsComponent,
-    StringReplacePipe,
-    MainComponent
+    MainComponent,
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
 
     InputSourceModule,
+    PipesModule,
 
     AppRoutingModule,
     FormsModule,
@@ -71,9 +69,6 @@ import { MainComponent } from './components/main/main.component';
     TooltipModule,
     TreeModule,
     TreeTableModule
-  ],
-  exports: [
-    TreeOrientationPipe
   ],
   providers: [],
   bootstrap: [AppComponent]

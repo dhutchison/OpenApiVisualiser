@@ -38,7 +38,9 @@
                 <em><a href="{{rowData.$ref | replaceSlash }}">{{rowData.$ref}}</a></em>
               </ng-template>
           </td>
-          <td>{{rowData.description}}</td>
+          <td>
+            <div [innerHTML]="(rowData.description | markdownify)"></div>
+          </td>
           <!--
           <td>
               <ul>
