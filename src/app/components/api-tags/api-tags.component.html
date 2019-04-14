@@ -2,7 +2,9 @@
   <ng-container *ngFor="let tag of tags">
     <ng-container *ngIf="tag">
       <dt><strong>{{tag.name}}</strong></dt>
-      <dd>{{tag.description}}</dd>
+      <dd>
+        <div [innerHTML]="(tag.description | markdownify)"></div>
+      </dd>
       <dd *ngIf="tag.externalDocs"><app-external-docs [document]="tag.externalDocs"></app-external-docs></dd>
     </ng-container>
   </ng-container>

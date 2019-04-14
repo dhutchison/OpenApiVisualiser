@@ -4,6 +4,7 @@ import { ApiInformationComponent } from './api-information.component';
 import { PanelModule } from 'primeng/panel';
 import { FieldsetModule } from 'primeng/fieldset';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { PipesModule } from 'src/app/pipes/pipes.module';
 
 describe('ApiInformationComponent', () => {
   let component: ApiInformationComponent;
@@ -18,7 +19,8 @@ describe('ApiInformationComponent', () => {
         HttpClientTestingModule,
 
         FieldsetModule,
-        PanelModule
+        PanelModule,
+        PipesModule
       ]
     })
     .compileComponents();

@@ -5,7 +5,9 @@
         <p class="path" style="display: inline-block">{{path}}</p>
         <p style="display: inline-block">{{node.summary}}</p>
     </p-header>
-    <p>{{node.description}}</p>
+    <!-- As per the specification, descriptions support Markdown using the CommonMark
+         syntax. Need to convert this content. -->
+    <div [innerHTML]="(node.description | markdownify)"></div>
 
     <p-fieldset [toggleable]="true">
         <p-header>Parameters</p-header>
@@ -24,7 +26,9 @@
                       <dd>({{p.in}})</dd>
                   </dl>
                 </td>
-                <td>{{p.description}}</td>
+                <td>
+                  <div [innerHTML]="(p.description | markdownify)"></div>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -44,7 +48,9 @@
               <tbody>
                 <tr class="key" *ngFor="let item of node.responses | keyvalue">
                   <td>{{item.key}}</td>
-                  <td>{{item.value.description}}</td>
+                  <td>
+                    <div [innerHTML]="(item.value.description | markdownify)"></div>
+                  </td>
                 </tr>
             </tbody>
           </table>

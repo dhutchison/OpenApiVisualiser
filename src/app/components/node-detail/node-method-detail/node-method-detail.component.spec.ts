@@ -4,6 +4,7 @@ import { NodeMethodDetailComponent } from './node-method-detail.component';
 import { ButtonModule } from 'primeng/button';
 import { FieldsetModule } from 'primeng/fieldset';
 import { PanelModule } from 'primeng/panel';
+import { PipesModule } from 'src/app/pipes/pipes.module';
 
 describe('NodeMethodDetailComponent', () => {
   let component: NodeMethodDetailComponent;
@@ -17,7 +18,8 @@ describe('NodeMethodDetailComponent', () => {
       imports: [
         ButtonModule,
         FieldsetModule,
-        PanelModule
+        PanelModule,
+        PipesModule
       ]
     })
     .compileComponents();

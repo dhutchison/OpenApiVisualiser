@@ -1,6 +1,6 @@
 <p-panel styleClass="api-info" [toggleable]="true" *ngFor="let api of apiDefinitions">
     <p-header>{{ api.info.title }} - {{ api.info.version }}</p-header>
-    <p>{{ api.info.description }}</p>
+    <div [innerHTML]="(api.info.description | markdownify)"></div>
 
     <p-fieldset legend="Terms of Service" *ngIf="api.info.termsOfService">
       <p>{{ api.info.termsOfService }}</p>
