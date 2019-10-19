@@ -12,7 +12,7 @@ export class MarkdownifyPipe implements PipeTransform {
   transform(value: string, args?: any): string {
 
     if (value === undefined) {
-      /* cannot pass an undefined value into the parser, 
+      /* cannot pass an undefined value into the parser,
        * at least set it to something. */
       value = '';
     }
