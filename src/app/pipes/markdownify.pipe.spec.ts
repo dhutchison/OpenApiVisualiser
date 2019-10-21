@@ -23,4 +23,10 @@ describe('MarkdownifyPipe', () => {
     const output = '<p>and the <a href="http://en.wikipedia.org/wiki/ISO_4217">ISO 4217</a> currency code</p>\n';
     expect(pipe.transform(input)).toEqual(output);
   });
+
+  it('Undefined value results in an empty string', () => {
+    const input = undefined;
+    const output = '';
+    expect(pipe.transform(input)).toEqual(output);
+  });
 });
