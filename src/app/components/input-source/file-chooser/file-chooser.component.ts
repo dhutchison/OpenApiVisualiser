@@ -3,8 +3,7 @@ import { FileReaderService } from '../../../services/file-reader.service';
 
 @Component({
   selector: 'app-file-chooser',
-  templateUrl: './file-chooser.component.html',
-  styleUrls: ['./file-chooser.component.scss']
+  templateUrl: './file-chooser.component.html'
 })
 export class FileChooserComponent implements OnInit {
 

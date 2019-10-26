@@ -4,8 +4,7 @@ import { TagObject } from 'openapi3-ts';
 
 @Component({
   selector: 'app-api-tags',
-  templateUrl: './api-tags.component.html',
-  styleUrls: ['./api-tags.component.scss']
+  templateUrl: './api-tags.component.html'
 })
 export class ApiTagsComponent implements OnInit {
 

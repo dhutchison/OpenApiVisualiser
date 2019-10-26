@@ -4,8 +4,7 @@ import { OpenAPIObject } from 'openapi3-ts';
 
 @Component({
   selector: 'app-api-information',
-  templateUrl: './api-information.component.html',
-  styleUrls: ['./api-information.component.scss']
+  templateUrl: './api-information.component.html'
 })
 export class ApiInformationComponent implements OnInit {
 

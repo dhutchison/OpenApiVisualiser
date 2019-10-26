@@ -7,8 +7,7 @@ import * as jsyaml from 'js-yaml';
 
 @Component({
   selector: 'app-export',
-  templateUrl: './export.component.html',
-  styleUrls: ['./export.component.scss']
+  templateUrl: './export.component.html'
 })
 export class ExportComponent implements OnInit {
 
