@@ -1,11 +1,51 @@
 /* You can add global styles to this file, and also import other style files */
-@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+// @import "~@angular/material/prebuilt-themes/indigo-pink.css";
 
 /* PrimeNG */
 @import "~primeicons/primeicons.css";
 @import "~primeng/resources/themes/nova-colored/theme.css";
 @import "~primeng/resources/primeng.min.css";
 
+/* Fonts */
+@import url('https://fonts.googleapis.com/css?family=Montserrat|Open+Sans&display=swap');
+
+/********** Core Styling ************/
+
+body {
+    font-family: 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+
+header.header {
+    // height: 3em;
+    padding-top: 2em;
+
+    text-align: right;
+}
+h1.title {
+    font-size: 2.4em;
+    font-family: 'Montserrat', sans-serif;
+
+    
+}
+
+/********** Colours *****************/
+$mainHeaderColour: #475261;
+$mainFontColour: #333333;
+
+$deleteHighlightColour: #f93e3e;
+$getHighlightColour: #61affe;
+$postHighlightColour: #49cc90;
+$putHighlightColour: #fca130;
+
+/********** Button bar ********/
+.button-bar {
+    display: flex;
+}
+
+
+
+/********** Tree component styling ********/
 
 .tree-vertical .ui-treenode-content {
     background-image: linear-gradient(#cfd9df,#e2ebf0);  
@@ -19,68 +59,82 @@
     }
 }
 
+.tree-detail-horizontal {
+    display: flex;
+}
+
+.selected-node-detail {
+    width: 100%;
+}
+
 .http-post {
     .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
-        border-color:#49cc90;
+        border-color: $postHighlightColour;
         background:rgba(73,204,144,.1);
     }
 
     .ui-widget-header button {
-        background:#49cc90;
-        border-color:#49cc90;
+        background: $postHighlightColour;
+        border-color: $postHighlightColour;
         padding: 0 0.5em
     }
 }
 
 .http-put {
     .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
-        border-color:#fca130;
+        border-color:$putHighlightColour;
         background:rgba(252,161,48,.1);
     }
     .ui-widget-header .ui-button {
-        border-color:#fca130;
-        background: #fca130;
+        border-color:$putHighlightColour;
+        background: $putHighlightColour;
         padding: 0 0.5em
     }
 }
 
 .http-get {
     .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
-        border-color:#61affe;
+        border-color: $getHighlightColour;
         background:rgba(97,175,254,.1);
     }
     .ui-widget-header .ui-button {
-        border-color:#61affe;
-        background: #61affe;
+        border-color: $getHighlightColour;
+        background: $getHighlightColour;
         padding: 0 0.5em
     }
 }
 
 .http-delete {
     .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
-        border-color:#f93e3e;
+        border-color:$deleteHighlightColour;
         background:rgba(249,62,62,.1);
     }
     .ui-widget-header .ui-button {
-        border-color:#f93e3e;
-        background: #f93e3e;
+        border-color:$deleteHighlightColour;
+        background: $deleteHighlightColour;
         padding: 0 0.5em
     }
 }
 
-.ui-treenode-http-method-get .ui-treenode-content {
-    border-bottom: 2px solid #61affe;
-}
+// body 
+.ui-tree {
+    &.ui-tree-horizontal, &.ui-tree-vertical {
+        
+        .ui-treenode-http-method-get .ui-treenode .ui-treenode-content {
+            border-bottom: 2px solid $getHighlightColour;
+        }
 
-.ui-treenode-http-method-post .ui-treenode-content {
-    border-bottom: 2px solid #49cc90;
-}
+        .ui-treenode-http-method-post .ui-treenode .ui-treenode-content {
+            border-bottom: 2px solid $postHighlightColour;
+        }
 
-.ui-treenode-http-method-put .ui-treenode-content {
-    border-bottom: 2px solid #fca130;
-}
+        .ui-treenode-http-method-put .ui-treenode .ui-treenode-content {
+            border-bottom: 2px solid $putHighlightColour;
+        }
 
-.ui-treenode-http-method-delete .ui-treenode-content {
-    border-bottom: 2px solid #f93e3e;
+        .ui-treenode-http-method-delete .ui-treenode .ui-treenode-content {
+            border-bottom: 2px solid $deleteHighlightColour;
+        }
+    }
 }
 

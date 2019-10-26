@@ -1,6 +1,9 @@
 <div>
-  <app-input-source></app-input-source>
-  <app-export></app-export>
+  <div class="button-bar">
+    <app-file-chooser></app-file-chooser>
+    <app-url-chooser></app-url-chooser>
+    <app-export></app-export>
+  </div>
   <p-accordion [multiple]="true"> 
     <p-accordionTab header="API Information">
       <app-api-information></app-api-information>

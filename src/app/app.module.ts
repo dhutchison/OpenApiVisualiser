@@ -23,34 +23,35 @@ import { ApiInformationComponent } from './components/api-information/api-inform
 import { ExportComponent } from './components/export/export.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
-import { InputSourceModule } from './components/input-source/input-source.module';
 import { DialogModule } from 'primeng/dialog';
 import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
 import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
 import { MainComponent } from './components/main/main.component';
 import { PipesModule } from './pipes/pipes.module';
+import { FileChooserComponent } from './components/file-chooser/file-chooser.component';
+import { UrlChooserComponent } from './components/url-chooser/url-chooser.component';
+import { FileUploadModule } from 'primeng/fileupload';
 
 @NgModule({
   declarations: [
     AppComponent,
-    ApiPathTreeComponent,
-    NodeMethodDetailComponent,
-    ApiInformationComponent,
-    ExportComponent,
-    ApiTagsComponent,
-    ExternalDocsComponent,
+
     ApiComponentsDetailComponent,
-    SchemaDetailComponent,
-    ExportComponent,
+    ApiInformationComponent,
+    ApiPathTreeComponent,
     ApiTagsComponent,
+    ExportComponent,
     ExternalDocsComponent,
+    FileChooserComponent,
     MainComponent,
+    NodeMethodDetailComponent,
+    SchemaDetailComponent,
+    UrlChooserComponent
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
 
-    InputSourceModule,
     PipesModule,
 
     AppRoutingModule,
@@ -62,6 +63,7 @@ import { PipesModule } from './pipes/pipes.module';
     ButtonModule,
     DialogModule,
     FieldsetModule,
+    FileUploadModule,
     InputSwitchModule,
     PanelModule,
     TableModule,

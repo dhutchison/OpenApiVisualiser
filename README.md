@@ -2,7 +2,7 @@
 
 # OpenAPIVisualiser
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.3.3.
+A utility for visualising the paths of an OpenAPI definition. 
 
 This application supports a query parameter, url, which can be used to pre-load a definition in to the application. 
 
