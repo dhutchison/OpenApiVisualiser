@@ -1,4 +1,4 @@
-<a href="{{document.url}}" *ngIf="document">
+<a href="{{document.url}}" *ngIf="document" class="external-document-link">
   <ng-template [ngIf]="document.description" [ngIfElse]="urlOnly">
     <div [innerHTML]="(document.description | markdownify)"></div>
   </ng-template>
