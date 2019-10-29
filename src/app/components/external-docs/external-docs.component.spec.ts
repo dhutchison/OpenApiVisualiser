@@ -54,7 +54,7 @@ describe('ExternalDocsComponent', () => {
     const testDescriptionMarkdown = 'The *BBC*';
     const testDescriptionText = 'The BBC';
 
-    component.document = { 
+    component.document = {
       url: testUrl,
       description: testDescriptionMarkdown
     };
@@ -63,7 +63,7 @@ describe('ExternalDocsComponent', () => {
     const debugElement = fixture.debugElement.query(By.css('.external-document-link'));
     expect(debugElement).toBeDefined();
     expect(debugElement.nativeElement.getAttribute('href')).toEqual(testUrl);
-    /* This is just grabbing the text of the HTML which was generated, not testing 
+    /* This is just grabbing the text of the HTML which was generated, not testing
      * the markdown pipe except that it is called  */
     expect(debugElement.nativeElement.textContent.trim()).toBe(testDescriptionText);
   });
