@@ -7,7 +7,7 @@ import { FileReaderService } from '../../services/file-reader.service';
 })
 export class FileChooserComponent implements OnInit {
 
-  readonly yamlFilenamePattern = /\.yaml/;
+  readonly yamlFilenamePattern = /\.y(a)?ml/;
   readonly jsonFilenamePattern = /\.json/;
 
   constructor(
@@ -41,7 +41,8 @@ export class FileChooserComponent implements OnInit {
     fileArray.forEach(file => {
       if (!file.name.match(this.yamlFilenamePattern) &&
             !file.name.match(this.jsonFilenamePattern)) {
-        alert(`You are trying to upload an unsupported file extension (${file.name}). Please choose either a '.yaml' or '.json' file.`);
+        alert(`You are trying to upload an unsupported file extension (${file.name}). ' +
+          'Please choose either a '.yaml', '.yml', or '.json' file.`);
         return;
       }
       console.log(file);
