@@ -47,4 +47,16 @@ describe('ApiPathTreeComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should allow view orientation to be set', () => {
+    /* Check the default value */
+    expect(component.horizontalView).toBeTruthy();
+
+    /* Set the value and check it is still set */
+    component.horizontalView = false;
+    expect(component.horizontalView).toBeFalsy();
+
+
+  });
+
 });

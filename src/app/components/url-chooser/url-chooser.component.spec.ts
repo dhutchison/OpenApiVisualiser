@@ -10,10 +10,10 @@ describe('UrlChooserComponent', () => {
   let component: UrlChooserComponent;
   let fixture: ComponentFixture<UrlChooserComponent>;
 
-  let fileReaderServiceSpy: jasmine.SpyObj<FileReaderService>;
+  let fileReaderService: FileReaderService;
+  let loadFileFromURLSpy: jasmine.Spy;
 
   beforeEach(async(() => {
-    const spy = jasmine.createSpyObj('FileReaderService', ['loadFileFromURL']);
 
     TestBed.configureTestingModule({
       declarations: [
@@ -24,14 +24,12 @@ describe('UrlChooserComponent', () => {
         HttpClientTestingModule,
 
         DialogModule
-      ],
-      providers: [
-        { provide: FileReaderService, useValue: spy}
       ]
     })
     .compileComponents();
 
-    fileReaderServiceSpy = TestBed.get(FileReaderService);
+    fileReaderService = TestBed.get(FileReaderService);
+    loadFileFromURLSpy = spyOn(fileReaderService, 'loadFileFromURL');
   }));
 
   beforeEach(() => {
@@ -42,5 +40,24 @@ describe('UrlChooserComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should set dialog to be shown', () => {
+    component.showDialog();
+
+    expect(component.display).toBeTruthy();
+  });
+
+  it('should import from url', () => {
+    component.url = 'https://google.com';
+    component.import();
+
+    /* Check call to import from url occurs */
+    expect(loadFileFromURLSpy.calls.count()).toBe(1);
+
+    /* Check state is reset back */
+    expect(component.url).toBeUndefined();
+    expect(component.display).toBeFalsy();
+
   });
 });

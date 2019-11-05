@@ -1,17 +1,16 @@
-
 <p-inputSwitch [(ngModel)]="horizontalView"></p-inputSwitch>
-
-<p-tree [value]="apiPathNodes" layout="{{horizontalView | treeOrientation}}"
-  selectionMode="single" [(selection)]="selectedNode"
-  [className]="horizontalView? 'tree-horizontal': 'tree-vertical'"
-  >
-  <ng-template let-node  pTemplate="operation">
-    <span pTooltip="{{ node.tooltip }}">{{ node.label }}</span>
-  </ng-template>
-</p-tree>
-
-<app-node-method-detail *ngIf="selectedNode"
-  [(method)]="selectedNode.method"
-  [(path)]="selectedNode.path"
-  [(node)]="selectedNode.operation">
-</app-node-method-detail>
+<div [class.tree-detail-horizontal]="!horizontalView">
+  <div class="tree-view">
+    <p-tree [value]="apiPathNodes" layout="{{horizontalView | treeOrientation}}" selectionMode="single"
+      [(selection)]="selectedNode" [className]="horizontalView? 'tree-horizontal': 'tree-vertical'">
+      <ng-template let-node pTemplate="operation">
+        <span pTooltip="{{ node.tooltip }}">{{ node.label }}</span>
+      </ng-template>
+    </p-tree>
+  </div>
+  <div class="selected-node-detail">
+    <app-node-method-detail *ngIf="selectedNode" [(method)]="selectedNode.method" [(path)]="selectedNode.path"
+      [(node)]="selectedNode.operation">
+    </app-node-method-detail>
+  </div>
+</div>

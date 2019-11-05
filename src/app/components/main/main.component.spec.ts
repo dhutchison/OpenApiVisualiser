@@ -1,7 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MainComponent } from './main.component';
-import { InputSourceModule } from '../input-source/input-source.module';
 import { AccordionModule } from 'primeng/accordion';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ButtonModule } from 'primeng/button';
@@ -24,6 +23,9 @@ import { ExternalDocsComponent } from '../external-docs/external-docs.component'
 import { NodeMethodDetailComponent } from '../node-detail/node-method-detail/node-method-detail.component';
 import { SchemaDetailComponent } from '../api-components-detail/schema-detail/schema-detail.component';
 import { PipesModule } from 'src/app/pipes/pipes.module';
+import { FileChooserComponent } from '../file-chooser/file-chooser.component';
+import { UrlChooserComponent } from '../url-chooser/url-chooser.component';
+import { FileUploadModule } from 'primeng/fileupload';
 
 describe('MainComponent', () => {
   let component: MainComponent;
@@ -40,11 +42,12 @@ describe('MainComponent', () => {
         ApiTagsComponent,
         ExportComponent,
         ExternalDocsComponent,
+        FileChooserComponent,
         NodeMethodDetailComponent,
         SchemaDetailComponent,
+        UrlChooserComponent
       ],
       imports: [
-        InputSourceModule,
         PipesModule,
 
         AccordionModule,
@@ -52,6 +55,7 @@ describe('MainComponent', () => {
         ButtonModule,
         DialogModule,
         FieldsetModule,
+        FileUploadModule,
         FormsModule,
         InputSwitchModule,
         PanelModule,

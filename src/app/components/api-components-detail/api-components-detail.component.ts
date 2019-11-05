@@ -8,8 +8,7 @@ export class SchemaContainer {
 
 @Component({
   selector: 'app-api-components-detail',
-  templateUrl: './api-components-detail.component.html',
-  styleUrls: ['./api-components-detail.component.scss']
+  templateUrl: './api-components-detail.component.html'
 })
 export class ApiComponentsDetailComponent implements OnInit {
 

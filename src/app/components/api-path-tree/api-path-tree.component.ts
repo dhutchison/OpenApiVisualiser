@@ -6,8 +6,7 @@ import { UserPreferenceControllerService } from 'src/app/controllers/user-prefer
 
 @Component({
   selector: 'app-api-path-tree',
-  templateUrl: './api-path-tree.component.html',
-  styleUrls: ['./api-path-tree.component.scss']
+  templateUrl: './api-path-tree.component.html'
 })
 export class ApiPathTreeComponent implements OnInit {
 
@@ -43,6 +42,9 @@ export class ApiPathTreeComponent implements OnInit {
   }
 
   set horizontalView(value: boolean) {
+    /* Deselect any item */
+    this.selectedNode = undefined;
+    /* Change the view */
     this.preferenceService.horizontalView = value;
   }
 }

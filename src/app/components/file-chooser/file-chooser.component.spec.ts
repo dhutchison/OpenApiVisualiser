@@ -72,6 +72,18 @@ describe('FileChooserComponent', () => {
       expect(loadFileSpy.calls.count()).toBe(1, 'spy method was called once');
     });
 
+    it('YAML "yml" file extension accepted, as a target', () => {
+      const testFiles: File[] = [new File([], 'input.yml')];
+      component.loadFile(
+        {
+          target: {
+            files: testFiles
+          }
+        });
+
+      expect(loadFileSpy.calls.count()).toBe(1, 'spy method was called once');
+    });
+
     it('Multiple files accepted', () => {
       const testFiles: File[] = [
         new File([], 'input.json'),

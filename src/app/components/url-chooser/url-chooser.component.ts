@@ -1,10 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { FileReaderService } from '../../../services/file-reader.service';
+import { FileReaderService } from '../../services/file-reader.service';
 
 @Component({
   selector: 'app-url-chooser',
-  templateUrl: './url-chooser.component.html',
-  styleUrls: ['./url-chooser.component.scss']
+  templateUrl: './url-chooser.component.html'
 })
 export class UrlChooserComponent implements OnInit {
 

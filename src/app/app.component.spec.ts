@@ -13,7 +13,6 @@ import { TreeModule } from 'primeng/tree';
 import { TooltipModule } from 'primeng/tooltip';
 import { NodeMethodDetailComponent } from './components/node-detail/node-method-detail/node-method-detail.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
-import { InputSourceModule } from './components/input-source/input-source.module';
 import { ButtonModule } from 'primeng/button';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -24,6 +23,9 @@ import { SchemaDetailComponent } from './components/api-components-detail/schema
 import { TreeTableModule } from 'primeng/treetable';
 import { MainComponent } from './components/main/main.component';
 import { PipesModule } from './pipes/pipes.module';
+import { FileChooserComponent } from './components/file-chooser/file-chooser.component';
+import { UrlChooserComponent } from './components/url-chooser/url-chooser.component';
+import { FileUploadModule } from 'primeng/fileupload';
 
 describe('AppComponent', () => {
 
@@ -31,7 +33,6 @@ describe('AppComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [
-        InputSourceModule,
         PipesModule,
 
         AccordionModule,
@@ -39,6 +40,7 @@ describe('AppComponent', () => {
         ButtonModule,
         DialogModule,
         FieldsetModule,
+        FileUploadModule,
         FormsModule,
         InputSwitchModule,
         PanelModule,
@@ -58,9 +60,11 @@ describe('AppComponent', () => {
         ApiTagsComponent,
         ExportComponent,
         ExternalDocsComponent,
+        FileChooserComponent,
         MainComponent,
         NodeMethodDetailComponent,
-        SchemaDetailComponent
+        SchemaDetailComponent,
+        UrlChooserComponent
       ]
     }).compileComponents();
   }));
@@ -81,6 +85,6 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.debugElement.nativeElement;
-    expect(compiled.querySelector('h1').textContent).toContain('Welcome to OpenAPIVisualiser!');
+    expect(compiled.querySelector('h1').textContent).toContain('OpenAPIVisualiser');
   });
 });

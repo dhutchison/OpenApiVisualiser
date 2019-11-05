@@ -3,8 +3,7 @@ import { ExternalDocumentationObject } from 'openapi3-ts';
 
 @Component({
   selector: 'app-external-docs',
-  templateUrl: './external-docs.component.html',
-  styleUrls: ['./external-docs.component.scss']
+  templateUrl: './external-docs.component.html'
 })
 export class ExternalDocsComponent implements OnInit {
 
