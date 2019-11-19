@@ -47,6 +47,29 @@ $putHighlightColour: #fca130;
 
 /********** Tree component styling ********/
 
+.tree-view {
+    overflow: auto;
+
+    border: 1px solid #c8c8c8;
+    background-color: #ffffff;
+    color: #333333;
+    border-radius: 3px;
+
+    .ui-tree-horizontal {
+        /* Overriding the behaviour of the PrimeNG component here so that
+         * the overflow control is on a component that we can change the style of
+         * in the api-path-tree component when generating an image. 
+         */
+        overflow: visible;
+
+        /* Also moved these styles up in to .tree-view so they are in the component 
+         * that we are generating the image of
+         */
+         border: 0;
+         background-color: transparent;
+    }
+}
+
 .tree-vertical .ui-treenode-content {
     background-image: linear-gradient(#cfd9df,#e2ebf0);  
     font-weight: bold;
