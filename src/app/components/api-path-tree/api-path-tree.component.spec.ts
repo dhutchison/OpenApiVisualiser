@@ -1,16 +1,19 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
 
 import { ApiPathTreeComponent } from './api-path-tree.component';
-import { InputSwitchModule } from 'primeng/inputswitch';
-import { TreeModule } from 'primeng/tree';
 import { NodeMethodDetailComponent } from '../node-detail/node-method-detail/node-method-detail.component';
-import { TooltipModule } from 'primeng/tooltip';
-import { FormsModule } from '@angular/forms';
-import { PanelModule } from 'primeng/panel';
+
+import { PipesModule } from 'src/app/pipes/pipes.module';
+
 import { ButtonModule } from 'primeng/button';
 import { FieldsetModule } from 'primeng/fieldset';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { PipesModule } from 'src/app/pipes/pipes.module';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { PanelModule } from 'primeng/panel';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { TooltipModule } from 'primeng/tooltip';
+import { TreeModule } from 'primeng/tree';
 
 describe('ApiPathTreeComponent', () => {
   let component: ApiPathTreeComponent;
@@ -29,6 +32,7 @@ describe('ApiPathTreeComponent', () => {
         FormsModule,
         PanelModule,
         PipesModule,
+        SelectButtonModule,
         TooltipModule,
         TreeModule,
 
