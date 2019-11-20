@@ -43,6 +43,20 @@ $putHighlightColour: #fca130;
     display: flex;
 }
 
+/* Icon manipulation */
+.icon-rotate-ccw-90 {
+    transform: rotate(-90deg);
+}
+
+
+/********** Tree view buttons *************/
+.path-tree-buttons {
+    display: flex;
+
+    .download-image-button {
+        margin-left: auto;
+    }
+}
 
 
 /********** Tree component styling ********/
@@ -67,6 +81,12 @@ $putHighlightColour: #fca130;
          */
          border: 0;
          background-color: transparent;
+    }
+}
+
+.tree-vertical {
+    .ui-tree {
+        width: auto;
     }
 }
 
