@@ -9,6 +9,7 @@ module.exports = function (config) {
       require('karma-jasmine'),
       require('karma-coveralls'),
       require('karma-chrome-launcher'),
+      require('karma-junit-reporter'),
       require('karma-jasmine-html-reporter'),
       require('karma-coverage-istanbul-reporter'),
       require('@angular-devkit/build-angular/plugins/karma')
@@ -21,7 +22,12 @@ module.exports = function (config) {
       reports: ['html', 'lcovonly', 'text-summary'],
       fixWebpackSourcePaths: true
     },
-    reporters: ['progress', 'kjhtml'],
+    // Note the documentation says more is required to allow this junit
+    // format to be usable in sonar
+    junitReporter: {
+      outputDir: require('path').join(__dirname, '../junit/OpenAPIVisualiser')
+    },
+    reporters: ['progress', 'junit', 'kjhtml'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
