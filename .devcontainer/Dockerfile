@@ -12,7 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # gives sudo access. However, for Linux, this user's GID/UID must match your local
 # user UID/GID to avoid permission issues with bind mounts. Update USER_UID / USER_GID 
 # if yours is not 1000. See https://aka.ms/vscode-remote/containers/non-root-user.
-ARG USER_UID=1000
+ARG USER_UID=502
 ARG USER_GID=$USER_UID
 
 # Configure apt and install packages
@@ -37,6 +37,10 @@ RUN apt-get update \
     && npm install -g tslint typescript \
     # Install angular CLI globally
     && npm install -g @angular/cli \
+    # Install the bits required for ChromeHeadless tests
+    # Using Chromium instead of full Chrome (saves having to add additional download sites which
+    # may be blocked in some environments.
+    && apt-get install -y chromium chromium-l10n \
     #
     # [Optional] Update a non-root user to match UID/GID - see https://aka.ms/vscode-remote/containers/non-root-user.
     && if [ "$USER_GID" != "1000" ]; then groupmod node --gid $USER_GID; fi \
@@ -53,3 +57,5 @@ RUN apt-get update \
 
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=
+# Set environment variable so we can use chromium instead of chrome headless
+ENV CHROME_BIN=/usr/bin/chromium

@@ -9,6 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { FieldsetModule } from 'primeng/fieldset';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { PanelModule } from 'primeng/panel';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { TabViewModule } from 'primeng/tabview';
 import { TooltipModule } from 'primeng/tooltip';
@@ -66,6 +67,7 @@ import { FileUploadModule } from 'primeng/fileupload';
     FileUploadModule,
     InputSwitchModule,
     PanelModule,
+    SelectButtonModule,
     TableModule,
     TabViewModule,
     TooltipModule,

@@ -1,8 +1,22 @@
-<p-inputSwitch [(ngModel)]="horizontalView"></p-inputSwitch>
+<div class="path-tree-buttons">
+  <!-- <p-inputSwitch [(ngModel)]="horizontalView"></p-inputSwitch> -->
+  <p-selectButton [options]="viewTypes" [(ngModel)]="horizontalView"></p-selectButton>
+  <button pButton type="button" icon="pi pi-download" label="Download Image" 
+    (click)="downloadImage($event)"
+    class="download-image-button"
+    [disabled]="generatingImage" *ngIf="horizontalView">
+  </button>
+</div>
+
 <div [class.tree-detail-horizontal]="!horizontalView">
-  <div class="tree-view">
-    <p-tree [value]="apiPathNodes" layout="{{horizontalView | treeOrientation}}" selectionMode="single"
-      [(selection)]="selectedNode" [className]="horizontalView? 'tree-horizontal': 'tree-vertical'">
+  <div class="tree-view" #treeView>
+    <p-tree [value]="apiPathNodes" 
+        layout="{{horizontalView | treeOrientation}}" 
+        selectionMode="single"
+        [(selection)]="selectedNode" 
+        [className]="horizontalView? 'tree-horizontal': 'tree-vertical'"
+        >
+
       <ng-template let-node pTemplate="operation">
         <span pTooltip="{{ node.tooltip }}">{{ node.label }}</span>
       </ng-template>

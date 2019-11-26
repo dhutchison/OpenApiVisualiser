@@ -9,9 +9,19 @@ This application supports a query parameter, url, which can be used to pre-load 
 For example:
 http://localhost:4200/?url=https:%2F%2Fraw.githubusercontent.com%2FMermade%2Fopenapi3-examples%2Fmaster%2Fpass%2FOAI%2Fuber.yaml
 
+A large number of public API specifications which can be used for testing are available here: https://apis.guru/browse-apis/
+
 ## Development server
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+
+## Development container
+
+When running `ng serve` from in the development container, to allow it to listen to connections
+from the source machine browser, it needs to be ran with a host (as localhost won't allow it to
+accept connections).
+
+`ng serve --host 0.0.0.0`
 
 ## Code scaffolding
 
