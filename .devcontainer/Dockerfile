@@ -38,9 +38,9 @@ RUN apt-get update \
     # Install angular CLI globally
     && npm install -g @angular/cli \
     # Install the bits required for ChromeHeadless tests
-    && wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo 'deb http://dl.google.com/linux/chrome/deb/ stable main' >> /etc/apt/sources.list \
-    && apt-get update && apt-get install --no-install-recommends -y google-chrome-stable \
+    # Using Chromium instead of full Chrome (saves having to add additional download sites which
+    # may be blocked in some environments.
+    && apt-get install -y chromium chromium-l10n \
     #
     # [Optional] Update a non-root user to match UID/GID - see https://aka.ms/vscode-remote/containers/non-root-user.
     && if [ "$USER_GID" != "1000" ]; then groupmod node --gid $USER_GID; fi \
@@ -57,3 +57,5 @@ RUN apt-get update \
 
 # Switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=
+# Set environment variable so we can use chromium instead of chrome headless
+ENV CHROME_BIN=/usr/bin/chromium
