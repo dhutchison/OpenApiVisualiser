@@ -69,7 +69,8 @@ export class ApiPathTreeComponent implements OnInit {
    * This depends on the html-to-image library to do all the heavy work.
    * https://github.com/bubkoo/html-to-image
    *
-   * TODO: async / progress indicator (can take a while)
+   * Also uses FileSaver to handle the file download
+   * https://github.com/eligrey/FileSaver.js
    */
   downloadImage() {
 
