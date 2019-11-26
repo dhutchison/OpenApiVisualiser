@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start-container": "ng serve --host $(ip -f inet addr show eth0 | grep -Po 'inet \\K[\\d.]+')",
     "build": "ng build",
     "build-deployment": "ng build --prod --output-path docs --base-href /OpenApiVisualiser/ && cp docs/index.html docs/404.html",
     "test": "ng test --codeCoverage=true",
