@@ -2,8 +2,8 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/master/containers/typescript-node-lts
 {
 	"name": "Node.js (latest LTS) & TypeScript",
-	// "dockerFile": "Dockerfile",
-	"image": "docker.pkg.github.com/dhutchison/container-images/angular-dev:0.1",
+	"dockerFile": "Dockerfile",
+	//"image": "docker.pkg.github.com/dhutchison/container-images/angular-dev:0.1",
 
 	// Use 'settings' to set *default* container specific settings.json values on container create. 
 	// You can edit these settings after create using File > Preferences > Settings > Remote.
