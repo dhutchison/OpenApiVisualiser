@@ -14,7 +14,16 @@
 body {
     font-family: 'Open Sans', 'Helvetica Neue', sans-serif;
 }
-
+#masthead {
+    background: url('/assets/images/logo.png') top left no-repeat;
+   
+    position: absolute;
+    width: 219px;
+    height:270px;
+    top: 0;
+    right: 395px;
+    opacity: 0.25;
+}
 
 header.header {
     // height: 3em;
