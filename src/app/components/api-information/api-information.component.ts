@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
-import { getPath, OpenAPIObject, PathsObject, OperationObject } from 'openapi3-ts';
+import { getPath, OpenAPIObject, PathsObject, OperationObject, ReferenceObject, ResponseObject } from 'openapi3-ts';
 
 @Component({
   selector: 'app-api-information',
@@ -75,6 +75,8 @@ export class ApiInformationComponent implements OnInit {
           /* Definition exists for the http method */
           apiStats.methodsSplit[method]++;
           apiStats.methodCount++;
+
+          this.calculateComplexity(pathObject[method]);
         }
       });
     });
@@ -84,11 +86,23 @@ export class ApiInformationComponent implements OnInit {
   }
 
   private calculateComplexity(operation: OperationObject): number {
-    //TODO: Implement;
+    // TODO: Implement;
+
+    // console.log('Request');
+    // console.log(operation.requestBody);
+    // console.log('Response');
+    // console.log(operation.responses[200]);
 
     /* Calculate the complexity of the request object */
+    // if (operation.responses[200]) {
+    //   if (operation.responses[200][$ref]) {
+
+    //   }
+
+    // }
     // if (operation.requestBody instanceof ReferenceObject) {
-      /* Need to resolve the object */
+    //   /* Need to resolve the object */
+
     // }
     // operation.requestBody;
 
