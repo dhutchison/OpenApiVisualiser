@@ -29,7 +29,7 @@ export class ApiPathTreeComponent implements OnInit {
   ];
 
   /* DOM element holding the API tree view */
-  @ViewChild('treeView', {static: false}) treeViewElement: ElementRef;
+  @ViewChild('treeView') treeViewElement: ElementRef;
 
   constructor(
     private preferenceService: UserPreferenceControllerService,

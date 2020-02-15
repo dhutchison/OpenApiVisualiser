@@ -28,7 +28,7 @@ describe('FileChooserComponent', () => {
     .compileComponents();
 
     // fileReaderServiceSpy = TestBed.get(FileReaderService);
-    fileReaderService = TestBed.get(FileReaderService);
+    fileReaderService = TestBed.inject(FileReaderService);
     loadFileSpy = spyOn(fileReaderService, 'loadFile');
 
     fileUploadComponent = {

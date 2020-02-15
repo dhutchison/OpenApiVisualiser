@@ -8,7 +8,7 @@ import { getPath, OpenAPIObject, PathsObject, OperationObject, ReferenceObject, 
 })
 export class ApiInformationComponent implements OnInit {
 
-  apiDefinitions: Api[] = [];
+  apiDefinitions: OpenAPIObject[] = [];
 
   /**
    * Array containing the possible HTTP methods which can have operations for a path.
@@ -29,16 +29,8 @@ export class ApiInformationComponent implements OnInit {
 
   ngOnInit() {
     this.fileReaderService.apiChanged.subscribe(value => {
-      /* Add this specification to our current state,
-       * after calculating the statistics */
-      const api: Api = {
-        apiDefinition: value,
-        statistics: this.getApiStatistics(value)
-      };
-
-      this.apiDefinitions.push(api);
-
-      console.log(value);
+      /* Add this specification to our current state */
+      this.apiDefinitions.push(value);
     });
 
     this.fileReaderService.resetFiles.subscribe(v => {
@@ -47,88 +39,4 @@ export class ApiInformationComponent implements OnInit {
     });
   }
 
-  private getApiStatistics(api: OpenAPIObject): ApiStatistics {
-
-    /* Setup the base object */
-    const apiStats: ApiStatistics = {
-      pathCount: Object.keys(api.paths).length,
-      methodCount: 0,
-      methodsSplit: {
-        get: 0,
-        put: 0,
-        post: 0,
-        delete: 0,
-        options: 0,
-        head: 0,
-        patch: 0,
-        trace: 0
-      }
-    };
-
-    /* Iterate through each path and method */
-    Object.keys(api.paths).forEach(pathKey => {
-      const pathObject = getPath(api.paths, pathKey);
-
-      /* Iterate through the possible http methods, adding nodes as required */
-      this.httpMethods.forEach(method => {
-        if (pathObject[method]) {
-          /* Definition exists for the http method */
-          apiStats.methodsSplit[method]++;
-          apiStats.methodCount++;
-
-          this.calculateComplexity(pathObject[method]);
-        }
-      });
-    });
-
-    return apiStats;
-
-  }
-
-  private calculateComplexity(operation: OperationObject): number {
-    // TODO: Implement;
-
-    // console.log('Request');
-    // console.log(operation.requestBody);
-    // console.log('Response');
-    // console.log(operation.responses[200]);
-
-    /* Calculate the complexity of the request object */
-    // if (operation.responses[200]) {
-    //   if (operation.responses[200][$ref]) {
-
-    //   }
-
-    // }
-    // if (operation.requestBody instanceof ReferenceObject) {
-    //   /* Need to resolve the object */
-
-    // }
-    // operation.requestBody;
-
-    return 0;
-  }
-
-}
-
-interface ApiStatistics {
-
-  pathCount: number;
-  methodCount: number;
-  methodsSplit: {
-    get: number;
-    put: number;
-    post: number;
-    delete: number;
-    options: number;
-    head: number;
-    patch: number;
-    trace: number
-  };
-
-}
-
-interface Api {
-  apiDefinition: OpenAPIObject;
-  statistics: ApiStatistics;
 }

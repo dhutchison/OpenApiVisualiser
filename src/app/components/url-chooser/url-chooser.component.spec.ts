@@ -28,7 +28,7 @@ describe('UrlChooserComponent', () => {
     })
     .compileComponents();
 
-    fileReaderService = TestBed.get(FileReaderService);
+    fileReaderService = TestBed.inject(FileReaderService);
     loadFileFromURLSpy = spyOn(fileReaderService, 'loadFileFromURL');
   }));
 

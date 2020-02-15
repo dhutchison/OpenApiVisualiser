@@ -32,6 +32,7 @@ import { PipesModule } from './pipes/pipes.module';
 import { FileChooserComponent } from './components/file-chooser/file-chooser.component';
 import { UrlChooserComponent } from './components/url-chooser/url-chooser.component';
 import { FileUploadModule } from 'primeng/fileupload';
+import { SummaryComponent } from './components/summary/summary.component';
 
 @NgModule({
   declarations: [
@@ -47,6 +48,7 @@ import { FileUploadModule } from 'primeng/fileupload';
     MainComponent,
     NodeMethodDetailComponent,
     SchemaDetailComponent,
+    SummaryComponent,
     UrlChooserComponent
   ],
   imports: [

@@ -8,7 +8,7 @@ describe('UserPreferenceControllerService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.get(UserPreferenceControllerService);
+    service = TestBed.inject(UserPreferenceControllerService);
   });
 
   it('should be created', () => {

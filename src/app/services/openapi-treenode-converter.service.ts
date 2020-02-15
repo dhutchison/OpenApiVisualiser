@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
+import { Injectable, ComponentFactoryResolver } from '@angular/core';
 import { TreeNode } from 'primeng/api';
 import { Subject } from 'rxjs';
 import {
           getPath, OpenApiSpec, OperationObject,
-          PathItemObject, PathsObject, SchemaObject
+          PathItemObject, PathsObject, SchemaObject,
+          RequestBodyObject, ReferenceObject, ComponentsObject, MediaTypeObject, ResponseObject
         } from '@loopback/openapi-v3-types';
 
 @Injectable({
@@ -82,7 +83,8 @@ export class OpenapiTreenodeConverterService {
   addApiSpecification(openApiSpec: OpenApiSpec) {
 
     /* Convert the specification paths into nodes */
-    this.convertPathsToTree(openApiSpec.paths);
+    console.log(openApiSpec);
+    this.convertPathsToTree(openApiSpec.paths, openApiSpec);
 
 
     if (this.apiPathNodes.length === 0) {
@@ -111,7 +113,7 @@ export class OpenapiTreenodeConverterService {
    *
    * @param paths the paths contained in the API specification.
    */
-  private convertPathsToTree(paths: PathsObject) {
+  private convertPathsToTree(paths: PathsObject, apiDefinition: OpenApiSpec) {
 
     /* Iterate through each API path key building up the tree nodes */
     Object.keys(paths).forEach(key => {
@@ -165,7 +167,7 @@ export class OpenapiTreenodeConverterService {
               if (apiPath[method]) {
                 /* Definition exists for the http method */
                 pathNode.children.push(
-                  this.createHttpMethodNode(key, method.toUpperCase(), apiPath[method]));
+                  this.createHttpMethodNode(key, method.toUpperCase(), apiPath[method], apiDefinition));
               }
             });
           }
@@ -196,7 +198,7 @@ export class OpenapiTreenodeConverterService {
    * @param method the HTTP method
    * @param operation the details of the Operation
    */
-  private createHttpMethodNode(path: string, method: string, operation: OperationObject): TreeNode {
+  private createHttpMethodNode(path: string, method: string, operation: OperationObject, apiDefinition: OpenApiSpec): TreeNode {
 
     const node: OperationTreeNode = {
       label: method,
@@ -208,6 +210,9 @@ export class OpenapiTreenodeConverterService {
       path
     };
 
+    /* Work out the object complexity */
+    node.complexity = this.calculateComplexity(operation, apiDefinition);
+
     /* Add a tooltip */
     if (operation.description) {
       node.tooltip = operation.description;
@@ -215,8 +220,106 @@ export class OpenapiTreenodeConverterService {
       node.tooltip = operation.summary;
     }
 
+    if (node.tooltip) {
+      node.tooltip += '<br/><br/>Complexity: ' + node.complexity;
+    } else {
+      node.tooltip = 'Complexity: ' + node.complexity;
+    }
+
     return node;
 
+  }
+
+  private calculateComplexity(operation: OperationObject, apiDefinition: OpenApiSpec): number {
+
+    /* Calculate the complexity of the request object */
+    let totalComplexity = 0;
+    if (operation.requestBody) {
+      totalComplexity += this.calculateObjectComplexity(operation.requestBody, apiDefinition);
+    }
+
+    /* A bit crude, but only care about "ok" and "created" responses. */
+    if (operation.responses[200]) {
+      totalComplexity += this.calculateObjectComplexity(operation.responses[200], apiDefinition);
+    }
+    if (operation.responses[201]) {
+      totalComplexity += this.calculateObjectComplexity(operation.responses[201], apiDefinition);
+    }
+
+    console.log('Complexity: %s', totalComplexity);
+    return totalComplexity;
+  }
+
+  private calculateObjectComplexity(object: any, apiDefinition: OpenApiSpec): number {
+
+    let complexity = 1;
+
+    if (object === undefined) {
+      /* If the object supplied isn't defined, nothing should be added.
+       * Doing this to prevent having to do additional checking in the caller
+       */
+      complexity = 0;
+
+    } else if (this.isRequestBodyObject(object) || this.isResponseObject(object)) {
+      console.log('Request or Response body object: %s', object.content);
+
+      /* Process each media type */
+      Object.keys(object).forEach(key => {
+        console.log('key: %s, value: %s', key, object[key]);
+
+        /* Keep recursing down to calculate the complexity */
+        complexity += this.calculateObjectComplexity(object[key], apiDefinition);
+      });
+    } else if (this.isMediaTypeObject(object)) {
+      /* Keep recursing down to calculate the complexity */
+      complexity += this.calculateObjectComplexity(object.schema, apiDefinition);
+    } else if (this.isReferenceObject(object)) {
+      console.log('Reference needs resolved: %s', object.$ref);
+      const resolvedReference = this.resolveReference(object.$ref, apiDefinition);
+      console.log('Resolved Reference: ', resolvedReference);
+      complexity += this.calculateObjectComplexity(resolvedReference, apiDefinition);
+    } else if (this.isSchemaObject(object)) {
+      /* Quite a few fields in this we could consider, most of these will not be set */
+      console.log('Schema object needs processed: %s', object);
+
+      complexity += this.calculateObjectComplexity(object.items, apiDefinition);
+      complexity += this.calculateObjectComplexity(object.allOf, apiDefinition);
+      complexity += this.calculateObjectComplexity(object.anyOf, apiDefinition);
+      complexity += this.calculateObjectComplexity(object.oneOf, apiDefinition);
+      /* TODO: Check - if this is for excluding fields from a combined object
+       * then it should make the score go down */
+      complexity -= this.calculateObjectComplexity(object.not, apiDefinition);
+
+      if (object.properties) {
+        /* Actual definition of fields in an object.
+         * Keys here are the fields which can be in the object */
+        complexity += Object.keys(object.properties).length;
+      }
+
+    } else {
+      console.log('Did not process object: %s', object);
+      console.log(object);
+    }
+
+    return complexity;
+  }
+
+  private resolveReference(name: string, apiDefinition: OpenApiSpec): any {
+
+    const nameParts = name.split('/');
+    /* remove the first element, this will always be a '#' */
+    nameParts.shift();
+
+    console.log('Name parts: %s', nameParts);
+    console.log(nameParts);
+
+    /* Only interested in index 1 onwards */
+    let object = apiDefinition;
+    for (const key of nameParts) {
+      object = object[key];
+    }
+
+    return object;
   }
 
 
@@ -277,6 +380,54 @@ export class OpenapiTreenodeConverterService {
     return node;
   }
 
+  /**
+   * Helper method using type guards to determine if the supplied object is a RequestBodyObject.
+   * @param object the object to test
+   */
+  private isRequestBodyObject(object: object): object is RequestBodyObject {
+    return (object as RequestBodyObject).content !== undefined;
+  }
+
+  /**
+   * Helper method using type guards to determine if the supplied object is a ReferenceObject.
+   * @param object the object to test
+   */
+  private isReferenceObject(object: object): object is ReferenceObject {
+    return (object as ReferenceObject).$ref !== undefined;
+  }
+
+  /**
+   * Helper method using type guards to determine if the supplied object is a MediaTypeObject.
+   * @param object the object to test
+   */
+  private isMediaTypeObject(object: object): object is MediaTypeObject {
+    return (object as MediaTypeObject).schema !== undefined;
+  }
+
+  /**
+   * Helper method using type guards to determine if the supplied object is a ResponseObject.
+   * @param object the object to test
+   */
+  private isResponseObject(object: object): object is ResponseObject {
+    return (object as ResponseObject).content !== undefined;
+  }
+
+  /**
+   * Helper method using type guards to determine if the supplied object is a SchemaObject.
+   * @param object the object to test
+   */
+  private isSchemaObject(object: object): object is SchemaObject {
+
+    const schemaObject = (object as SchemaObject);
+
+    return (schemaObject.properties !== undefined ||
+      schemaObject.items !== undefined ||
+      schemaObject.allOf !== undefined ||
+      schemaObject.anyOf !== undefined ||
+      schemaObject.oneOf !== undefined ||
+      schemaObject.not !== undefined);
+  }
+
 }
 
 export interface OperationTreeNode extends TreeNode {
@@ -286,4 +437,5 @@ export interface OperationTreeNode extends TreeNode {
   method?: string;
   path?: string;
   operation?: OperationObject;
+  complexity?: number;
 }

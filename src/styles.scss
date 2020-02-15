@@ -119,6 +119,26 @@ $putHighlightColour: #fca130;
     width: 100%;
 }
 
+#method-header-delete {
+    background-color: $deleteHighlightColour;
+}
+
+#method-header-get {
+    background-color: $getHighlightColour;
+}
+
+#method-header-post {
+    background-color: $postHighlightColour;
+}
+
+#method-header-put {
+    background-color: $putHighlightColour;
+}
+
+#method-summary {
+    min-width: 15em;
+}
+
 .http-post {
     .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
         border-color: $postHighlightColour;

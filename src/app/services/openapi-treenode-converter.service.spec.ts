@@ -9,7 +9,7 @@ describe('OpenapiTreenodeConverterService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({});
 
-    service = TestBed.get(OpenapiTreenodeConverterService);
+    service = TestBed.inject(OpenapiTreenodeConverterService);
   });
 
   it('should be created', () => {
