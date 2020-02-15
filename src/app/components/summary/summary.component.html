@@ -1,10 +1,13 @@
-<dl>
-    <dt>{{apiPathNodes?.length}} methods used</dt>
-        <table>
-            <caption>HTTP methods in use</caption>
-            <tr *ngFor="let entry of methodSummary | keyvalue">
-                <th id="method-header-{{ entry.key | lowercase }}">{{entry.key}}</th>
-                <td>{{entry.value}}</td>
-            </tr>
-        </table>
-</dl>
+<div>
+    <table id="method-summary">
+        <caption>HTTP methods in use</caption>
+        <tr *ngFor="let entry of methodSummary | keyvalue">
+            <th id="method-header-{{ entry.key | lowercase }}">{{entry.key}}</th>
+            <td>{{entry.value}}</td>
+        </tr>
+        <tr>
+            <th id="method-header-total">Total</th>
+            <td>{{ apiPathNodes?.length }}</td>
+        </tr>
+    </table>
+</div>

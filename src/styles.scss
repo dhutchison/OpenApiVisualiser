@@ -135,6 +135,10 @@ $putHighlightColour: #fca130;
     background-color: $putHighlightColour;
 }
 
+#method-summary {
+    min-width: 15em;
+}
+
 .http-post {
     .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
         border-color: $postHighlightColour;

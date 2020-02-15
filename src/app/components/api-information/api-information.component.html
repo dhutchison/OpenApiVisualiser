@@ -1,70 +1,43 @@
 <p-panel styleClass="api-info" [toggleable]="true" *ngFor="let api of apiDefinitions">
-    <p-header>{{ api.apiDefinition.info.title }} - {{ api.apiDefinition.info.version }}</p-header>
-    <div [innerHTML]="(api.apiDefinition.info.description | markdownify)"></div>
+    <p-header>{{ api.info.title }} - {{ api.info.version }}</p-header>
+    <div [innerHTML]="(api.info.description | markdownify)"></div>
 
-    <p-fieldset legend="Terms of Service" *ngIf="api.apiDefinition.info.termsOfService">
-      <p>{{ api.apiDefinition.info.termsOfService }}</p>
+    <p-fieldset legend="Terms of Service" *ngIf="api.info.termsOfService">
+      <p>{{ api.info.termsOfService }}</p>
     </p-fieldset>
 
-    <p-fieldset legend="Contact" *ngIf="api.apiDefinition.info.contact">
+    <p-fieldset legend="Contact" *ngIf="api.info.contact">
         <dl>
             <dt>Name</dt>
-            <dd>{{ api.apiDefinition.info.contact.name }}</dd>
+            <dd>{{ api.info.contact.name }}</dd>
 
             <dt>URL</dt>
             <dd>
-              <a href="{{ api.apiDefinition.info.contact.url }}" target="_blank" *ngIf="api.apiDefinition.info.contact.url">
-                {{ api.apiDefinition.info.contact.url }}
+              <a href="{{ api.info.contact.url }}" target="_blank" *ngIf="api.info.contact.url">
+                {{ api.info.contact.url }}
               </a>
             </dd>
 
             <dt>Email</dt>
             <dd>
-              <a href="mailto:{{ api.apiDefinition.info.contact.email }}" *ngIf="api.apiDefinition.info.contact.email">
-                {{ api.apiDefinition.info.contact.email }}
+              <a href="mailto:{{ api.info.contact.email }}" *ngIf="api.info.contact.email">
+                {{ api.info.contact.email }}
               </a>
             </dd>
         </dl>
     </p-fieldset>
 
-    <p-fieldset legend="License" *ngIf="api.apiDefinition.info.license">
+    <p-fieldset legend="License" *ngIf="api.info.license">
         <dl>
           <dt>Name</dt>
-          <dd>{{ api.apiDefinition.info.license.name }}</dd>
+          <dd>{{ api.info.license.name }}</dd>
 
           <dt>URL</dt>
           <dd>
-            <a href="{{ api.apiDefinition.info.license.url }}" target="_blank" *ngIf="api.apiDefinition.info.license.url">
-              {{ api.apiDefinition.info.license.url }}
+            <a href="{{ api.info.license.url }}" target="_blank" *ngIf="api.info.license.url">
+              {{ api.info.license.url }}
             </a>
           </dd>
         </dl>
-    </p-fieldset>
-
-    <p-fieldset legend="Statistics">
-      <dl>
-        <dt>Paths</dt>
-        <dd>{{ api.statistics.pathCount }}</dd>
-
-        <dt>Methods</dt>
-        <dd>{{ api.statistics.methodCount }}</dd>
-
-        <dt>GET Methods</dt>
-        <dd>{{ api.statistics.methodsSplit.get }}</dd>
-        <dt>PUT Methods</dt>
-        <dd>{{ api.statistics.methodsSplit.put }}</dd>
-        <dt>POST Methods</dt>
-        <dd>{{ api.statistics.methodsSplit.post }}</dd>
-        <dt>DELETE Methods</dt>
-        <dd>{{ api.statistics.methodsSplit.delete }}</dd>
-        <dt>OPTIONS Methods</dt>
-        <dd>{{ api.statistics.methodsSplit.options }}</dd>
-        <dt>HEAD Methods</dt>
-        <dd>{{ api.statistics.methodsSplit.head }}</dd>
-        <dt>PATCH Methods</dt>
-        <dd>{{ api.statistics.methodsSplit.patch }}</dd>
-        <dt>TRACE Methods</dt>
-        <dd>{{ api.statistics.methodsSplit.trace }}</dd>
-      </dl>
     </p-fieldset>
 </p-panel>
