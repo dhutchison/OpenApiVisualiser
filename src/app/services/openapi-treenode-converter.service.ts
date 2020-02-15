@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, ComponentFactoryResolver } from '@angular/core';
 import { TreeNode } from 'primeng/api';
 import { Subject } from 'rxjs';
 import {
@@ -210,6 +210,9 @@ export class OpenapiTreenodeConverterService {
       path
     };
 
+    /* Work out the object complexity */
+    node.complexity = this.calculateComplexity(operation, apiDefinition);
+
     /* Add a tooltip */
     if (operation.description) {
       node.tooltip = operation.description;
@@ -217,20 +220,19 @@ export class OpenapiTreenodeConverterService {
       node.tooltip = operation.summary;
     }
 
-    /* Work out the object complexity */
-    node.complexity = this.calculateComplexity(operation, apiDefinition);
+    if (node.tooltip) {
+      node.tooltip += '<br/><br/>Complexity: ' + node.complexity;
+    } else {
+      node.tooltip = 'Complexity: ' + node.complexity;
+    }
+
+    
 
     return node;
 
   }
 
   private calculateComplexity(operation: OperationObject, apiDefinition: OpenApiSpec): number {
-    console.log('Request');
-    console.log(operation.requestBody);
-    console.log(typeof operation.requestBody);
-    console.log('Response');
-    console.log(operation.responses[200]);
-    console.log(typeof operation.responses[200]);
 
     /* Calculate the complexity of the request object */
     let totalComplexity = 0;
@@ -238,10 +240,12 @@ export class OpenapiTreenodeConverterService {
       totalComplexity += this.calculateObjectComplexity(operation.requestBody, apiDefinition);
     }
 
-
+    /* A bit crude, but only care about "ok" and "created" responses. */
     if (operation.responses[200]) {
-      /* A bit crude, but only care about "ok" responses. */
       totalComplexity += this.calculateObjectComplexity(operation.responses[200], apiDefinition);
+    }
+    if (operation.responses[201]) {
+      totalComplexity += this.calculateObjectComplexity(operation.responses[201], apiDefinition);
     }
 
     console.log('Complexity: %s', totalComplexity);
@@ -296,6 +300,7 @@ export class OpenapiTreenodeConverterService {
 
     } else {
       console.log('Did not process object: %s', object);
+      console.log(object);
     }
 
     return complexity;
@@ -378,25 +383,41 @@ export class OpenapiTreenodeConverterService {
   }
 
   /**
-   * Helper method using type guards to determine if the supplied object is a RequestBodyObject. 
+   * Helper method using type guards to determine if the supplied object is a RequestBodyObject.
    * @param object the object to test
    */
   private isRequestBodyObject(object: object): object is RequestBodyObject {
     return (object as RequestBodyObject).content !== undefined;
   }
 
+  /**
+   * Helper method using type guards to determine if the supplied object is a ReferenceObject.
+   * @param object the object to test
+   */
   private isReferenceObject(object: object): object is ReferenceObject {
     return (object as ReferenceObject).$ref !== undefined;
   }
 
+  /**
+   * Helper method using type guards to determine if the supplied object is a MediaTypeObject.
+   * @param object the object to test
+   */
   private isMediaTypeObject(object: object): object is MediaTypeObject {
     return (object as MediaTypeObject).schema !== undefined;
   }
 
+  /**
+   * Helper method using type guards to determine if the supplied object is a ResponseObject.
+   * @param object the object to test
+   */
   private isResponseObject(object: object): object is ResponseObject {
     return (object as ResponseObject).content !== undefined;
   }
 
+  /**
+   * Helper method using type guards to determine if the supplied object is a SchemaObject.
+   * @param object the object to test
+   */
   private isSchemaObject(object: object): object is SchemaObject {
 
     const schemaObject = (object as SchemaObject);
@@ -417,6 +438,6 @@ export interface OperationTreeNode extends TreeNode {
   // Additional fields to supply details to Node Detail Rendering
   method?: string;
   path?: string;
-  operation?: OperationObject,
+  operation?: OperationObject;
   complexity?: number;
 }

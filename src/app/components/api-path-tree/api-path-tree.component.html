@@ -18,7 +18,7 @@
         >
 
       <ng-template let-node pTemplate="operation">
-        <span pTooltip="{{ node.tooltip }}">{{ node.label }}</span>
+        <span pTooltip="{{ node.tooltip }}" [escape]=false>{{ node.label }}</span>
       </ng-template>
     </p-tree>
   </div>
