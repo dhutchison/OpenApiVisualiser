@@ -83,7 +83,8 @@ export class OpenapiTreenodeConverterService {
   addApiSpecification(openApiSpec: OpenApiSpec) {
 
     /* Convert the specification paths into nodes */
-    this.convertPathsToTree(openApiSpec.paths, openApiSpec.components);
+    console.log(openApiSpec);
+    this.convertPathsToTree(openApiSpec.paths, openApiSpec);
 
 
     if (this.apiPathNodes.length === 0) {
@@ -112,7 +113,7 @@ export class OpenapiTreenodeConverterService {
    *
    * @param paths the paths contained in the API specification.
    */
-  private convertPathsToTree(paths: PathsObject, components: ComponentsObject) {
+  private convertPathsToTree(paths: PathsObject, apiDefinition: OpenApiSpec) {
 
     /* Iterate through each API path key building up the tree nodes */
     Object.keys(paths).forEach(key => {
@@ -166,7 +167,7 @@ export class OpenapiTreenodeConverterService {
               if (apiPath[method]) {
                 /* Definition exists for the http method */
                 pathNode.children.push(
-                  this.createHttpMethodNode(key, method.toUpperCase(), apiPath[method], components));
+                  this.createHttpMethodNode(key, method.toUpperCase(), apiPath[method], apiDefinition));
               }
             });
           }
@@ -197,7 +198,7 @@ export class OpenapiTreenodeConverterService {
    * @param method the HTTP method
    * @param operation the details of the Operation
    */
-  private createHttpMethodNode(path: string, method: string, operation: OperationObject, components: ComponentsObject): TreeNode {
+  private createHttpMethodNode(path: string, method: string, operation: OperationObject, apiDefinition: OpenApiSpec): TreeNode {
 
     const node: OperationTreeNode = {
       label: method,
@@ -217,13 +218,13 @@ export class OpenapiTreenodeConverterService {
     }
 
     /* Work out the object complexity */
-    node.complexity = this.calculateComplexity(operation, components);
+    node.complexity = this.calculateComplexity(operation, apiDefinition);
 
     return node;
 
   }
 
-  private calculateComplexity(operation: OperationObject, components: ComponentsObject): number {
+  private calculateComplexity(operation: OperationObject, apiDefinition: OpenApiSpec): number {
     console.log('Request');
     console.log(operation.requestBody);
     console.log(typeof operation.requestBody);
@@ -234,20 +235,20 @@ export class OpenapiTreenodeConverterService {
     /* Calculate the complexity of the request object */
     let totalComplexity = 0;
     if (operation.requestBody) {
-      totalComplexity += this.calculateObjectComplexity(operation.requestBody, components);
+      totalComplexity += this.calculateObjectComplexity(operation.requestBody, apiDefinition);
     }
 
 
     if (operation.responses[200]) {
       /* A bit crude, but only care about "ok" responses. */
-      totalComplexity += this.calculateObjectComplexity(operation.responses[200], components);
+      totalComplexity += this.calculateObjectComplexity(operation.responses[200], apiDefinition);
     }
 
     console.log('Complexity: %s', totalComplexity);
     return totalComplexity;
   }
 
-  private calculateObjectComplexity(object: any, components: ComponentsObject): number {
+  private calculateObjectComplexity(object: any, apiDefinition: OpenApiSpec): number {
 
     let complexity = 1;
 
@@ -265,27 +266,27 @@ export class OpenapiTreenodeConverterService {
         console.log('key: %s, value: %s', key, object[key]);
 
         /* Keep recursing down to calculate the complexity */
-        complexity += this.calculateObjectComplexity(object[key], components);
+        complexity += this.calculateObjectComplexity(object[key], apiDefinition);
       });
     } else if (this.isMediaTypeObject(object)) {
       /* Keep recursing down to calculate the complexity */
-      complexity += this.calculateObjectComplexity(object, components);
+      complexity += this.calculateObjectComplexity(object.schema, apiDefinition);
     } else if (this.isReferenceObject(object)) {
       console.log('Reference needs resolved: %s', object.$ref);
-      const resolvedReference = this.resolveReference(object.$ref, components);
+      const resolvedReference = this.resolveReference(object.$ref, apiDefinition);
       console.log('Resolved Reference: ', resolvedReference);
-      complexity += this.calculateObjectComplexity(resolvedReference, components);
+      complexity += this.calculateObjectComplexity(resolvedReference, apiDefinition);
     } else if (this.isSchemaObject(object)) {
       /* Quite a few fields in this we could consider, most of these will not be set */
       console.log('Schema object needs processed: %s', object);
 
-      complexity += this.calculateObjectComplexity(object.items, components);
-      complexity += this.calculateObjectComplexity(object.allOf, components);
-      complexity += this.calculateObjectComplexity(object.anyOf, components);
-      complexity += this.calculateObjectComplexity(object.oneOf, components);
+      complexity += this.calculateObjectComplexity(object.items, apiDefinition);
+      complexity += this.calculateObjectComplexity(object.allOf, apiDefinition);
+      complexity += this.calculateObjectComplexity(object.anyOf, apiDefinition);
+      complexity += this.calculateObjectComplexity(object.oneOf, apiDefinition);
       /* TODO: Check - if this is for excluding fields from a combined object
        * then it should make the score go down */
-      complexity -= this.calculateObjectComplexity(object.not, components);
+      complexity -= this.calculateObjectComplexity(object.not, apiDefinition);
 
       if (object.properties) {
         /* Actual definition of fields in an object.
@@ -300,12 +301,22 @@ export class OpenapiTreenodeConverterService {
     return complexity;
   }
 
-  private resolveReference(name: string, components: ComponentsObject): any {
+  private resolveReference(name: string, apiDefinition: OpenApiSpec): any {
 
     const nameParts = name.split('/');
+    /* remove the first element, this will always be a '#' */
+    nameParts.shift();
 
-    /* only interested in parts 2 & 3 of the array */
-    return components[nameParts[2]][nameParts[3]];
+    console.log('Name parts: %s', nameParts);
+    console.log(nameParts);
+
+    /* Only interested in index 1 onwards */
+    let object = apiDefinition;
+    for (const key of nameParts) {
+      object = object[key];
+    }
+
+    return object;
   }
 
 
