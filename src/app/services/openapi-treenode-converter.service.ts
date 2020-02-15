@@ -226,8 +226,6 @@ export class OpenapiTreenodeConverterService {
       node.tooltip = 'Complexity: ' + node.complexity;
     }
 
-    
-
     return node;
 
   }
