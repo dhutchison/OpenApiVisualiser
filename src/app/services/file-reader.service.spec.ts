@@ -305,8 +305,8 @@ describe('FileReaderService', () => {
         ]
       });
       injector = getTestBed();
-      service = injector.get(FileReaderService);
-      httpMock = injector.get(HttpTestingController);
+      service = injector.inject(FileReaderService);
+      httpMock = injector.inject(HttpTestingController);
     });
 
     it('should be created', () => {
