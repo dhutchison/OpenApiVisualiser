@@ -3,7 +3,8 @@ import { TreeNode } from 'primeng/api';
 import { Subject } from 'rxjs';
 import {
           getPath, OpenApiSpec, OperationObject,
-          PathItemObject, PathsObject, SchemaObject
+          PathItemObject, PathsObject, SchemaObject,
+          RequestBodyObject, ReferenceObject, ComponentsObject, MediaTypeObject, ResponseObject
         } from '@loopback/openapi-v3-types';
 
 @Injectable({
@@ -82,7 +83,7 @@ export class OpenapiTreenodeConverterService {
   addApiSpecification(openApiSpec: OpenApiSpec) {
 
     /* Convert the specification paths into nodes */
-    this.convertPathsToTree(openApiSpec.paths);
+    this.convertPathsToTree(openApiSpec.paths, openApiSpec.components);
 
 
     if (this.apiPathNodes.length === 0) {
@@ -111,7 +112,7 @@ export class OpenapiTreenodeConverterService {
    *
    * @param paths the paths contained in the API specification.
    */
-  private convertPathsToTree(paths: PathsObject) {
+  private convertPathsToTree(paths: PathsObject, components: ComponentsObject) {
 
     /* Iterate through each API path key building up the tree nodes */
     Object.keys(paths).forEach(key => {
@@ -165,7 +166,7 @@ export class OpenapiTreenodeConverterService {
               if (apiPath[method]) {
                 /* Definition exists for the http method */
                 pathNode.children.push(
-                  this.createHttpMethodNode(key, method.toUpperCase(), apiPath[method]));
+                  this.createHttpMethodNode(key, method.toUpperCase(), apiPath[method], components));
               }
             });
           }
@@ -196,7 +197,7 @@ export class OpenapiTreenodeConverterService {
    * @param method the HTTP method
    * @param operation the details of the Operation
    */
-  private createHttpMethodNode(path: string, method: string, operation: OperationObject): TreeNode {
+  private createHttpMethodNode(path: string, method: string, operation: OperationObject, components: ComponentsObject): TreeNode {
 
     const node: OperationTreeNode = {
       label: method,
@@ -215,8 +216,96 @@ export class OpenapiTreenodeConverterService {
       node.tooltip = operation.summary;
     }
 
+    /* Work out the object complexity */
+    node.complexity = this.calculateComplexity(operation, components);
+
     return node;
 
+  }
+
+  private calculateComplexity(operation: OperationObject, components: ComponentsObject): number {
+    console.log('Request');
+    console.log(operation.requestBody);
+    console.log(typeof operation.requestBody);
+    console.log('Response');
+    console.log(operation.responses[200]);
+    console.log(typeof operation.responses[200]);
+
+    /* Calculate the complexity of the request object */
+    let totalComplexity = 0;
+    if (operation.requestBody) {
+      totalComplexity += this.calculateObjectComplexity(operation.requestBody, components);
+    }
+
+
+    if (operation.responses[200]) {
+      /* A bit crude, but only care about "ok" responses. */
+      totalComplexity += this.calculateObjectComplexity(operation.responses[200], components);
+    }
+
+    console.log('Complexity: %s', totalComplexity);
+    return totalComplexity;
+  }
+
+  private calculateObjectComplexity(object: any, components: ComponentsObject): number {
+
+    let complexity = 1;
+
+    if (object === undefined) {
+      /* If the object supplied isn't defined, nothing should be added.
+       * Doing this to prevent having to do additional checking in the caller
+       */
+      complexity = 0;
+
+    } else if (this.isRequestBodyObject(object) || this.isResponseObject(object)) {
+      console.log('Request or Response body object: %s', object.content);
+
+      /* Process each media type */
+      Object.keys(object).forEach(key => {
+        console.log('key: %s, value: %s', key, object[key]);
+
+        /* Keep recursing down to calculate the complexity */
+        complexity += this.calculateObjectComplexity(object[key], components);
+      });
+    } else if (this.isMediaTypeObject(object)) {
+      /* Keep recursing down to calculate the complexity */
+      complexity += this.calculateObjectComplexity(object, components);
+    } else if (this.isReferenceObject(object)) {
+      console.log('Reference needs resolved: %s', object.$ref);
+      const resolvedReference = this.resolveReference(object.$ref, components);
+      console.log('Resolved Reference: ', resolvedReference);
+      complexity += this.calculateObjectComplexity(resolvedReference, components);
+    } else if (this.isSchemaObject(object)) {
+      /* Quite a few fields in this we could consider, most of these will not be set */
+      console.log('Schema object needs processed: %s', object);
+
+      complexity += this.calculateObjectComplexity(object.items, components);
+      complexity += this.calculateObjectComplexity(object.allOf, components);
+      complexity += this.calculateObjectComplexity(object.anyOf, components);
+      complexity += this.calculateObjectComplexity(object.oneOf, components);
+      /* TODO: Check - if this is for excluding fields from a combined object
+       * then it should make the score go down */
+      complexity -= this.calculateObjectComplexity(object.not, components);
+
+      if (object.properties) {
+        /* Actual definition of fields in an object.
+         * Keys here are the fields which can be in the object */
+        complexity += Object.keys(object.properties).length;
+      }
+
+    } else {
+      console.log('Did not process object: %s', object);
+    }
+
+    return complexity;
+  }
+
+  private resolveReference(name: string, components: ComponentsObject): any {
+
+    const nameParts = name.split('/');
+
+    /* only interested in parts 2 & 3 of the array */
+    return components[nameParts[2]][nameParts[3]];
   }
 
 
@@ -277,6 +366,38 @@ export class OpenapiTreenodeConverterService {
     return node;
   }
 
+  /**
+   * Helper method using type guards to determine if the supplied object is a RequestBodyObject. 
+   * @param object the object to test
+   */
+  private isRequestBodyObject(object: object): object is RequestBodyObject {
+    return (object as RequestBodyObject).content !== undefined;
+  }
+
+  private isReferenceObject(object: object): object is ReferenceObject {
+    return (object as ReferenceObject).$ref !== undefined;
+  }
+
+  private isMediaTypeObject(object: object): object is MediaTypeObject {
+    return (object as MediaTypeObject).schema !== undefined;
+  }
+
+  private isResponseObject(object: object): object is ResponseObject {
+    return (object as ResponseObject).content !== undefined;
+  }
+
+  private isSchemaObject(object: object): object is SchemaObject {
+
+    const schemaObject = (object as SchemaObject);
+
+    return (schemaObject.properties !== undefined ||
+      schemaObject.items !== undefined ||
+      schemaObject.allOf !== undefined ||
+      schemaObject.anyOf !== undefined ||
+      schemaObject.oneOf !== undefined ||
+      schemaObject.not !== undefined);
+  }
+
 }
 
 export interface OperationTreeNode extends TreeNode {
@@ -285,5 +406,6 @@ export interface OperationTreeNode extends TreeNode {
   // Additional fields to supply details to Node Detail Rendering
   method?: string;
   path?: string;
-  operation?: OperationObject;
+  operation?: OperationObject,
+  complexity?: number;
 }
