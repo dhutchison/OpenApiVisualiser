@@ -7,5 +7,7 @@ export class UserPreferenceControllerService {
 
   horizontalView = true;
 
+  joinNodesWithNoLeaves = true;
+
   constructor() { }
 }

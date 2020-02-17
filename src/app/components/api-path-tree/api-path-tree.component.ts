@@ -48,7 +48,14 @@ export class ApiPathTreeComponent implements OnInit {
     });
 
     this.openApiConverterService.treeNodesChanged.subscribe(value => {
-      this.apiPathNodes = value;
+      if (this.preferenceService.joinNodesWithNoLeaves) {
+        /* First, lets do a pretty dumb (deep) clone of the objects we got */
+        const nodesCopy: TreeNode[] = JSON.parse(JSON.stringify(value));
+        /* Then compress */
+        this.apiPathNodes = this.compress(nodesCopy);
+      } else {
+        this.apiPathNodes = value;
+      }
     });
   }
 
@@ -61,6 +68,21 @@ export class ApiPathTreeComponent implements OnInit {
     this.selectedNode = undefined;
     /* Change the view */
     this.preferenceService.horizontalView = value;
+  }
+
+  get joinNodesWithNoLeaves(): boolean {
+    return this.preferenceService.joinNodesWithNoLeaves;
+  }
+
+  set joinNodesWithNoLeaves(value: boolean) {
+    /* Deselect any item */
+    this.selectedNode = undefined;
+
+    /* Reprocess the tree */
+    // TODO: implement
+
+    /* Set the value */
+    this.preferenceService.joinNodesWithNoLeaves = value;
   }
 
   /**
@@ -97,5 +119,45 @@ export class ApiPathTreeComponent implements OnInit {
         this.generatingImage = false;
     });
 
+  }
+
+  /**  When we compress the view, we will merge any nodes which have only a
+   * single child, and the child is not a leaf.
+   *
+   * @param nodes the array of nodes to compress. This array will be modified
+   *              and returned.
+   */
+  private compress(nodes: TreeNode[]): TreeNode[] {
+
+    console.log('In Compress');
+    console.log(nodes);
+
+    /* Iterate through the nodes at this level */
+    nodes.forEach(value => {
+      if (value.leaf) {
+        /* Node is a leaf, don't touch */
+        console.log('Leaf node: %s', value.label);
+      } else if (value.children) {
+        /* Child nodes exist, apply compression to them */
+        console.log('Child nodes exist, pre-compress: ');
+        console.log(value.children);
+        const compressedChildren = this.compress(value.children);
+
+        if (compressedChildren.length === 1 && !compressedChildren[0].leaf) {
+          /* Only a single non-leaf child, merge */
+          value.label += compressedChildren[0].label;
+          value.children = compressedChildren[0].children;
+
+          /* Remove any double slashes from the path */
+          value.label = value.label.replace('//', '/');
+        }
+      }
+    });
+
+
+    console.log('Compress returning: ');
+    console.log(nodes);
+
+    return nodes;
   }
 }
