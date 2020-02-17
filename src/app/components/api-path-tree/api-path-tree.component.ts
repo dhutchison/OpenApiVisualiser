@@ -17,15 +17,29 @@ export class ApiPathTreeComponent implements OnInit {
    * Object hoilding the tree nodes to display
    */
   apiPathNodes: TreeNode[] = [];
+  /**
+   * The original (uncompressed) version of the tree nodes
+   */
+  private apiPathNodesOrig: TreeNode[];
+
+  /**
+   * The selected node
+   */
   selectedNode: TreeNode;
 
   /* Boolean holding the state on if an image generation is in progress */
   generatingImage = false;
 
-  /* Possible display types */
+  /* Possible display orientation types */
   readonly viewTypes: SelectItem[] = [
     {title: 'Tree', value: true, icon: 'pi pi-sitemap icon-rotate-ccw-90'},
     {title: 'List', value: false, icon: 'pi pi-list'}
+  ];
+
+  /* Possible display expansion modes */
+  readonly expansionTypes: SelectItem[] = [
+    {title: 'Compressed', value: true, icon: 'pi pi-window-minimize'},
+    {title: 'Expanded', value: false, icon: 'pi pi-window-maximize'}
   ];
 
   /* DOM element holding the API tree view */
@@ -48,14 +62,8 @@ export class ApiPathTreeComponent implements OnInit {
     });
 
     this.openApiConverterService.treeNodesChanged.subscribe(value => {
-      if (this.preferenceService.joinNodesWithNoLeaves) {
-        /* First, lets do a pretty dumb (deep) clone of the objects we got */
-        const nodesCopy: TreeNode[] = JSON.parse(JSON.stringify(value));
-        /* Then compress */
-        this.apiPathNodes = this.compress(nodesCopy);
-      } else {
-        this.apiPathNodes = value;
-      }
+      this.apiPathNodesOrig = value;
+      this.setTreeNodes();
     });
   }
 
@@ -78,11 +86,28 @@ export class ApiPathTreeComponent implements OnInit {
     /* Deselect any item */
     this.selectedNode = undefined;
 
-    /* Reprocess the tree */
-    // TODO: implement
-
     /* Set the value */
     this.preferenceService.joinNodesWithNoLeaves = value;
+
+    /* Reprocess the tree */
+    this.setTreeNodes();
+  }
+
+  /**
+   * Method which takes the original (uncompressed) tree
+   * nodes and, if required, applies compression before
+   * setting the field the UI is watching
+   */
+  private setTreeNodes() {
+    /* First, lets do a pretty dumb (deep) clone of the objects we got */
+    const nodesCopy: TreeNode[] = JSON.parse(JSON.stringify(this.apiPathNodesOrig));
+
+    if (this.preferenceService.joinNodesWithNoLeaves) {
+      /* Then compress */
+      this.apiPathNodes = this.compress(nodesCopy);
+    } else {
+      this.apiPathNodes = nodesCopy;
+    }
   }
 
   /**

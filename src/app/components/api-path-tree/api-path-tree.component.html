@@ -1,6 +1,14 @@
 <div class="path-tree-buttons">
-  <!-- <p-inputSwitch [(ngModel)]="horizontalView"></p-inputSwitch> -->
-  <p-selectButton [options]="viewTypes" [(ngModel)]="horizontalView"></p-selectButton>
+  <p-selectButton 
+    [options]="viewTypes" 
+    [(ngModel)]="horizontalView">
+  </p-selectButton>
+  
+  <p-selectButton 
+    [options]="expansionTypes" 
+    [(ngModel)]="joinNodesWithNoLeaves">
+  </p-selectButton>
+
   <button pButton type="button" icon="pi pi-download" label="Download Image" 
     (click)="downloadImage($event)"
     class="download-image-button"
