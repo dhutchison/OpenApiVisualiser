@@ -17,15 +17,29 @@ export class ApiPathTreeComponent implements OnInit {
    * Object hoilding the tree nodes to display
    */
   apiPathNodes: TreeNode[] = [];
+  /**
+   * The original (uncompressed) version of the tree nodes
+   */
+  private apiPathNodesOrig: TreeNode[];
+
+  /**
+   * The selected node
+   */
   selectedNode: TreeNode;
 
   /* Boolean holding the state on if an image generation is in progress */
   generatingImage = false;
 
-  /* Possible display types */
+  /* Possible display orientation types */
   readonly viewTypes: SelectItem[] = [
     {title: 'Tree', value: true, icon: 'pi pi-sitemap icon-rotate-ccw-90'},
     {title: 'List', value: false, icon: 'pi pi-list'}
+  ];
+
+  /* Possible display expansion modes */
+  readonly expansionTypes: SelectItem[] = [
+    {title: 'Compressed', value: true, icon: 'pi pi-window-minimize'},
+    {title: 'Expanded', value: false, icon: 'pi pi-window-maximize'}
   ];
 
   /* DOM element holding the API tree view */
@@ -48,7 +62,8 @@ export class ApiPathTreeComponent implements OnInit {
     });
 
     this.openApiConverterService.treeNodesChanged.subscribe(value => {
-      this.apiPathNodes = value;
+      this.apiPathNodesOrig = value;
+      this.setTreeNodes();
     });
   }
 
@@ -61,6 +76,38 @@ export class ApiPathTreeComponent implements OnInit {
     this.selectedNode = undefined;
     /* Change the view */
     this.preferenceService.horizontalView = value;
+  }
+
+  get joinNodesWithNoLeaves(): boolean {
+    return this.preferenceService.joinNodesWithNoLeaves;
+  }
+
+  set joinNodesWithNoLeaves(value: boolean) {
+    /* Deselect any item */
+    this.selectedNode = undefined;
+
+    /* Set the value */
+    this.preferenceService.joinNodesWithNoLeaves = value;
+
+    /* Reprocess the tree */
+    this.setTreeNodes();
+  }
+
+  /**
+   * Method which takes the original (uncompressed) tree
+   * nodes and, if required, applies compression before
+   * setting the field the UI is watching
+   */
+  private setTreeNodes() {
+    /* First, lets do a pretty dumb (deep) clone of the objects we got */
+    const nodesCopy: TreeNode[] = JSON.parse(JSON.stringify(this.apiPathNodesOrig));
+
+    if (this.preferenceService.joinNodesWithNoLeaves) {
+      /* Then compress */
+      this.apiPathNodes = this.compress(nodesCopy);
+    } else {
+      this.apiPathNodes = nodesCopy;
+    }
   }
 
   /**
@@ -97,5 +144,45 @@ export class ApiPathTreeComponent implements OnInit {
         this.generatingImage = false;
     });
 
+  }
+
+  /**  When we compress the view, we will merge any nodes which have only a
+   * single child, and the child is not a leaf.
+   *
+   * @param nodes the array of nodes to compress. This array will be modified
+   *              and returned.
+   */
+  private compress(nodes: TreeNode[]): TreeNode[] {
+
+    console.log('In Compress');
+    console.log(nodes);
+
+    /* Iterate through the nodes at this level */
+    nodes.forEach(value => {
+      if (value.leaf) {
+        /* Node is a leaf, don't touch */
+        console.log('Leaf node: %s', value.label);
+      } else if (value.children) {
+        /* Child nodes exist, apply compression to them */
+        console.log('Child nodes exist, pre-compress: ');
+        console.log(value.children);
+        const compressedChildren = this.compress(value.children);
+
+        if (compressedChildren.length === 1 && !compressedChildren[0].leaf) {
+          /* Only a single non-leaf child, merge */
+          value.label += compressedChildren[0].label;
+          value.children = compressedChildren[0].children;
+
+          /* Remove any double slashes from the path */
+          value.label = value.label.replace('//', '/');
+        }
+      }
+    });
+
+
+    console.log('Compress returning: ');
+    console.log(nodes);
+
+    return nodes;
   }
 }
