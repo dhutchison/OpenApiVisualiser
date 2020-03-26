@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiPathTreeComponent } from './api-path-tree.component';
 import { NodeMethodDetailComponent } from '../node-detail/node-method-detail/node-method-detail.component';
 
-import { PipesModule } from 'src/app/pipes/pipes.module';
+import { PipesModule } from '../../pipes/pipes.module';
 
 import { ButtonModule } from 'primeng/button';
 import { FieldsetModule } from 'primeng/fieldset';

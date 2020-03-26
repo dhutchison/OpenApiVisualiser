@@ -5,7 +5,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { SchemaDetailComponent } from './schema-detail/schema-detail.component';
 import { TreeTableModule } from 'primeng/treetable';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { PipesModule } from 'src/app/pipes/pipes.module';
+import { PipesModule } from '../../pipes/pipes.module';
 
 describe('ApiComponentsDetailComponent', () => {
   let component: ApiComponentsDetailComponent;

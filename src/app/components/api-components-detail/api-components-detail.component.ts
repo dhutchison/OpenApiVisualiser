@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { SchemaObject, ReferenceObject } from 'openapi3-ts';
-import { FileReaderService } from 'src/app/services/file-reader.service';
+import { SchemaObject, ReferenceObject } from '@loopback/openapi-v3-types';
+import { FileReaderService } from '../../services/file-reader.service';
 
 export class SchemaContainer {
   [schema: string]: SchemaObject | ReferenceObject;

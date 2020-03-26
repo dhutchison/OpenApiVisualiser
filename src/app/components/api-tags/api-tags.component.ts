@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FileReaderService } from 'src/app/services/file-reader.service';
-import { TagObject } from 'openapi3-ts';
+import { FileReaderService } from '../../services/file-reader.service';
+import { TagObject } from '@loopback/openapi-v3-types';
 
 @Component({
   selector: 'app-api-tags',

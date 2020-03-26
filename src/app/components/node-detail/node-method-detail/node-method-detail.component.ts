@@ -1,8 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { TreeNode } from 'primeng/api';
 
-import { Parser, HtmlRenderer } from 'commonmark';
-import { OperationObject } from 'openapi3-ts';
+import { OperationObject } from '@loopback/openapi-v3-types';
 
 @Component({
   selector: 'app-node-method-detail',

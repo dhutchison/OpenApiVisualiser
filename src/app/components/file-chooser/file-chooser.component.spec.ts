@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { FileChooserComponent } from './file-chooser.component';
 import { FileUploadModule } from 'primeng/fileupload';
-import { FileReaderService } from 'src/app/services/file-reader.service';
+import { FileReaderService } from '../../services/file-reader.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('FileChooserComponent', () => {

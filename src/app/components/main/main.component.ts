@@ -1,5 +1,5 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { FileReaderService } from 'src/app/services/file-reader.service';
+import { FileReaderService } from '../../services/file-reader.service';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({

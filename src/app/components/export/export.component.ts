@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { OpenAPIObject } from 'openapi3-ts';
-import { FileReaderService } from 'src/app/services/file-reader.service';
+import { OpenAPIObject } from '@loopback/openapi-v3-types';
+import { FileReaderService } from '../../services/file-reader.service';
 
 import { saveAs } from 'file-saver';
 import * as jsyaml from 'js-yaml';

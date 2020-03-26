@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { ExternalDocumentationObject } from 'openapi3-ts';
+import { ExternalDocumentationObject } from '@loopback/openapi-v3-types';
 
 @Component({
   selector: 'app-external-docs',

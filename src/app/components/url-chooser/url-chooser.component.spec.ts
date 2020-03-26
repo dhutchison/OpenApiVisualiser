@@ -3,7 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { UrlChooserComponent } from './url-chooser.component';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
-import { FileReaderService } from 'src/app/services/file-reader.service';
+import { FileReaderService } from '../../services/file-reader.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('UrlChooserComponent', () => {
