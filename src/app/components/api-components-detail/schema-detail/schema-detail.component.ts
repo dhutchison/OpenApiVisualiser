@@ -1,7 +1,7 @@
 import { Component, OnInit, Input, SimpleChanges, OnChanges } from '@angular/core';
-import { SchemaObject } from 'openapi3-ts';
+import { SchemaObject } from '@loopback/openapi-v3-types';
 import { TreeNode } from 'primeng/api';
-import { OpenapiTreenodeConverterService } from 'src/app/services/openapi-treenode-converter.service';
+import { OpenapiTreenodeConverterService } from '../../../services/openapi-treenode-converter.service';
 
 @Component({
   selector: 'app-schema-detail',

@@ -3,7 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { ApiTagsComponent } from './api-tags.component';
 import { ExternalDocsComponent } from '../external-docs/external-docs.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { PipesModule } from 'src/app/pipes/pipes.module';
+import { PipesModule } from '../../pipes/pipes.module';
 
 describe('ApiTagsComponent', () => {
   let component: ApiTagsComponent;

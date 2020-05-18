@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { SchemaDetailComponent } from './schema-detail.component';
 import { TreeTableModule } from 'primeng/treetable';
-import { PipesModule } from 'src/app/pipes/pipes.module';
+import { PipesModule } from '../../../pipes/pipes.module';
 
 describe('SchemaDetailComponent', () => {
   let component: SchemaDetailComponent;

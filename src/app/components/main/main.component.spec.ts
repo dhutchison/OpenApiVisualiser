@@ -29,7 +29,7 @@ import { SchemaDetailComponent } from '../api-components-detail/schema-detail/sc
 import { FileChooserComponent } from '../file-chooser/file-chooser.component';
 import { UrlChooserComponent } from '../url-chooser/url-chooser.component';
 
-import { PipesModule } from 'src/app/pipes/pipes.module';
+import { PipesModule } from '../../pipes/pipes.module';
 
 describe('MainComponent', () => {
   let component: MainComponent;

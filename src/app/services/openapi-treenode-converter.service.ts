@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 import {
           getPath, OpenApiSpec, OperationObject,
           PathItemObject, PathsObject, SchemaObject,
-          RequestBodyObject, ReferenceObject, ComponentsObject, MediaTypeObject, ResponseObject
+          RequestBodyObject, ReferenceObject, MediaTypeObject, ResponseObject
         } from '@loopback/openapi-v3-types';
 
 @Injectable({

@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { OpenAPIObject } from 'openapi3-ts';
-import { FileReaderService } from 'src/app/services/file-reader.service';
-import { OpenapiTreenodeConverterService } from 'src/app/services/openapi-treenode-converter.service';
+import { FileReaderService } from '../../services/file-reader.service';
+import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
 import { TreeNode } from 'primeng/api';
 
 @Component({
