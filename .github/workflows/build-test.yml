@@ -39,5 +39,5 @@ jobs:
         npm install
         npm run-script lint
         npm run-script build-deployment
-        # TODO: Add tests
+        npm run-script test-headless
         
