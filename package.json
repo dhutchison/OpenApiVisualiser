@@ -12,7 +12,8 @@
     "test-headless-container": "ng test --watch=false --browsers=ChromeHeadlessNoSandbox --codeCoverage=true",
     "test-headless-coveralls": "ng test --watch=false --browsers=ChromeHeadless --codeCoverage=true --reporters=coverage-istanbul,coveralls",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "cy:open": "cypress open"
   },
   "private": true,
   "dependencies": {
@@ -51,6 +52,7 @@
     "@types/jasminewd2": "^2.0.8",
     "@types/node": "^12.11.1",
     "codelyzer": "^5.2.1",
+    "cypress": "^5.0.0",
     "husky": "^4.2.3",
     "jasmine-core": "~2.99.1",
     "jasmine-spec-reporter": "~4.2.1",
