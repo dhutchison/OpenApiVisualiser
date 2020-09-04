@@ -1,5 +1,3 @@
-[![Coverage Status](https://coveralls.io/repos/github/dhutchison/OpenApiVisualiser/badge.svg?branch=master)](https://coveralls.io/github/dhutchison/OpenApiVisualiser?branch=master)
-
 # OpenAPIVisualiser
 
 A utility for visualising the paths of an OpenAPI definition. 

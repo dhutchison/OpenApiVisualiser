@@ -38,4 +38,29 @@ describe('The Home Page', () => {
         cy.contains('Import File(s)')//.click();
     })
 
+    /* Test when we load a spec from a URL, with root node endpoints, that they
+       are rendered
+    */
+   it('Loads from a URL with root node endpoints', () => {
+
+        /* Load the URL using the query parameter */
+        cy.visit('/?url=https://raw.githubusercontent.com/dhutchison/OpenApiVisualiser/master/sample_openapi/uspto.yaml')
+
+        /* Expand the API Paths section */
+        cy.get('#api-path-tab').click()
+
+        /* Check the operation ID nodes exist and are visible */
+        cy.get('#list-data-sets-node')
+            .should('be.visible')
+            .should('have.text', 'GET')
+        cy.get('#list-searchable-fields-node')
+            .should('be.visible')
+            .should('have.text', 'GET')
+        cy.get('#perform-search-node')
+            .should('be.visible')
+            .should('have.text', 'POST')
+
+
+
+   })
   })

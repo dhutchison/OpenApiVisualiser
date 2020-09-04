@@ -121,23 +121,29 @@ export class OpenapiTreenodeConverterService {
       const apiPath: PathItemObject = getPath(paths, key);
       console.log(apiPath);
 
-      /* Need to work back up the path structure. Filtering out any blank elements */
+      /* Need to work back up the path structure. Filtering out any duplicate elements */
       key.split('/')
-        .filter(value => value.length > 0)
+        .filter((value, index, array) => index === array.indexOf(value))
         .forEach((value, index, pathSegments) => {
 
-          console.log('Loop values: Value %s, Index %d, PathSegments:', value, index);
+          console.log('Loop values: Value "%s", Index %d, PathSegments:', value, index);
           console.log(pathSegments);
 
 
           /* Work out the path for the node we are trying to work on.
            * Note that slice does not include the end indexed element, so need to add 1 here.
            */
-          const pathSoFar = '/'.concat(pathSegments.slice(0, (index + 1)).join('/'));
+          const pathSoFar = '/'.concat(
+              pathSegments.slice(0, (index + 1))
+              .filter(pathSegment => pathSegment.length > 0)
+              .join('/'));
           console.log('Path so far: %s', pathSoFar);
 
           /* Work out the path for the parent */
-          const parentPath = '/'.concat(pathSegments.slice(0, index).join('/'));
+          const parentPath = '/'.concat(
+              pathSegments.slice(0, index)
+              .filter(pathSegment => pathSegment.length > 0)
+              .join('/'));
 
           /* Get the parent node. This should always exist as we are working from back to front for the path */
           const parentNode = this.treeNodes.get(parentPath);
@@ -153,8 +159,10 @@ export class OpenapiTreenodeConverterService {
             pathNode = this.createPathNode('/'.concat(value), getPath(paths, pathSoFar));
             this.treeNodes.set(pathSoFar, pathNode);
 
-            /* Add it to the parent */
-            parentNode.children.push(pathNode);
+            /* Add it to the parent, if we are not dealing with the root node */
+            if (parentNode !== undefined) {
+              parentNode.children.push(pathNode);
+            }
           }
 
           if (key === pathSoFar) {
@@ -224,6 +232,11 @@ export class OpenapiTreenodeConverterService {
       node.tooltip += '<br/><br/>Complexity: ' + node.complexity;
     } else {
       node.tooltip = 'Complexity: ' + node.complexity;
+    }
+
+    /* Add an id */
+    if (node.operation && node.operation.operationId) {
+      node.id = node.operation.operationId;
     }
 
     return node;
@@ -432,6 +445,7 @@ export class OpenapiTreenodeConverterService {
 
 export interface OperationTreeNode extends TreeNode {
   tooltip?: string;
+  id?: string;
 
   // Additional fields to supply details to Node Detail Rendering
   method?: string;
