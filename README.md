@@ -37,7 +37,7 @@ Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.
 
 ## Running end-to-end tests
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+Run `ng e2e` to execute the end-to-end tests via [Cypress](https://cypress.io/).
 
 ## Building for deployment
 [This guide](https://angular.io/guide/deployment#deploy-to-github-pages) details how to deploy Angular applications to GitHub pages. 

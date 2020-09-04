@@ -7,7 +7,6 @@ module.exports = function (config) {
     frameworks: ['jasmine', '@angular-devkit/build-angular'],
     plugins: [
       require('karma-jasmine'),
-      require('karma-coveralls'),
       require('karma-chrome-launcher'),
       require('karma-junit-reporter'),
       require('karma-jasmine-html-reporter'),
@@ -19,7 +18,7 @@ module.exports = function (config) {
     },
     coverageIstanbulReporter: {
       dir: require('path').join(__dirname, '../coverage/OpenAPIVisualiser'),
-      reports: ['html', 'lcovonly', 'text-summary'],
+      reports: ['json', 'lcov', 'text-summary'],
       fixWebpackSourcePaths: true
     },
     // Note the documentation says more is required to allow this junit
