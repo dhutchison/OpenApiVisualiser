@@ -40,7 +40,7 @@ jobs:
     # Run tests
     - name: Test
       run: |
-        npm run-script test-headless
+        npm run-script test:all
     # Comment on the PR
     - name: Add comment to PR
       # if: contains(github.event.comment.body, 'special string')

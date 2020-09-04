@@ -40,7 +40,7 @@ jobs:
     # Run tests
     - name: Test
       run: |
-        npm run-script test-headless
+        npm run-script test:all
     # Deploy to GH pages
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@3.5.9
