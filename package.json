@@ -9,15 +9,14 @@
     "build-deployment": "ng build --prod --output-path dist --base-href /OpenApiVisualiser/ && cp dist/index.html dist/404.html",
     "lint": "ng lint",
     "test": "ng test --codeCoverage=true",
-    "test-headless": "ng test --watch=false --browsers=ChromeHeadless --codeCoverage=true",
-    "test-headless-container": "ng test --watch=false --browsers=ChromeHeadlessNoSandbox --codeCoverage=true",
+    "test-headless": "nyc --silent ng test --watch=false --browsers=ChromeHeadless",
+    "test-headless-container": "nyc --silent ng test --watch=false --browsers=ChromeHeadlessNoSandbox",
     "cy:run": "cypress run --headless --spec \"cypress/integration/*_spec.js\"",
     "cy:coverage:report": "nyc report --reporter=html --temp-dir=.nyc_output --report-dir=./coverage/cypress",
     "cy:open": "cypress open",
     "e2e": "concurrently \"ng serve\" \"wait-on http-get://localhost:4200 && npm run cy:run\" --kill-others --success first",
-    "test:all": "run-s -n test-headless-container e2e test:all:coverage:merge test:all:coverage:report",
-    "test:all:coverage:merge": "istanbul-merge --out ./coverage/combined/coverage-final.json ./coverage/OpenAPIVisualiser/coverage-final.json .nyc_output/out.json",
-    "test:all:coverage:report": "nyc report --reporter=lcov --temp-dir=./coverage/output --report-dir=./coverage/combined/html"
+    "test:all": "run-s -n test-headless-container e2e test:all:coverage:report",
+    "test:all:coverage:report": "nyc report --reporter=lcov --report-dir=./coverage/combined/html"
   },
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",
