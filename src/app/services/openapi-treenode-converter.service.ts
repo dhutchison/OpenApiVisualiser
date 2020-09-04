@@ -234,6 +234,11 @@ export class OpenapiTreenodeConverterService {
       node.tooltip = 'Complexity: ' + node.complexity;
     }
 
+    /* Add an id */
+    if (node.operation && node.operation.operationId) {
+      node.id = node.operation.operationId;
+    }
+
     return node;
 
   }
@@ -440,6 +445,7 @@ export class OpenapiTreenodeConverterService {
 
 export interface OperationTreeNode extends TreeNode {
   tooltip?: string;
+  id?: string;
 
   // Additional fields to supply details to Node Detail Rendering
   method?: string;
