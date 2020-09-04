@@ -16,5 +16,8 @@
 // Import commands.js using ES2015 syntax:
 import './commands'
 
+// Import cypress code-coverage collector plugin
+import '@cypress/code-coverage/support';
+
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
