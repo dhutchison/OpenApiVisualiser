@@ -48,10 +48,18 @@ export class FileReaderService {
 
     const yaml = (url.match(/\.yaml/) !== null);
     fileData.subscribe(
-      fileContent => this.loadData(fileContent, yaml),
+      fileContent => {
+        this.loadData(fileContent, yaml);
+
+        this.runTestFunction(() => console.log('Testing coverage?'));
+      },
       // TODO: notification of the failure?
       error => { console.error(error); }
     );
+  }
+
+  private runTestFunction(funct: () => any) {
+    funct();
   }
 
   /**
