@@ -7,6 +7,7 @@ name: Build and Test
 on:
   pull_request:
     branches: [ master ]
+    types: [opened, synchronize, reopened]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -20,12 +21,15 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        # Shallow clones should be disabled for a better relevancy of sonar analysis
+        fetch-depth: 0
     # This installs node and npm for us
     - uses: actions/setup-node@v1
       with:
         node-version: '10.x'
     # this allows for re-using node_modules caching, making builds a bit faster.
-    - uses: actions/cache@v1 
+    - uses: actions/cache@v1
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -41,6 +45,13 @@ jobs:
     - name: Test
       run: |
         npm run-script test:all
+    # Code quality checks
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        # Needed to get PR information, if any
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     # Comment on the PR
     - name: Add comment to PR
       # if: contains(github.event.comment.body, 'special string')
@@ -67,4 +78,4 @@ jobs:
           -H "Content-Type: application/json" \
           -H "Authorization: token $GITHUB_TOKEN" \
           --data '{ "body": "@dependabot merge" }'
-        
+
