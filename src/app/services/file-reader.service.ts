@@ -103,7 +103,7 @@ export class FileReaderService {
    * @param yaml the YAML to convert
    */
   private convertYamlToOpenApiSpec(yaml: string): OpenApiSpec {
-    const obj = jsyaml.safeLoad(yaml);
+    const obj = jsyaml.safeLoad(yaml) as OpenApiSpec;
 
     console.log(JSON.stringify(obj, null, 4));
 
