@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { SchemaDetailComponent } from './schema-detail.component';
 import { TreeTableModule } from 'primeng/treetable';
@@ -8,7 +8,7 @@ describe('SchemaDetailComponent', () => {
   let component: SchemaDetailComponent;
   let fixture: ComponentFixture<SchemaDetailComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         SchemaDetailComponent,
