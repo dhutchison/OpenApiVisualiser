@@ -20,6 +20,13 @@ import {
 export class OpenapiTreenodeConverterService {
 
   /**
+   * Subject which interested modules can subscribe to
+   * in order to be informed when the nodes for display
+   * change.
+   */
+  readonly treeNodesChanged = new Subject<TreeNode[]>();
+
+  /**
    * Array containing the possible HTTP methods which can have operations for a path.
    */
   private readonly httpMethods = [
@@ -32,13 +39,6 @@ export class OpenapiTreenodeConverterService {
     'patch',
     'trace'
   ];
-
-  /**
-   * Subject which interested modules can subscribe to
-   * in order to be informed when the nodes for display
-   * change.
-   */
-  readonly treeNodesChanged = new Subject<TreeNode[]>();
 
   /**
    * Object hoilding the tree nodes to display
@@ -78,6 +78,7 @@ export class OpenapiTreenodeConverterService {
    * Merge in the paths and operations from the supplied OpenApi Specification
    * in to the current state in this service and notify subscribers
    * of the updated Tree Nodes.
+   *
    * @param openApiSpec the specification to merge in.
    */
   addApiSpecification(openApiSpec: OpenApiSpec) {
@@ -102,6 +103,38 @@ export class OpenapiTreenodeConverterService {
     /* Notify subscribers */
     this.treeNodesChanged.next(this.apiPathNodes);
 
+  }
+
+  /**
+   * Create a tree node for a component schema object with nested
+   * structure below it for any child components referenced by properties
+   *
+   * @param schema the schema object
+   */
+  public createComponentSchemaPropertiesToTreeNodes(schema: SchemaObject): TreeNode[] {
+    const nodes: TreeNode[] = [];
+    if (schema.type && schema.type === 'array') {
+      const node = this.createSchemaPropertyToTreeNode(schema.title, schema.items);
+      if (node) {
+        const root: TreeNode = {
+          label: schema.title,
+          leaf: false,
+          expanded: true,
+          children: [node],
+          data: schema
+        };
+        nodes.push(root);
+      }
+    }
+    if (schema.properties) {
+      Object.keys(schema.properties).forEach(title => {
+        const node = this.createSchemaPropertyToTreeNode(title, schema.properties[title]);
+        if (node) {
+          nodes.push(node);
+        }
+      });
+    }
+    return nodes;
   }
 
   /**
@@ -186,6 +219,7 @@ export class OpenapiTreenodeConverterService {
 
   /**
    * Create a non-leaf node for a path.
+   *
    * @param path the path segment to have as the label for the node
    * @param definition the path section definition
    */
@@ -203,6 +237,7 @@ export class OpenapiTreenodeConverterService {
 
   /**
    * Create a leaf node for an HTTP Method Operation
+   *
    * @param method the HTTP method
    * @param operation the details of the Operation
    */
@@ -335,41 +370,10 @@ export class OpenapiTreenodeConverterService {
     return object;
   }
 
-
-  /**
-   * Create a tree node for a component schema object with nested
-   * structure below it for any child components referenced by properties
-   * @param schema the schema object
-   */
-  public createComponentSchemaPropertiesToTreeNodes(schema: SchemaObject): TreeNode[] {
-    const nodes: TreeNode[] = [];
-    if (schema.type && schema.type === 'array') {
-      const node = this.createSchemaPropertyToTreeNode(schema.title, schema.items);
-      if (node) {
-        const root: TreeNode = {
-          label: schema.title,
-          leaf: false,
-          expanded: true,
-          children: [node],
-          data: schema
-        };
-        nodes.push(root);
-      }
-    }
-    if (schema.properties) {
-      Object.keys(schema.properties).forEach(title => {
-        const node = this.createSchemaPropertyToTreeNode(title, schema.properties[title]);
-        if (node) {
-          nodes.push(node);
-        }
-      });
-    }
-    return nodes;
-  }
-
   /**
    * Create a tree node for the property component schema object with nested
    * structure below it for any child components referenced by properties
+   *
    * @param schema the schema object
    */
   private createSchemaPropertyToTreeNode(title: string, property: SchemaObject): TreeNode {
@@ -395,41 +399,46 @@ export class OpenapiTreenodeConverterService {
 
   /**
    * Helper method using type guards to determine if the supplied object is a RequestBodyObject.
+   *
    * @param object the object to test
    */
-  private isRequestBodyObject(object: object): object is RequestBodyObject {
+  private isRequestBodyObject(object: unknown): object is RequestBodyObject {
     return (object as RequestBodyObject).content !== undefined;
   }
 
   /**
    * Helper method using type guards to determine if the supplied object is a ReferenceObject.
+   *
    * @param object the object to test
    */
-  private isReferenceObject(object: object): object is ReferenceObject {
+  private isReferenceObject(object: unknown): object is ReferenceObject {
     return (object as ReferenceObject).$ref !== undefined;
   }
 
   /**
    * Helper method using type guards to determine if the supplied object is a MediaTypeObject.
+   *
    * @param object the object to test
    */
-  private isMediaTypeObject(object: object): object is MediaTypeObject {
+  private isMediaTypeObject(object: unknown): object is MediaTypeObject {
     return (object as MediaTypeObject).schema !== undefined;
   }
 
   /**
    * Helper method using type guards to determine if the supplied object is a ResponseObject.
+   *
    * @param object the object to test
    */
-  private isResponseObject(object: object): object is ResponseObject {
+  private isResponseObject(object: unknown): object is ResponseObject {
     return (object as ResponseObject).content !== undefined;
   }
 
   /**
    * Helper method using type guards to determine if the supplied object is a SchemaObject.
+   *
    * @param object the object to test
    */
-  private isSchemaObject(object: object): object is SchemaObject {
+  private isSchemaObject(object: unknown): object is SchemaObject {
 
     const schemaObject = (object as SchemaObject);
 

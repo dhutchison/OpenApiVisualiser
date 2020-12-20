@@ -27,6 +27,7 @@ export class FileReaderService {
   /**
    * Load the supplied file as a YAML OpenAPI specification
    * and notify subscribers to the "apiChanged" subject in this service.
+   *
    * @param file the file to load as a YAML specification
    */
   loadFile(file: File) {
@@ -41,6 +42,7 @@ export class FileReaderService {
   /**
    * Load the supplied URL as a YAML OpenAPI specification
    * and notify subscribers to the "apiChanged" subject in this service.
+   *
    * @param url the url to load as a YAML specification
    */
   loadFileFromURL(url: string) {
@@ -57,6 +59,7 @@ export class FileReaderService {
   /**
    * Load the supplied file content as a OpenAPI specification
    * and notify subscribers to the "apiChanged" subject in this service.
+   *
    * @param fileContent the file contents to load
    * @param yaml boolean indicating if the file content is YAML (true) or not.
    *       If this is false then it will be assumed to be JSON.
@@ -100,6 +103,7 @@ export class FileReaderService {
 
   /**
    * Convert the supplied YAML api defintion into the OpenApiSpec object.
+   *
    * @param yaml the YAML to convert
    */
   private convertYamlToOpenApiSpec(yaml: string): OpenApiSpec {

@@ -3,7 +3,7 @@
 
 /* PrimeNG */
 @import "~primeicons/primeicons.css";
-@import "~primeng/resources/themes/nova-colored/theme.css";
+@import "~primeng/resources/themes/nova-accent/theme.css";
 @import "~primeng/resources/primeng.min.css";
 
 /* Fonts */
@@ -16,7 +16,7 @@ body {
 }
 #masthead {
     background: url('assets/images/logo.png') top left no-repeat;
-   
+
     position: absolute;
     width: 219px;
     height:270px;
@@ -35,7 +35,7 @@ h1.title {
     font-size: 2.4em;
     font-family: 'Montserrat', sans-serif;
 
-    
+
 }
 
 /********** Colours *****************/
@@ -81,11 +81,11 @@ $putHighlightColour: #fca130;
     .ui-tree-horizontal {
         /* Overriding the behaviour of the PrimeNG component here so that
          * the overflow control is on a component that we can change the style of
-         * in the api-path-tree component when generating an image. 
+         * in the api-path-tree component when generating an image.
          */
         overflow: visible;
 
-        /* Also moved these styles up in to .tree-view so they are in the component 
+        /* Also moved these styles up in to .tree-view so they are in the component
          * that we are generating the image of
          */
          border: 0;
@@ -100,7 +100,7 @@ $putHighlightColour: #fca130;
 }
 
 .tree-vertical .ui-treenode-content {
-    background-image: linear-gradient(#cfd9df,#e2ebf0);  
+    background-image: linear-gradient(#cfd9df,#e2ebf0);
     font-weight: bold;
 
 }
@@ -188,10 +188,10 @@ $putHighlightColour: #fca130;
     }
 }
 
-// body 
+// body
 .ui-tree {
     &.ui-tree-horizontal, &.ui-tree-vertical {
-        
+
         .ui-treenode-http-method-get .ui-treenode .ui-treenode-content {
             border-bottom: 2px solid $getHighlightColour;
         }

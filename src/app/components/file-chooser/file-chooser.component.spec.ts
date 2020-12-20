@@ -32,7 +32,7 @@ describe('FileChooserComponent', () => {
     loadFileSpy = spyOn(fileReaderService, 'loadFile');
 
     fileUploadComponent = {
-      clear() {}
+      clear: () => {}
     };
     clearSpy = spyOn(fileUploadComponent, 'clear');
 

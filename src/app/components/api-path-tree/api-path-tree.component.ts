@@ -13,14 +13,13 @@ import { toBlob, OptionsType } from 'html-to-image';
 })
 export class ApiPathTreeComponent implements OnInit {
 
+  /* DOM element holding the API tree view */
+  @ViewChild('treeView') treeViewElement: ElementRef;
+
   /**
    * Object hoilding the tree nodes to display
    */
   apiPathNodes: TreeNode[] = [];
-  /**
-   * The original (uncompressed) version of the tree nodes
-   */
-  private apiPathNodesOrig: TreeNode[];
 
   /**
    * The selected node
@@ -42,8 +41,10 @@ export class ApiPathTreeComponent implements OnInit {
     {title: 'Expanded', value: false, icon: 'pi pi-window-maximize'}
   ];
 
-  /* DOM element holding the API tree view */
-  @ViewChild('treeView') treeViewElement: ElementRef;
+  /**
+   * The original (uncompressed) version of the tree nodes
+   */
+  private apiPathNodesOrig: TreeNode[];
 
   constructor(
     private preferenceService: UserPreferenceControllerService,
@@ -94,23 +95,6 @@ export class ApiPathTreeComponent implements OnInit {
   }
 
   /**
-   * Method which takes the original (uncompressed) tree
-   * nodes and, if required, applies compression before
-   * setting the field the UI is watching
-   */
-  private setTreeNodes() {
-    /* First, lets do a pretty dumb (deep) clone of the objects we got */
-    const nodesCopy: TreeNode[] = JSON.parse(JSON.stringify(this.apiPathNodesOrig));
-
-    if (this.preferenceService.joinNodesWithNoLeaves) {
-      /* Then compress */
-      this.apiPathNodes = this.compress(nodesCopy);
-    } else {
-      this.apiPathNodes = nodesCopy;
-    }
-  }
-
-  /**
    * Download an image of the API tree.
    *
    * This depends on the html-to-image library to do all the heavy work.
@@ -144,6 +128,23 @@ export class ApiPathTreeComponent implements OnInit {
         this.generatingImage = false;
     });
 
+  }
+
+  /**
+   * Method which takes the original (uncompressed) tree
+   * nodes and, if required, applies compression before
+   * setting the field the UI is watching
+   */
+  private setTreeNodes() {
+    /* First, lets do a pretty dumb (deep) clone of the objects we got */
+    const nodesCopy: TreeNode[] = JSON.parse(JSON.stringify(this.apiPathNodesOrig));
+
+    if (this.preferenceService.joinNodesWithNoLeaves) {
+      /* Then compress */
+      this.apiPathNodes = this.compress(nodesCopy);
+    } else {
+      this.apiPathNodes = nodesCopy;
+    }
   }
 
   /**  When we compress the view, we will merge any nodes which have only a
