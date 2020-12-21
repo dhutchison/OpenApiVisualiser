@@ -247,7 +247,7 @@ export class OpenapiTreenodeConverterService {
       label: method,
       leaf: true,
       type: 'operation',
-      styleClass: 'ui-treenode-http-method-' + method.toLowerCase(),
+      styleClass: 'p-treenode-http-method-' + method.toLowerCase(),
       operation,
       method,
       path

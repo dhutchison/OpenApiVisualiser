@@ -1,11 +1,11 @@
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
-import { TreeNode, SelectItem } from 'primeng/api';
+import { TreeNode } from 'primeng/api';
 import { FileReaderService } from '../../services/file-reader.service';
 import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
 import { UserPreferenceControllerService } from '../../controllers/user-preference-controller.service';
 
 
-import { toBlob, OptionsType } from 'html-to-image';
+import { toBlob, Options } from 'html-to-image';
 
 @Component({
   selector: 'app-api-path-tree',
@@ -30,13 +30,13 @@ export class ApiPathTreeComponent implements OnInit {
   generatingImage = false;
 
   /* Possible display orientation types */
-  readonly viewTypes: SelectItem[] = [
+  readonly viewTypes: any[] = [
     {title: 'Tree', value: true, icon: 'pi pi-sitemap icon-rotate-ccw-90'},
     {title: 'List', value: false, icon: 'pi pi-list'}
   ];
 
   /* Possible display expansion modes */
-  readonly expansionTypes: SelectItem[] = [
+  readonly expansionTypes: any[] = [
     {title: 'Compressed', value: true, icon: 'pi pi-window-minimize'},
     {title: 'Expanded', value: false, icon: 'pi pi-window-maximize'}
   ];
@@ -109,12 +109,20 @@ export class ApiPathTreeComponent implements OnInit {
     this.generatingImage = true;
 
     /* Configure the export */
-    const exportOptions: OptionsType = {
+    // const styles: Partial<CSSStyleDeclaration> = {
+    //   border: '0',
+    //   overflow: 'visible'
+    // };
+
+    const exportOptions: Options = {
       backgroundColor: '#ffffff',
-      style: {
-        border: 0,
-        overflow: 'visible'
-      }
+      /*
+       * Needing to set this configuration option until
+       * https://github.com/bubkoo/html-to-image/issues/74
+       * is fixed
+       */
+      pixelRatio: 1,
+      // style: styles
     };
 
     /* Do the work. This uses a promise to async the work */
@@ -126,7 +134,15 @@ export class ApiPathTreeComponent implements OnInit {
 
         /* Mark that the generation is complete */
         this.generatingImage = false;
-    });
+      })
+      .catch(err => {
+
+        //TODO: Error handling in UI
+        console.error('Failed to generate image: %o', err);
+
+        /* Mark that the generation is complete */
+        this.generatingImage = false;
+      });
 
   }
 
