@@ -39,6 +39,7 @@ export class SummaryComponent implements OnInit {
     /**
      * Flattens the descendants of the provided nodes into a single array
      * containing just the leaves
+     *
      * @param parent nodes to be flattened
      */
     flatten(parent: TreeNode[]): TreeNode[] {

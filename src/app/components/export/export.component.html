@@ -6,16 +6,16 @@
           </option>
       </select>
       <p-footer>
-          <button type="submit" pButton icon="pi pi-check" 
+          <button type="submit" pButton icon="pi pi-check"
             label="Export"
             (click)="export()"></button>
-          <button type="button" pButton icon="pi pi-times" 
-            (click)="display=false" label="Cancel" 
-            class="ui-button-secondary"></button>
+          <button type="button" pButton icon="pi pi-times"
+            (click)="display=false" label="Cancel"
+            class="p-button-secondary"></button>
       </p-footer>
 </p-dialog>
 
 <button type="button" pButton
-  (click)="showDialog()"  
+  (click)="showDialog()"
   [disabled]="!buttonEnabled"
   icon="pi pi-download" label="Export"></button>

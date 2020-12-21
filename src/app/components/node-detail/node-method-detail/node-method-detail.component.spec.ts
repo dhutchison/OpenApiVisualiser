@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { NodeMethodDetailComponent } from './node-method-detail.component';
 import { ButtonModule } from 'primeng/button';
@@ -10,7 +10,7 @@ describe('NodeMethodDetailComponent', () => {
   let component: NodeMethodDetailComponent;
   let fixture: ComponentFixture<NodeMethodDetailComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         NodeMethodDetailComponent

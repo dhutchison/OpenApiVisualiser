@@ -3,7 +3,7 @@
 
 /* PrimeNG */
 @import "~primeicons/primeicons.css";
-@import "~primeng/resources/themes/nova-colored/theme.css";
+@import "~primeng/resources/themes/nova-accent/theme.css";
 @import "~primeng/resources/primeng.min.css";
 
 /* Fonts */
@@ -16,7 +16,7 @@ body {
 }
 #masthead {
     background: url('assets/images/logo.png') top left no-repeat;
-   
+
     position: absolute;
     width: 219px;
     height:270px;
@@ -35,7 +35,7 @@ h1.title {
     font-size: 2.4em;
     font-family: 'Montserrat', sans-serif;
 
-    
+
 }
 
 /********** Colours *****************/
@@ -50,6 +50,7 @@ $putHighlightColour: #fca130;
 /********** Button bar ********/
 .button-bar {
     display: flex;
+    margin-bottom: 2px;
 }
 
 /* Icon manipulation */
@@ -73,19 +74,19 @@ $putHighlightColour: #fca130;
 .tree-view {
     overflow: auto;
 
-    border: 1px solid #c8c8c8;
+    border: 0;
     background-color: #ffffff;
     color: #333333;
     border-radius: 3px;
 
-    .ui-tree-horizontal {
+    .p-tree-horizontal {
         /* Overriding the behaviour of the PrimeNG component here so that
          * the overflow control is on a component that we can change the style of
-         * in the api-path-tree component when generating an image. 
+         * in the api-path-tree component when generating an image.
          */
         overflow: visible;
 
-        /* Also moved these styles up in to .tree-view so they are in the component 
+        /* Also moved these styles up in to .tree-view so they are in the component
          * that we are generating the image of
          */
          border: 0;
@@ -94,18 +95,19 @@ $putHighlightColour: #fca130;
 }
 
 .tree-vertical {
-    .ui-tree {
+    .p-tree {
         width: auto;
+        border: 0;
     }
 }
 
-.tree-vertical .ui-treenode-content {
-    background-image: linear-gradient(#cfd9df,#e2ebf0);  
+.tree-vertical .p-treenode-content {
+    background-image: linear-gradient(#cfd9df,#e2ebf0);
     font-weight: bold;
 
 }
 
-.ui-treenode-http-method {
+.p-treenode-http-method {
     .ui-corner-all {
         border-radius: 10px;
     }
@@ -140,12 +142,12 @@ $putHighlightColour: #fca130;
 }
 
 .http-post {
-    .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
+    .p-panel, .p-component-header, .p-panel-content, .p-panel-footer {
         border-color: $postHighlightColour;
         background:rgba(73,204,144,.1);
     }
 
-    .ui-widget-header button {
+    .p-component-header button {
         background: $postHighlightColour;
         border-color: $postHighlightColour;
         padding: 0 0.5em
@@ -153,11 +155,11 @@ $putHighlightColour: #fca130;
 }
 
 .http-put {
-    .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
+    .p-panel, .p-component-header, .p-panel-content, .p-panel-footer {
         border-color:$putHighlightColour;
         background:rgba(252,161,48,.1);
     }
-    .ui-widget-header .ui-button {
+    .p-component-header .p-button {
         border-color:$putHighlightColour;
         background: $putHighlightColour;
         padding: 0 0.5em
@@ -165,11 +167,11 @@ $putHighlightColour: #fca130;
 }
 
 .http-get {
-    .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
+    .p-panel, .p-component-header, .p-panel-content, .p-panel-footer {
         border-color: $getHighlightColour;
         background:rgba(97,175,254,.1);
     }
-    .ui-widget-header .ui-button {
+    .p-component-header .p-button {
         border-color: $getHighlightColour;
         background: $getHighlightColour;
         padding: 0 0.5em
@@ -177,34 +179,34 @@ $putHighlightColour: #fca130;
 }
 
 .http-delete {
-    .ui-panel, .ui-widget-header, .ui-panel-content, .ui-panel-footer {
+    .p-panel, .p-component-header, .p-panel-content, .p-panel-footer {
         border-color:$deleteHighlightColour;
         background:rgba(249,62,62,.1);
     }
-    .ui-widget-header .ui-button {
+    .p-component-header .p-button {
         border-color:$deleteHighlightColour;
         background: $deleteHighlightColour;
         padding: 0 0.5em
     }
 }
 
-// body 
-.ui-tree {
-    &.ui-tree-horizontal, &.ui-tree-vertical {
-        
-        .ui-treenode-http-method-get .ui-treenode .ui-treenode-content {
+// body
+.p-tree {
+    &.p-tree-horizontal, &.p-tree-vertical {
+
+        .p-treenode-http-method-get .p-treenode .p-treenode-content {
             border-bottom: 2px solid $getHighlightColour;
         }
 
-        .ui-treenode-http-method-post .ui-treenode .ui-treenode-content {
+        .p-treenode-http-method-post .p-treenode .p-treenode-content {
             border-bottom: 2px solid $postHighlightColour;
         }
 
-        .ui-treenode-http-method-put .ui-treenode .ui-treenode-content {
+        .p-treenode-http-method-put .p-treenode .p-treenode-content {
             border-bottom: 2px solid $putHighlightColour;
         }
 
-        .ui-treenode-http-method-delete .ui-treenode .ui-treenode-content {
+        .p-treenode-http-method-delete .p-treenode .p-treenode-content {
             border-bottom: 2px solid $deleteHighlightColour;
         }
     }

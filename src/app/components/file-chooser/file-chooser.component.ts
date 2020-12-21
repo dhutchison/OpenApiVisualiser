@@ -17,8 +17,8 @@ export class FileChooserComponent implements OnInit {
   }
 
   loadFile(
-    event: { files?: File[]; target?: { files: Iterable<File> | ArrayLike<File>; }; },
-    fileUploadComponent?: { clear: () => void; }) {
+    event: { files?: File[]; target?: { files: Iterable<File> | ArrayLike<File> } },
+    fileUploadComponent?: { clear: () => void }) {
 
     console.log(event);
 

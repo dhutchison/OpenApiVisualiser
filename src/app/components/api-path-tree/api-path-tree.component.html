@@ -1,15 +1,19 @@
 <div class="path-tree-buttons">
-  <p-selectButton 
-    [options]="viewTypes" 
-    [(ngModel)]="horizontalView">
-  </p-selectButton>
-  
-  <p-selectButton 
-    [options]="expansionTypes" 
-    [(ngModel)]="joinNodesWithNoLeaves">
+  <p-selectButton
+    [options]="viewTypes"
+    [(ngModel)]="horizontalView"
+    optionLabel="title"
+    optionValue="value">
   </p-selectButton>
 
-  <button pButton type="button" icon="pi pi-download" label="Download Image" 
+  <p-selectButton
+    [options]="expansionTypes"
+    [(ngModel)]="joinNodesWithNoLeaves"
+    optionLabel="title"
+    optionValue="value">
+  </p-selectButton>
+
+  <button pButton type="button" icon="pi pi-download" label="Download Image"
     (click)="downloadImage($event)"
     class="download-image-button"
     [disabled]="generatingImage" *ngIf="horizontalView">
@@ -18,10 +22,10 @@
 
 <div [class.tree-detail-horizontal]="!horizontalView">
   <div class="tree-view" #treeView>
-    <p-tree [value]="apiPathNodes" 
-        layout="{{horizontalView | treeOrientation}}" 
+    <p-tree [value]="apiPathNodes"
+        layout="{{horizontalView | treeOrientation}}"
         selectionMode="single"
-        [(selection)]="selectedNode" 
+        [(selection)]="selectedNode"
         [className]="horizontalView? 'tree-horizontal': 'tree-vertical'"
         >
 

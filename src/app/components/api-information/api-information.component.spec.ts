@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ApiInformationComponent } from './api-information.component';
 import { PanelModule } from 'primeng/panel';
@@ -10,7 +10,7 @@ describe('ApiInformationComponent', () => {
   let component: ApiInformationComponent;
   let fixture: ComponentFixture<ApiInformationComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         ApiInformationComponent

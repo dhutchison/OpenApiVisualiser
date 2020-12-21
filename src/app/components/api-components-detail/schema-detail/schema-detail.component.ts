@@ -22,6 +22,7 @@ export class SchemaDetailComponent implements OnInit, OnChanges {
   /**
    * Lifecycle hook triggered when @Input() changes.
    * Utilised to redraw the schema change rendering if the element swaps out underneath
+   *
    * @param changes value of the property change event
    */
   ngOnChanges(changes: SimpleChanges) {

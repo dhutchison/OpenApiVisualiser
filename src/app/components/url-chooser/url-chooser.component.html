@@ -1,18 +1,18 @@
 
 <p-dialog header="Import from URL" [(visible)]="display" [modal]="true"
   [style]="{width: '350px', minWidth: '200px'}" [minY]="70">
-      <span class="ui-float-label">
-        <input id="url-input" type="url" name='url' [(ngModel)]='url' pInputText required> 
+      <span class="p-float-label">
+        <input id="url-input" type="url" name='url' [(ngModel)]='url' pInputText required>
         <label for="url-input">URL</label>
       </span>
       <p-footer>
-          <button type="submit" pButton icon="pi pi-check" 
+          <button type="submit" pButton icon="pi pi-check"
             label="Import"
             [disabled]="!(url && url.length > 0)"
             (click)="import()"></button>
-          <button type="button" pButton icon="pi pi-times" 
-            (click)="display=false" label="Cancel" 
-            class="ui-button-secondary"></button>
+          <button type="button" pButton icon="pi pi-times"
+            (click)="display=false" label="Cancel"
+            class="p-button-secondary"></button>
       </p-footer>
 </p-dialog>
 

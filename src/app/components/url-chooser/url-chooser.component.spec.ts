@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { UrlChooserComponent } from './url-chooser.component';
 import { DialogModule } from 'primeng/dialog';
@@ -13,7 +13,7 @@ describe('UrlChooserComponent', () => {
   let fileReaderService: FileReaderService;
   let loadFileFromURLSpy: jasmine.Spy;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
 
     TestBed.configureTestingModule({
       declarations: [

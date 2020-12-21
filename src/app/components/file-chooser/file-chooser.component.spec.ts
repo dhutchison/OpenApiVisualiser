@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { FileChooserComponent } from './file-chooser.component';
 import { FileUploadModule } from 'primeng/fileupload';
@@ -14,7 +14,7 @@ describe('FileChooserComponent', () => {
   let fileUploadComponent;
   let clearSpy: jasmine.Spy;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
 
     TestBed.configureTestingModule({
       declarations: [
@@ -32,7 +32,7 @@ describe('FileChooserComponent', () => {
     loadFileSpy = spyOn(fileReaderService, 'loadFile');
 
     fileUploadComponent = {
-      clear() {}
+      clear: () => {}
     };
     clearSpy = spyOn(fileUploadComponent, 'clear');
 
