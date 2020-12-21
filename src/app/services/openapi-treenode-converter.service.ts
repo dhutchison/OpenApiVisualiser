@@ -154,14 +154,11 @@ export class OpenapiTreenodeConverterService {
       const apiPath: PathItemObject = getPath(paths, key);
       console.log(apiPath);
 
-      /* Need to work back up the path structure. Filtering out any duplicate elements */
+      /* Need to work back up the path structure. */
       key.split('/')
-        .filter((value, index, array) => index === array.indexOf(value))
         .forEach((value, index, pathSegments) => {
 
-          console.log('Loop values: Value "%s", Index %d, PathSegments:', value, index);
-          console.log(pathSegments);
-
+          console.debug('Loop values: Value "%s", Index %d, PathSegments: %o', value, index, pathSegments);
 
           /* Work out the path for the node we are trying to work on.
            * Note that slice does not include the end indexed element, so need to add 1 here.
@@ -180,8 +177,7 @@ export class OpenapiTreenodeConverterService {
 
           /* Get the parent node. This should always exist as we are working from back to front for the path */
           const parentNode = this.treeNodes.get(parentPath);
-          console.log('Parent node: '.concat(parentPath));
-          console.log(parentNode);
+          console.debug('Parent node: %s, %o', parentPath, parentNode);
 
           /* Get the node definition if it already exists (for instance we are adding a HTTP method to an existng path definition) */
           let pathNode = this.treeNodes.get(pathSoFar);
@@ -201,7 +197,7 @@ export class OpenapiTreenodeConverterService {
           if (key === pathSoFar) {
             /* If the path matches the original key then we are at
              * the level we need to add the HTTP methods */
-            console.log('Path matches the key');
+            console.log('Path %s matches the key %s', pathSoFar, key);
 
             /* Iterate through the possible http methods, adding nodes as required */
             this.httpMethods.forEach(method => {
@@ -211,6 +207,8 @@ export class OpenapiTreenodeConverterService {
                   this.createHttpMethodNode(key, method.toUpperCase(), apiPath[method], apiDefinition));
               }
             });
+          } else {
+            console.log('No match between %s and %s', key, pathSoFar);
           }
       });
     });
@@ -242,6 +240,8 @@ export class OpenapiTreenodeConverterService {
    * @param operation the details of the Operation
    */
   private createHttpMethodNode(path: string, method: string, operation: OperationObject, apiDefinition: OpenApiSpec): TreeNode {
+
+    console.debug('Creating HTTP method node for %s (%s)', operation.operationId, method);
 
     const node: OperationTreeNode = {
       label: method,

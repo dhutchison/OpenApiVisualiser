@@ -23,6 +23,9 @@ describe('The Home Page', () => {
         /* And check the submit button is enabled now and click it */
         cy.get('button[type=submit]').should('be.enabled').click()
 
+        /* Give the dialog a short period to disappear */
+        cy.wait(250);
+
         /* Check there is API information including the title of the spec */
         cy.get('.api-info-title').should('not.be.visible')
         cy.get('#api-information-tab').click()
@@ -38,13 +41,31 @@ describe('The Home Page', () => {
         cy.contains('Import File(s)')//.click();
     })
 
-    /* Test when we load a spec from a URL, with root node endpoints, that they
-       are rendered
-    */
+    /*
+     * Test when we load a spec from a URL, with root node endpoints, that they
+     * are rendered
+     */
    it('Loads from a URL with root node endpoints', () => {
 
+        /* Setup the intercept to use a fixture instead of URL */
+        cy.fixture('uspto.yaml', 'utf8').then((data) => {
+
+          const response = {
+            statusCode: 200,
+            body: data,
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8'
+            }
+          };
+          cy.intercept(
+            'GET',
+            /^http:\/\/local.test\/uspto.yaml/,
+            response)
+        })
+
         /* Load the URL using the query parameter */
-        cy.visit('/?url=https://raw.githubusercontent.com/dhutchison/OpenApiVisualiser/master/sample_openapi/uspto.yaml')
+        cy.visit('/?url=http://local.test/uspto.yaml')
+        // cy.visit('/?url=https://raw.githubusercontent.com/dhutchison/OpenApiVisualiser/master/sample_openapi/uspto.yaml')
 
         /* Expand the API Paths section */
         cy.get('#api-path-tab').click()
@@ -59,8 +80,51 @@ describe('The Home Page', () => {
         cy.get('#perform-search-node')
             .should('be.visible')
             .should('have.text', 'POST')
-
-
-
    })
+
+    /*
+     * Test when we load a spec from a URL, with multiple nodes with the same name in a path, that they
+     * are rendered
+     */
+    it('Loads from a URL with duplicate path nodes', () => {
+
+      /* Setup the intercept to use a fixture instead of URL */
+      cy.fixture('petstore.yaml', 'utf8').then((data) => {
+
+        const response = {
+          statusCode: 200,
+          body: data,
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8'
+          }
+        };
+        cy.intercept(
+          'GET',
+          /^http:\/\/local.test\/petstore.yaml$/,
+          response)
+      })
+
+      /* Load the URL using the query parameter */
+      cy.visit('/?url=http://local.test/petstore.yaml')
+
+      /* Expand the API Paths section */
+      cy.get('#api-path-tab').click()
+
+      /* Check the operation ID nodes exist and are visible */
+      cy.get('#listPets-node')
+          .should('be.visible')
+          .should('have.text', 'GET')
+      cy.get('#showPetById-node')
+          .should('be.visible')
+          .should('have.text', 'GET')
+      cy.get('#listAuditPets-node')
+          .should('be.visible')
+          .should('have.text', 'GET')
+      cy.get('#createPets-node')
+          .should('be.visible')
+          .should('have.text', 'POST')
+
+
+
+ })
   })
