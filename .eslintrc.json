@@ -32,7 +32,8 @@
           "off",
           "always"
         ],
-        "import/order": "off"
+        "import/order": "off",
+        "no-console": "off"
       }
     },
     {

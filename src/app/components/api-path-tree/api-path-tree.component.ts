@@ -171,18 +171,16 @@ export class ApiPathTreeComponent implements OnInit {
    */
   private compress(nodes: TreeNode[]): TreeNode[] {
 
-    console.log('In Compress');
-    console.log(nodes);
+    console.debug('In Compress: %o', nodes);
 
     /* Iterate through the nodes at this level */
     nodes.forEach(value => {
       if (value.leaf) {
         /* Node is a leaf, don't touch */
-        console.log('Leaf node: %s', value.label);
+        console.debug('Leaf node: %s', value.label);
       } else if (value.children) {
         /* Child nodes exist, apply compression to them */
-        console.log('Child nodes exist, pre-compress: ');
-        console.log(value.children);
+        console.debug('Child nodes exist, pre-compress: %o', value.children);
         const compressedChildren = this.compress(value.children);
 
         if (compressedChildren.length === 1 && !compressedChildren[0].leaf) {
@@ -197,8 +195,7 @@ export class ApiPathTreeComponent implements OnInit {
     });
 
 
-    console.log('Compress returning: ');
-    console.log(nodes);
+    console.debug('Compress returning: %o', nodes);
 
     return nodes;
   }
