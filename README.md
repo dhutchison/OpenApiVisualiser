@@ -2,6 +2,8 @@
 
 A utility for visualising the paths of an OpenAPI definition. 
 
+![Example API output](docs/images/API.png)
+
 This application supports a query parameter, url, which can be used to pre-load a definition in to the application. 
 
 For example:
@@ -21,10 +23,6 @@ accept connections).
 
 `ng serve --host 0.0.0.0`
 
-## Code scaffolding
-
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
 ## Build
 
 Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
@@ -35,18 +33,14 @@ Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.
 
 ## Running end-to-end tests
 
-Run `ng e2e` to execute the end-to-end tests via [Cypress](https://cypress.io/).
+Run `npm run e2e` to execute the end-to-end tests via [Cypress](https://cypress.io/).
+
+This will also start up a local server. If you just want to run the tests you can either use `npm run cy:run` or `npm run cy:open` depending on if you want to run the tests headless or not. 
 
 ## Building for deployment
 [This guide](https://angular.io/guide/deployment#deploy-to-github-pages) details how to deploy Angular applications to GitHub pages. 
 
-The package.json defines a "build-deployment" script that can be ran to recompile the project 
-in to the "docs" directory. Pushing this directory to master will update the deployed version of the 
-application, available at: https://www.devwithimagination.com/OpenApiVisualiser/
+The package.json defines a "build-deployment" script that can be ran to recompile the project in to the `dist` directory. A GitHub action is configured for this repository so that pushes to master will run this and publish the output to GitHub Pages, hosted at: https://www.devwithimagination.com/OpenApiVisualiser/
 
 This can be ran by running the command:
 `npm run-script build-deployment`
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
