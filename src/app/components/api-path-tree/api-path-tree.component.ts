@@ -5,7 +5,7 @@ import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode
 import { UserPreferenceControllerService } from '../../controllers/user-preference-controller.service';
 
 
-import { toBlob, Options } from 'html-to-image';
+import { toBlob } from 'html-to-image';
 
 @Component({
   selector: 'app-api-path-tree',
@@ -109,12 +109,7 @@ export class ApiPathTreeComponent implements OnInit {
     this.generatingImage = true;
 
     /* Configure the export */
-    // const styles: Partial<CSSStyleDeclaration> = {
-    //   border: '0',
-    //   overflow: 'visible'
-    // };
-
-    const exportOptions: Options = {
+    const exportOptions = {
       backgroundColor: '#ffffff',
       /*
        * Needing to set this configuration option until
