@@ -1,7 +1,8 @@
 {
   "name": "open-apivisualiser",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "scripts": {
+    "prepare": "husky install",
     "ng": "ng",
     "start": "ng serve",
     "start-container": "ng serve --host $(ip -f inet addr show eth0 | grep -Po 'inet \\K[\\d.]+')",
