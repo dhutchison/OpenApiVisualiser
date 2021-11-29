@@ -49,4 +49,5 @@ testem.log
 Thumbs.db
 
 # Cypress outputs
+/cypress/screenshots
 /cypress/videos
