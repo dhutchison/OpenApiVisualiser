@@ -24,16 +24,10 @@ jobs:
         # Shallow clones should be disabled for a better relevancy of sonar analysis
         fetch-depth: 0
     # This installs node and npm for us
-    - uses: actions/setup-node@v1
+    - uses: actions/setup-node@v2
       with:
-        node-version: '10.x'
-    # this allows for re-using node_modules caching, making builds a bit faster.
-    - uses: actions/cache@v1
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
+        node-version: '16'
+        cache: 'npm'
     # Lint and Build
     - name: Install, Lint and Build 🔧
       run: |
