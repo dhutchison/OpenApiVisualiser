@@ -3,7 +3,7 @@
 
 /* PrimeNG */
 @import "~primeicons/primeicons.css";
-@import "~primeng/resources/themes/nova-accent/theme.css";
+@import "~primeng/resources/themes/md-light-indigo/theme.css";
 @import "~primeng/resources/primeng.min.css";
 
 /* Fonts */
@@ -50,6 +50,7 @@ $putHighlightColour: #fca130;
 /********** Button bar ********/
 .button-bar {
     display: flex;
+    gap: 0.5rem;
     margin-bottom: 2px;
 }
 
