@@ -1,20 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 
 @Component({
   selector: 'app-url-chooser',
   templateUrl: './url-chooser.component.html'
 })
-export class UrlChooserComponent implements OnInit {
+export class UrlChooserComponent {
 
   url: string;
   display = false;
 
   constructor(
     private fileReaderService: FileReaderService) { }
-
-  ngOnInit() {
-  }
 
   showDialog() {
     this.display = true;

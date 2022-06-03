@@ -1,20 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 
 @Component({
   selector: 'app-file-chooser',
   templateUrl: './file-chooser.component.html'
 })
-export class FileChooserComponent implements OnInit {
+export class FileChooserComponent {
 
   readonly yamlFilenamePattern = /\.y(a)?ml/;
   readonly jsonFilenamePattern = /\.json/;
 
   constructor(
     private fileReaderService: FileReaderService) { }
-
-  ngOnInit() {
-  }
 
   loadFile(
     event: { files?: File[]; target?: { files: Iterable<File> | ArrayLike<File> } },

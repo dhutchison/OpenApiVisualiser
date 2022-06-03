@@ -51,23 +51,6 @@ export class ApiPathTreeComponent implements OnInit {
     private fileReaderService: FileReaderService,
     private openApiConverterService: OpenapiTreenodeConverterService ) { }
 
-  ngOnInit() {
-    this.fileReaderService.apiChanged.subscribe(value => {
-      /* Add this specification to our current state */
-      this.openApiConverterService.addApiSpecification(value);
-    });
-
-    this.fileReaderService.resetFiles.subscribe(v => {
-      /* Reset the service which holds our current state */
-      this.openApiConverterService.reset();
-    });
-
-    this.openApiConverterService.treeNodesChanged.subscribe(value => {
-      this.apiPathNodesOrig = value;
-      this.setTreeNodes();
-    });
-  }
-
   get horizontalView(): boolean {
     return this.preferenceService.horizontalView;
   }
@@ -92,6 +75,23 @@ export class ApiPathTreeComponent implements OnInit {
 
     /* Reprocess the tree */
     this.setTreeNodes();
+  }
+
+  ngOnInit() {
+    this.fileReaderService.apiChanged.subscribe(value => {
+      /* Add this specification to our current state */
+      this.openApiConverterService.addApiSpecification(value);
+    });
+
+    this.fileReaderService.resetFiles.subscribe(v => {
+      /* Reset the service which holds our current state */
+      this.openApiConverterService.reset();
+    });
+
+    this.openApiConverterService.treeNodesChanged.subscribe(value => {
+      this.apiPathNodesOrig = value;
+      this.setTreeNodes();
+    });
   }
 
   /**
