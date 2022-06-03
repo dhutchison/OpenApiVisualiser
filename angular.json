@@ -122,5 +122,8 @@
       }
     }
   },
-  "defaultProject": "OpenAPIVisualiser"
+  "defaultProject": "OpenAPIVisualiser",
+  "cli": {
+    "defaultCollection": "@angular-eslint/schematics"
+  }
 }

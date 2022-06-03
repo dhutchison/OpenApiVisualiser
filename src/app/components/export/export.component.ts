@@ -34,19 +34,6 @@ export class ExportComponent implements OnInit {
   constructor(
     private fileReaderService: FileReaderService) { }
 
-  ngOnInit() {
-    this.fileReaderService.apiChanged.subscribe(value => {
-      /* Add this specification to our current state */
-      this.apiDefinitions.push(value);
-
-      console.log(value);
-    });
-
-    this.fileReaderService.resetFiles.subscribe(v => {
-      /* Clear any held state */
-      this.apiDefinitions = [];
-    });
-  }
 
   get buttonEnabled() {
     return (this.apiDefinitions.length === 1);
@@ -59,6 +46,20 @@ export class ExportComponent implements OnInit {
   set exportFormat(value) {
     /* Need to force this to be a number */
     this.exportFormatId = +value;
+  }
+
+  ngOnInit() {
+    this.fileReaderService.apiChanged.subscribe(value => {
+      /* Add this specification to our current state */
+      this.apiDefinitions.push(value);
+
+      console.log(value);
+    });
+
+    this.fileReaderService.resetFiles.subscribe(v => {
+      /* Clear any held state */
+      this.apiDefinitions = [];
+    });
   }
 
   showDialog() {

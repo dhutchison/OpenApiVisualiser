@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 import { ActivatedRoute } from '@angular/router';
 
@@ -6,15 +6,12 @@ import { ActivatedRoute } from '@angular/router';
   selector: 'app-main',
   templateUrl: './main.component.html'
 })
-export class MainComponent implements OnInit, AfterViewInit {
+export class MainComponent implements AfterViewInit {
 
   constructor(
     private route: ActivatedRoute,
     private fileReaderService: FileReaderService
   ) { }
-
-  ngOnInit() {
-  }
 
   ngAfterViewInit() {
     /* Only process query parameters after the child components have been initialized */
