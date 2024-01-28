@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SchemaObject, ReferenceObject } from '@loopback/openapi-v3-types';
+import { SchemaObject, ReferenceObject, OpenAPIObject } from 'openapi3-ts/oas31';
 import { FileReaderService } from '../../services/file-reader.service';
 
 export class SchemaContainer {
@@ -12,6 +12,7 @@ export class SchemaContainer {
 })
 export class ApiComponentsDetailComponent implements OnInit {
 
+  apiSpec?: OpenAPIObject;
   schemas?: SchemaContainer;
   items?: string[] = [];
 
@@ -26,6 +27,7 @@ export class ApiComponentsDetailComponent implements OnInit {
           // Retaining a sorted list of the items for the time being so that can
           // display in the same order as defined in the specification file
           this.items.push(key);
+          this.apiSpec = value;
           this.schemas = value.components.schemas;
         });
       }

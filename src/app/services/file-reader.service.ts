@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-import { OpenApiSpec } from '@loopback/openapi-v3-types';
+import { OpenAPIObject } from 'openapi3-ts/oas31';
 
 import { HttpClient } from '@angular/common/http';
 
@@ -14,7 +14,7 @@ export class FileReaderService {
   /**
    * Subject used to notify that a new Api Specification has been read.
    */
-  readonly apiChanged = new Subject<OpenApiSpec>();
+  readonly apiChanged = new Subject<OpenAPIObject>();
 
   /**
    * Subject used to notify that all files have been closed and components
@@ -67,7 +67,7 @@ export class FileReaderService {
   private loadData(fileContent: string, yaml: boolean) {
     console.log(fileContent);
 
-    let spec: OpenApiSpec;
+    let spec: OpenAPIObject;
 
     if (yaml === true) {
       spec = this.convertYamlToOpenApiSpec(fileContent);
@@ -106,8 +106,8 @@ export class FileReaderService {
    *
    * @param yaml the YAML to convert
    */
-  private convertYamlToOpenApiSpec(yaml: string): OpenApiSpec {
-    const obj = jsyaml.load(yaml) as OpenApiSpec;
+  private convertYamlToOpenApiSpec(yaml: string): OpenAPIObject {
+    const obj = jsyaml.load(yaml) as OpenAPIObject;
 
     console.log(JSON.stringify(obj, null, 4));
 

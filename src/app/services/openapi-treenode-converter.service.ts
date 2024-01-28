@@ -2,10 +2,10 @@ import { Injectable, ComponentFactoryResolver } from '@angular/core';
 import { TreeNode } from 'primeng/api';
 import { Subject } from 'rxjs';
 import {
-          getPath, OpenApiSpec, OperationObject,
+          getPath, OpenAPIObject, OperationObject,
           PathItemObject, PathsObject, SchemaObject,
           RequestBodyObject, ReferenceObject, MediaTypeObject, ResponseObject
-        } from '@loopback/openapi-v3-types';
+        } from 'openapi3-ts/oas31';
 
 @Injectable({
   providedIn: 'root'
@@ -81,7 +81,7 @@ export class OpenapiTreenodeConverterService {
    *
    * @param openApiSpec the specification to merge in.
    */
-  addApiSpecification(openApiSpec: OpenApiSpec) {
+  addApiSpecification(openApiSpec: OpenAPIObject) {
 
     /* Convert the specification paths into nodes */
     console.log(openApiSpec);
@@ -111,24 +111,27 @@ export class OpenapiTreenodeConverterService {
    *
    * @param schema the schema object
    */
-  public createComponentSchemaPropertiesToTreeNodes(schema: SchemaObject): TreeNode[] {
+  public createComponentSchemaPropertiesToTreeNodes(schema: SchemaObject | ReferenceObject, apiDefinition: OpenAPIObject): TreeNode[] {
+    
+    let schemaObject = this.getSchemaObjectFromReference(schema, apiDefinition);
+    
     const nodes: TreeNode[] = [];
-    if (schema.type && schema.type === 'array') {
-      const node = this.createSchemaPropertyToTreeNode(schema.title, schema.items);
+    if (schemaObject.type && schemaObject.type === 'array') {
+      const node = this.createSchemaPropertyToTreeNode(schemaObject.title, schemaObject.items, apiDefinition);
       if (node) {
         const root: TreeNode = {
-          label: schema.title,
+          label: schemaObject.title,
           leaf: false,
           expanded: true,
           children: [node],
-          data: schema
+          data: schemaObject
         };
         nodes.push(root);
       }
     }
-    if (schema.properties) {
-      Object.keys(schema.properties).forEach(title => {
-        const node = this.createSchemaPropertyToTreeNode(title, schema.properties[title]);
+    if (schemaObject.properties) {
+      Object.keys(schemaObject.properties).forEach(title => {
+        const node = this.createSchemaPropertyToTreeNode(title, schemaObject.properties[title], apiDefinition);
         if (node) {
           nodes.push(node);
         }
@@ -146,7 +149,7 @@ export class OpenapiTreenodeConverterService {
    *
    * @param paths the paths contained in the API specification.
    */
-  private convertPathsToTree(paths: PathsObject, apiDefinition: OpenApiSpec) {
+  private convertPathsToTree(paths: PathsObject, apiDefinition: OpenAPIObject) {
 
     /* Iterate through each API path key building up the tree nodes */
     Object.keys(paths).forEach(key => {
@@ -239,7 +242,7 @@ export class OpenapiTreenodeConverterService {
    * @param method the HTTP method
    * @param operation the details of the Operation
    */
-  private createHttpMethodNode(path: string, method: string, operation: OperationObject, apiDefinition: OpenApiSpec): TreeNode {
+  private createHttpMethodNode(path: string, method: string, operation: OperationObject, apiDefinition: OpenAPIObject): TreeNode {
 
     console.debug('Creating HTTP method node for %s (%s)', operation.operationId, method);
 
@@ -278,7 +281,7 @@ export class OpenapiTreenodeConverterService {
 
   }
 
-  private calculateComplexity(operation: OperationObject, apiDefinition: OpenApiSpec): number {
+  private calculateComplexity(operation: OperationObject, apiDefinition: OpenAPIObject): number {
 
     /* Calculate the complexity of the request object */
     let totalComplexity = 0;
@@ -298,7 +301,7 @@ export class OpenapiTreenodeConverterService {
     return totalComplexity;
   }
 
-  private calculateObjectComplexity(object: any, apiDefinition: OpenApiSpec): number {
+  private calculateObjectComplexity(object: any, apiDefinition: OpenAPIObject): number {
 
     let complexity = 1;
 
@@ -352,7 +355,7 @@ export class OpenapiTreenodeConverterService {
     return complexity;
   }
 
-  private resolveReference(name: string, apiDefinition: OpenApiSpec): any {
+  private resolveReference(name: string, apiDefinition: OpenAPIObject): any {
 
     const nameParts = name.split('/');
     /* remove the first element, this will always be a '#' */
@@ -376,7 +379,10 @@ export class OpenapiTreenodeConverterService {
    *
    * @param schema the schema object
    */
-  private createSchemaPropertyToTreeNode(title: string, property: SchemaObject): TreeNode {
+  private createSchemaPropertyToTreeNode(title: string, property: SchemaObject | ReferenceObject, apiDefinition: OpenAPIObject): TreeNode {
+
+    let schemaObject = this.getSchemaObjectFromReference(property, apiDefinition);
+    
     const node: TreeNode = {
       label: title,
       leaf: true,
@@ -389,7 +395,7 @@ export class OpenapiTreenodeConverterService {
         if (key === 'type' && property[key] === 'array') {
           // If we have an array type then start to recursively traverse and add child nodes
           node.leaf = false;
-          node.children = this.createComponentSchemaPropertiesToTreeNodes(property.items);
+          node.children = this.createComponentSchemaPropertiesToTreeNodes(schemaObject.items, apiDefinition);
         } else {
           // console.log(`Unrecognised property: [${key}]`);
         }
@@ -450,7 +456,20 @@ export class OpenapiTreenodeConverterService {
       schemaObject.not !== undefined);
   }
 
+  private getSchemaObjectFromReference(object: SchemaObject | ReferenceObject, apiDefinition: OpenAPIObject): SchemaObject {
+    let schemaObject: SchemaObject;
+    if (this.isReferenceObject(object)) {
+      console.log('Reference needs resolved: %s', object.$ref);
+      return this.resolveReference(object.$ref, apiDefinition);
+    } else if (this.isSchemaObject(object)) {
+      return object
+    }
+  }
+
 }
+
+
+
 
 export interface OperationTreeNode extends TreeNode {
   tooltip?: string;

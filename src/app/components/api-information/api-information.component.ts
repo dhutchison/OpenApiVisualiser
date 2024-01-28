@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
-import { OpenAPIObject } from '@loopback/openapi-v3-types';
+import { OpenAPIObject } from 'openapi3-ts/oas31';
 
 @Component({
   selector: 'app-api-information',
