@@ -1,6 +1,6 @@
 {
   "name": "open-apivisualiser",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "scripts": {
     "prepare": "husky install",
     "ng": "ng",
