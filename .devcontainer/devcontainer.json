@@ -1,31 +1,23 @@
-// For format details, see https://aka.ms/vscode-remote/devcontainer.json or the definition README at
-// https://github.com/microsoft/vscode-dev-containers/tree/master/containers/typescript-node-lts
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-	"name": "Node.js (latest LTS) & TypeScript",
-	"dockerFile": "Dockerfile",
-	//"image": "docker.pkg.github.com/dhutchison/container-images/angular-dev:0.1",
+	"name": "Node.js & TypeScript",
+	"build": {
+		"dockerfile": "Dockerfile"
+	}
 
-	// Use 'settings' to set *default* container specific settings.json values on container create. 
-	// You can edit these settings after create using File > Preferences > Settings > Remote.
-	"settings": { 
-		"terminal.integrated.shell.linux": "/bin/bash"
-	},
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
 
-	// Uncomment the next line if you want to publish any ports.
-	"appPort": [4200],
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
 
-	// Uncomment the next line to run commands after the container is created.
-	// "postCreateCommand": "yarn install",
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": ""
 
-	// Uncomment the next line to use a non-root user. On Linux, this will prevent
-	// new files getting created as root, but you may need to update the USER_UID
-	// and USER_GID in .devcontainer/Dockerfile to match your user if not 1000.
-	"runArgs": [ "-u", "node" ],
+	// Configure tool-specific properties.
+	// "customizations": {},
 
-	// Add the IDs of extensions you want installed when the container is created in the array below.
-	"extensions": [
-		"ms-vscode.vscode-typescript-tslint-plugin",
-		"ms-azuretools.vscode-docker", 
-		"eamodio.gitlens"
-	]
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
 }
