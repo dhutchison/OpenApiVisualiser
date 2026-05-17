@@ -1,9 +1,9 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import * as htmlToImage from 'html-to-image';
 
 import { ApiPathTreeComponent } from './api-path-tree.component';
-import { NodeMethodDetailComponent } from '../node-detail/node-method-detail/node-method-detail.component';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
 
 import { PipesModule } from '../../pipes/pipes.module';
@@ -24,8 +24,7 @@ describe('ApiPathTreeComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         ApiPathTreeComponent,
-        EndpointSwaggerComponent,
-        NodeMethodDetailComponent,
+        EndpointSwaggerComponent
       ],
       imports: [
         ButtonModule,
@@ -63,6 +62,26 @@ describe('ApiPathTreeComponent', () => {
     expect(component.horizontalView).toBeFalsy();
 
 
+  });
+
+  it('should export using the rendered tree background colour', async () => {
+    const treeViewElement = fixture.nativeElement.querySelector('.tree-view') as HTMLElement;
+    spyOn(window, 'saveAs');
+    spyOn(htmlToImage, 'toBlob').and.resolveTo(new Blob());
+
+    treeViewElement.style.backgroundColor = 'rgb(32, 33, 30)';
+
+    component.downloadImage();
+    await fixture.whenStable();
+
+    expect(htmlToImage.toBlob).toHaveBeenCalledWith(
+      component.treeViewElement.nativeElement,
+      jasmine.objectContaining({
+        backgroundColor: 'rgb(32, 33, 30)',
+        pixelRatio: 1
+      })
+    );
+    expect(window.saveAs).toHaveBeenCalled();
   });
 
 });

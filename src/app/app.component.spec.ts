@@ -6,7 +6,6 @@ import { AppComponent } from './app.component';
 import { ApiInformationComponent } from './components/api-information/api-information.component';
 import { ApiPathTreeComponent } from './components/api-path-tree/api-path-tree.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
-import { NodeMethodDetailComponent } from './components/node-detail/node-method-detail/node-method-detail.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -67,7 +66,6 @@ describe('AppComponent', () => {
         ExternalDocsComponent,
         FileChooserComponent,
         MainComponent,
-        NodeMethodDetailComponent,
         SchemaDetailComponent,
         SummaryComponent,
         UrlChooserComponent

@@ -28,11 +28,6 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
    */
   apiPathNodes: TreeNode[] = [];
 
-  /**
-   * The selected node
-   */
-  selectedNode: TreeNode;
-
   selectedOperationNode?: OperationTreeNode;
 
   endpointDialogVisible = false;
@@ -68,7 +63,6 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
 
   set horizontalView(value: boolean) {
     /* Deselect any item */
-    this.selectedNode = undefined;
     this.selectedOperationNode = undefined;
     this.endpointDialogVisible = false;
     /* Change the view */
@@ -82,7 +76,6 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
 
   set joinNodesWithNoLeaves(value: boolean) {
     /* Deselect any item */
-    this.selectedNode = undefined;
     this.selectedOperationNode = undefined;
     this.endpointDialogVisible = false;
 
@@ -139,9 +132,11 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     /* Set marker that an image is being generated */
     this.generatingImage = true;
 
+    const backgroundColor = getComputedStyle(this.treeViewElement.nativeElement).backgroundColor;
+
     /* Configure the export */
     const exportOptions = {
-      backgroundColor: '#ffffff',
+      backgroundColor,
       /*
        * Needing to set this configuration option until
        * https://github.com/bubkoo/html-to-image/issues/74
@@ -191,8 +186,8 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     this.schedulePathTreeMeasurement();
   }
 
-  openEndpointDetail(event: { node: TreeNode }) {
-    const node = event.node as OperationTreeNode;
+  openEndpointDetail(treeNode: TreeNode) {
+    const node = treeNode as OperationTreeNode;
     if (node.type !== 'operation') {
       this.endpointDialogVisible = false;
       this.selectedOperationNode = undefined;

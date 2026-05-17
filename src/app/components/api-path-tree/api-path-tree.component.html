@@ -21,24 +21,25 @@
     </button>
   </div>
 
-  <div [class.tree-detail-horizontal]="!horizontalView">
+  <div>
     <div class="tree-view" #treeView>
       <p-tree [value]="apiPathNodes"
-          selectionMode="single"
-          [(selection)]="selectedNode"
           (onNodeSelect)="openEndpointDetail($event)"
-          [styleClass]="horizontalView? 'tree-horizontal': 'tree-vertical'"
-          >
+          [styleClass]="horizontalView? 'tree-horizontal': 'tree-vertical'">
 
         <ng-template let-node pTemplate="operation">
-          <span pTooltip="{{ node.tooltip }}" [escape]=false id="{{ node.id }}-node">{{ node.label }}</span>
+          <span
+            class="operation-node"
+            pTooltip="{{ node.tooltip }}"
+            [escape]=false
+            id="{{ node.id }}-node"
+            (click)="openEndpointDetail(node)"
+            (keydown.enter)="openEndpointDetail(node)"
+            (keydown.space)="openEndpointDetail(node); $event.preventDefault()"
+            role="button"
+            tabindex="0">{{ node.label }}</span>
         </ng-template>
       </p-tree>
-    </div>
-    <div class="selected-node-detail">
-      <app-node-method-detail *ngIf="selectedOperationNode" [method]="selectedOperationNode.method" [path]="selectedOperationNode.path"
-        [node]="selectedOperationNode.operation">
-      </app-node-method-detail>
     </div>
   </div>
 </div>

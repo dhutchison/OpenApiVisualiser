@@ -1,12 +1,26 @@
+<div *ngIf="apiSpec?.components">
+  <div class="empty-state" *ngIf="!items.length && !componentSections.length">No reusable components are defined by this API.</div>
 
-<div *ngIf="schemas">
-  <h3>Schemas</h3>
+  <h3 *ngIf="items.length">Schemas</h3>
   <p-accordion [multiple]="true">
       <p-accordion-panel
       *ngFor="let item of items"
       [value]="item">
-        <p-accordion-header>{{item}}</p-accordion-header>
+        <p-accordion-header>
+          <span>{{item}}</span>
+          <span class="component-header-meta" *ngIf="schemas?.[item]">
+            <span class="count-pill">{{ getSchemaType(schemas[item]) }}</span>
+            <span class="count-pill" *ngIf="getSchemaPropertyCount(schemas[item])">{{ getSchemaPropertyCount(schemas[item]) }} properties</span>
+          </span>
+        </p-accordion-header>
         <p-accordion-content>
+        <div class="schema-overview" *ngIf="schemas?.[item] as schema">
+          <div *ngIf="!isReference(schema) && schema.description" [innerHTML]="(schema.description | markdownify)"></div>
+          <app-external-docs *ngIf="!isReference(schema) && schema.externalDocs" [document]="schema.externalDocs"></app-external-docs>
+          <ul class="pill-list" *ngIf="getSchemaBadges(schema).length">
+            <li *ngFor="let badge of getSchemaBadges(schema)">{{ badge }}</li>
+          </ul>
+        </div>
         <app-schema-detail 
           id="components_schemas_{{item}}"
           [apiSpec]="apiSpec"
@@ -14,4 +28,26 @@
         </p-accordion-content>
       </p-accordion-panel>
   </p-accordion>
+
+  <section class="detail-section" *ngIf="componentSections.length">
+    <h3>Other Components</h3>
+    <p-accordion [multiple]="true">
+      <p-accordion-panel
+        *ngFor="let section of componentSections"
+        [value]="section.key">
+        <p-accordion-header>
+          <span>{{ section.label }}</span>
+          <span class="count-pill">{{ section.items.length }}</span>
+        </p-accordion-header>
+        <p-accordion-content>
+          <dl class="component-list">
+            <ng-container *ngFor="let entry of getComponentEntries(section)">
+              <dt>{{ entry.name }}</dt>
+              <dd>{{ describeComponent(entry.value) }}</dd>
+            </ng-container>
+          </dl>
+        </p-accordion-content>
+      </p-accordion-panel>
+    </p-accordion>
+  </section>
 </div>

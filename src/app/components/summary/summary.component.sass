@@ -1,5 +1,78 @@
-th, td
-    padding: 0.25em 0.5em
+#method-summary
+    width: auto
+    max-width: 100%
+    border-collapse: separate
+    border-spacing: 0
+    color: var(--app-text)
+    table-layout: auto
 
-th
-    background: #EEE
+    caption
+        margin-bottom: 0.75rem
+        color: var(--app-text)
+        font-weight: 700
+        text-align: left
+
+    .method-column
+        width: auto
+
+    .count-column
+        width: 1%
+
+    th, td
+        padding: 0.65rem 0.75rem
+        border-bottom: 1px solid var(--app-border)
+        color: var(--app-text)
+        text-align: left
+        vertical-align: top
+        white-space: nowrap
+
+    .method-header
+        border: 1px solid var(--app-border)
+        border-radius: 999px
+        font-size: 0.78rem
+        font-weight: 800
+        text-transform: uppercase
+        letter-spacing: 0
+        background: var(--app-surface-muted)
+
+    .method-header-get
+        border-color: color-mix(in srgb, #61affe 72%, var(--app-border))
+        background: color-mix(in srgb, #61affe 18%, var(--app-surface-solid))
+        color: color-mix(in srgb, #0369a1 75%, var(--app-text))
+
+    .method-header-post
+        border-color: color-mix(in srgb, #49cc90 72%, var(--app-border))
+        background: color-mix(in srgb, #49cc90 18%, var(--app-surface-solid))
+        color: color-mix(in srgb, #047857 75%, var(--app-text))
+
+    .method-header-put
+        border-color: color-mix(in srgb, #fca130 72%, var(--app-border))
+        background: color-mix(in srgb, #fca130 18%, var(--app-surface-solid))
+        color: color-mix(in srgb, #b45309 75%, var(--app-text))
+
+    .method-header-delete
+        border-color: color-mix(in srgb, #f93e3e 72%, var(--app-border))
+        background: color-mix(in srgb, #f93e3e 18%, var(--app-surface-solid))
+        color: color-mix(in srgb, #be123c 75%, var(--app-text))
+
+    .method-header-total
+        background: var(--app-surface-muted)
+
+    .method-count
+        width: 1%
+        min-width: 3ch
+        text-align: right
+
+:host-context(.dark-mode)
+    #method-summary
+        .method-header-get
+            color: #dff3ff
+
+        .method-header-post
+            color: #dcfce7
+
+        .method-header-put
+            color: #fff4de
+
+        .method-header-delete
+            color: #ffe4e6

@@ -23,7 +23,6 @@ import { ApiPathTreeComponent } from '../api-path-tree/api-path-tree.component';
 import { ApiTagsComponent } from '../api-tags/api-tags.component';
 import { ExportComponent } from '../export/export.component';
 import { ExternalDocsComponent } from '../external-docs/external-docs.component';
-import { NodeMethodDetailComponent } from '../node-detail/node-method-detail/node-method-detail.component';
 import { SchemaDetailComponent } from '../api-components-detail/schema-detail/schema-detail.component';
 import { FileChooserComponent } from '../file-chooser/file-chooser.component';
 import { UrlChooserComponent } from '../url-chooser/url-chooser.component';
@@ -49,7 +48,6 @@ describe('MainComponent', () => {
         ExportComponent,
         ExternalDocsComponent,
         FileChooserComponent,
-        NodeMethodDetailComponent,
         SchemaDetailComponent,
         SummaryComponent,
         UrlChooserComponent

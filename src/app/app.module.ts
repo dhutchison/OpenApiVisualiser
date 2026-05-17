@@ -19,7 +19,6 @@ import { providePrimeNG } from 'primeng/config';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ApiPathTreeComponent } from './components/api-path-tree/api-path-tree.component';
-import { NodeMethodDetailComponent } from './components/node-detail/node-method-detail/node-method-detail.component';
 import { ApiInformationComponent } from './components/api-information/api-information.component';
 import { ExportComponent } from './components/export/export.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
@@ -48,7 +47,6 @@ import { EndpointSwaggerComponent } from './components/endpoint-swagger/endpoint
     ExternalDocsComponent,
     FileChooserComponent,
     MainComponent,
-    NodeMethodDetailComponent,
     SchemaDetailComponent,
     SummaryComponent,
     UrlChooserComponent
@@ -81,7 +79,7 @@ import { EndpointSwaggerComponent } from './components/endpoint-swagger/endpoint
       theme: {
         preset: Aura,
         options: {
-          darkModeSelector: false
+          darkModeSelector: '.dark-mode'
         }
       }
     })
