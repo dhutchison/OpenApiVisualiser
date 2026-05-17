@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
 
@@ -11,6 +11,8 @@ import * as jsyaml from 'js-yaml';
 })
 export class FileReaderService {
 
+  private http = inject(HttpClient);
+
   /**
    * Subject used to notify that a new Api Specification has been read.
    */
@@ -21,8 +23,6 @@ export class FileReaderService {
    * should reset any stored state.
    */
   readonly resetFiles = new Subject<void>();
-
-  constructor(private http: HttpClient) { }
 
   /**
    * Load the supplied file as a YAML OpenAPI specification

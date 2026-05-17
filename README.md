@@ -25,7 +25,7 @@ accept connections).
 
 ## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use `ng build --configuration production` for a production build.
 
 ## Running unit tests
 
@@ -44,3 +44,9 @@ The package.json defines a "build-deployment" script that can be ran to recompil
 
 This can be ran by running the command:
 `npm run-script build-deployment`
+
+## Endpoint details and Try it out
+
+Clicking an API endpoint in the path diagram opens an embedded Swagger UI view for that operation. This includes the operation details, referenced OpenAPI components, authentication controls, and Swagger UI's "Try it out" workflow.
+
+Live API calls are made directly from the browser, so they are still subject to the API's CORS policy, authentication requirements, and `servers` metadata in the loaded OpenAPI document.

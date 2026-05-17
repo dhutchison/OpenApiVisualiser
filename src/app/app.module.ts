@@ -3,18 +3,18 @@ import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import Aura from '@primeuix/themes/aura';
 
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { FieldsetModule } from 'primeng/fieldset';
-import { InputSwitchModule } from 'primeng/inputswitch';
 import { PanelModule } from 'primeng/panel';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
-import { TabViewModule } from 'primeng/tabview';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
 import { TreeTableModule } from 'primeng/treetable';
+import { providePrimeNG } from 'primeng/config';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -33,6 +33,7 @@ import { FileChooserComponent } from './components/file-chooser/file-chooser.com
 import { UrlChooserComponent } from './components/url-chooser/url-chooser.component';
 import { FileUploadModule } from 'primeng/fileupload';
 import { SummaryComponent } from './components/summary/summary.component';
+import { EndpointSwaggerComponent } from './components/endpoint-swagger/endpoint-swagger.component';
 
 @NgModule({
   declarations: [
@@ -43,6 +44,7 @@ import { SummaryComponent } from './components/summary/summary.component';
     ApiPathTreeComponent,
     ApiTagsComponent,
     ExportComponent,
+    EndpointSwaggerComponent,
     ExternalDocsComponent,
     FileChooserComponent,
     MainComponent,
@@ -67,16 +69,23 @@ import { SummaryComponent } from './components/summary/summary.component';
     DialogModule,
     FieldsetModule,
     FileUploadModule,
-    InputSwitchModule,
     PanelModule,
     SelectButtonModule,
     TableModule,
-    TabViewModule,
     TooltipModule,
     TreeModule,
     TreeTableModule
   ],
-  providers: [],
+  providers: [
+    providePrimeNG({
+      theme: {
+        preset: Aura,
+        options: {
+          darkModeSelector: false
+        }
+      }
+    })
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

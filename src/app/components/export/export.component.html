@@ -5,14 +5,14 @@
             {{ format.description }}
           </option>
       </select>
-      <p-footer>
+      <ng-template pTemplate="footer">
           <button type="submit" pButton icon="pi pi-check"
             label="Export"
             (click)="export()"></button>
           <button type="button" pButton icon="pi pi-times"
             (click)="display=false" label="Cancel"
             class="p-button-secondary"></button>
-      </p-footer>
+      </ng-template>
 </p-dialog>
 
 <button type="button" pButton

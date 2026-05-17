@@ -2,9 +2,8 @@
 // @import "@angular/material/prebuilt-themes/indigo-pink.css";
 
 /* PrimeNG */
-@import "~primeicons/primeicons.css";
-@import "~primeng/resources/themes/md-light-indigo/theme.css";
-@import "~primeng/resources/primeng.min.css";
+@import "primeicons/primeicons.css";
+@import "swagger-ui/dist/swagger-ui.css";
 
 /* Fonts */
 @import url('https://fonts.googleapis.com/css?family=Montserrat|Open+Sans&display=swap');
@@ -14,6 +13,23 @@
 body {
     font-family: 'Open Sans', 'Helvetica Neue', sans-serif;
 }
+
+/* PrimeNG v20 accordion hosts are custom elements, so make them participate in
+ * normal document flow explicitly.
+ */
+p-accordion,
+p-accordionpanel,
+p-accordion-panel,
+p-accordioncontent,
+p-accordion-content {
+    display: block;
+}
+
+p-accordionheader,
+p-accordion-header {
+    display: flex;
+}
+
 #masthead {
     background: url('assets/images/logo.png') top left no-repeat;
 
@@ -95,13 +111,107 @@ $putHighlightColour: #fca130;
     }
 }
 
-.tree-vertical {
-    .p-tree {
-        width: auto;
-        border: 0;
+.tree-horizontal.p-tree {
+    width: max-content;
+    min-width: 100%;
+    border: 0;
+    background-color: transparent;
+    overflow: visible;
+}
+
+.tree-horizontal {
+    .p-tree-root,
+    .p-tree-root-children,
+    .p-tree-node-children {
+        overflow: visible;
+    }
+
+    .p-tree-root-children,
+    .p-tree-node,
+    .p-tree-node-children {
+        display: flex;
+        align-items: center;
+    }
+
+    .p-tree-root-children,
+    .p-tree-node-children {
+        gap: 2rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        position: relative;
+    }
+
+    .p-tree-node {
+        flex: 0 0 auto;
+        gap: 2rem;
+        position: relative;
+    }
+
+    .p-tree-node-content {
+        flex: 0 0 auto;
+        background-image: linear-gradient(#cfd9df,#e2ebf0);
+        border-radius: 4px;
+        font-weight: bold;
+        padding: 0.5rem 0.75rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .p-tree-node-content::after {
+        border-top: 1px solid #cbd5e1;
+        content: "";
+        height: 0;
+        left: 100%;
+        position: absolute;
+        top: 50%;
+        width: 2rem;
+    }
+
+    .p-tree-node-leaf > .p-tree-node-content::after {
+        display: none;
+    }
+
+    .p-tree-node-children::before {
+        border-top: 1px solid #cbd5e1;
+        content: "";
+        height: 0;
+        position: absolute;
+        right: 100%;
+        top: 50%;
+        width: 2rem;
+    }
+
+    .p-tree-node-children::after {
+        border-left: 1px solid #cbd5e1;
+        bottom: 1.25rem;
+        content: "";
+        left: 0;
+        position: absolute;
+        top: 1.25rem;
+    }
+
+    .p-tree-node-children > .p-tree-node::before {
+        border-top: 1px solid #cbd5e1;
+        content: "";
+        height: 0;
+        left: -2rem;
+        position: absolute;
+        top: 50%;
+        width: 2rem;
+    }
+
+    .p-tree-node-toggle-button {
+        display: none;
     }
 }
 
+.tree-vertical.p-tree {
+    width: auto;
+    border: 0;
+}
+
+.tree-vertical .p-tree-node-content,
 .tree-vertical .p-treenode-content {
     background-image: linear-gradient(#cfd9df,#e2ebf0);
     font-weight: bold;
@@ -211,5 +321,27 @@ $putHighlightColour: #fca130;
             border-bottom: 2px solid $deleteHighlightColour;
         }
     }
-}
 
+    &.tree-horizontal, &.tree-vertical {
+
+        .p-treenode-http-method-get .p-tree-node .p-tree-node-content,
+        .p-treenode-http-method-get.p-tree-node > .p-tree-node-content {
+            border-bottom: 2px solid $getHighlightColour;
+        }
+
+        .p-treenode-http-method-post .p-tree-node .p-tree-node-content,
+        .p-treenode-http-method-post.p-tree-node > .p-tree-node-content {
+            border-bottom: 2px solid $postHighlightColour;
+        }
+
+        .p-treenode-http-method-put .p-tree-node .p-tree-node-content,
+        .p-treenode-http-method-put.p-tree-node > .p-tree-node-content {
+            border-bottom: 2px solid $putHighlightColour;
+        }
+
+        .p-treenode-http-method-delete .p-tree-node .p-tree-node-content,
+        .p-treenode-http-method-delete.p-tree-node > .p-tree-node-content {
+            border-bottom: 2px solid $deleteHighlightColour;
+        }
+    }
+}

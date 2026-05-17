@@ -1,0 +1,144 @@
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  Input,
+  OnChanges,
+  OnDestroy,
+  SimpleChanges,
+  ViewChild
+} from '@angular/core';
+import { OpenAPIObject, OperationObject, PathItemObject } from 'openapi3-ts/oas31';
+
+@Component({
+  standalone: false,
+  selector: 'app-endpoint-swagger',
+  templateUrl: './endpoint-swagger.component.html',
+  styleUrls: ['./endpoint-swagger.component.scss']
+})
+export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDestroy {
+
+  @Input() apiSpec?: OpenAPIObject;
+  @Input() path?: string;
+  @Input() method?: string;
+  @Input() operation?: OperationObject;
+
+  @ViewChild('swaggerContainer') swaggerContainer?: ElementRef<HTMLDivElement>;
+
+  errorMessage?: string;
+
+  private viewReady = false;
+  private destroyed = false;
+  private ui?: any;
+  private renderTimeoutId?: ReturnType<typeof setTimeout>;
+
+  ngAfterViewInit() {
+    this.viewReady = true;
+    this.renderSwaggerUi();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.apiSpec || changes.path || changes.method || changes.operation) {
+      this.renderSwaggerUi();
+    }
+  }
+
+  ngOnDestroy() {
+    this.destroyed = true;
+    if (this.renderTimeoutId) {
+      clearTimeout(this.renderTimeoutId);
+    }
+    this.swaggerContainer?.nativeElement.replaceChildren();
+    this.ui = undefined;
+  }
+
+  private renderSwaggerUi() {
+    if (!this.viewReady || !this.swaggerContainer || !this.apiSpec || !this.path || !this.method || !this.operation) {
+      return;
+    }
+
+    if (this.renderTimeoutId) {
+      clearTimeout(this.renderTimeoutId);
+    }
+
+    this.renderTimeoutId = setTimeout(() => this.mountSwaggerUi(), 0);
+  }
+
+  private async mountSwaggerUi() {
+    if (!this.swaggerContainer || !this.apiSpec || !this.path || !this.method || !this.operation) {
+      return;
+    }
+
+    const spec = this.createEndpointSpec();
+    this.errorMessage = undefined;
+    this.swaggerContainer.nativeElement.replaceChildren();
+
+    try {
+      const swaggerUiFactory = await this.getSwaggerUiFactory();
+
+      if (this.destroyed || !this.swaggerContainer) {
+        return;
+      }
+
+      this.ui = swaggerUiFactory({
+        domNode: this.swaggerContainer.nativeElement,
+        spec,
+        deepLinking: false,
+        displayOperationId: true,
+        docExpansion: 'full',
+        defaultModelsExpandDepth: 1,
+        tryItOutEnabled: true,
+        supportedSubmitMethods: ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace']
+      });
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      this.errorMessage = `Swagger UI could not render this endpoint. ${detail}`;
+      console.error(this.errorMessage, err);
+    }
+  }
+
+  private async getSwaggerUiFactory(): Promise<(config: object) => any> {
+    const SwaggerUIModule = await import('swagger-ui');
+    const swaggerUiModule = SwaggerUIModule as any;
+    const candidates = [
+      swaggerUiModule,
+      swaggerUiModule.default,
+      swaggerUiModule.SwaggerUIBundle,
+      swaggerUiModule['module.exports'],
+      swaggerUiModule.default?.default,
+      swaggerUiModule.default?.SwaggerUIBundle,
+      swaggerUiModule.default?.['module.exports']
+    ];
+
+    const swaggerUiFactory = candidates.find((candidate) => typeof candidate === 'function');
+
+    if (!swaggerUiFactory) {
+      throw new Error('Swagger UI factory export was not found.');
+    }
+
+    return swaggerUiFactory;
+  }
+
+  private createEndpointSpec(): OpenAPIObject {
+    const pathItem = this.apiSpec.paths?.[this.path] as PathItemObject | undefined;
+    const method = this.method.toLowerCase();
+    const selectedPathItem: PathItemObject = {
+      parameters: pathItem?.parameters
+    };
+
+    selectedPathItem[method] = this.operation;
+
+    return {
+      openapi: this.apiSpec.openapi,
+      info: this.apiSpec.info,
+      servers: this.apiSpec.servers,
+      security: this.apiSpec.security,
+      tags: this.apiSpec.tags,
+      externalDocs: this.apiSpec.externalDocs,
+      components: this.apiSpec.components,
+      paths: {
+        [this.path]: selectedPathItem
+      }
+    };
+  }
+}

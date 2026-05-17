@@ -3,6 +3,7 @@ import { Component, Input } from '@angular/core';
 import { OperationObject } from 'openapi3-ts/oas31';
 
 @Component({
+  standalone: false,
   selector: 'app-node-method-detail',
   templateUrl: './node-method-detail.component.html',
   styleUrls: ['./node-method-detail.component.scss']

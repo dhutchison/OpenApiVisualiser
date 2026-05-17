@@ -1,17 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 
 @Component({
+  standalone: false,
   selector: 'app-file-chooser',
   templateUrl: './file-chooser.component.html'
 })
 export class FileChooserComponent {
 
+  private fileReaderService = inject(FileReaderService);
+
   readonly yamlFilenamePattern = /\.y(a)?ml/;
   readonly jsonFilenamePattern = /\.json/;
-
-  constructor(
-    private fileReaderService: FileReaderService) { }
 
   loadFile(
     event: { files?: File[]; target?: { files: Iterable<File> | ArrayLike<File> } },

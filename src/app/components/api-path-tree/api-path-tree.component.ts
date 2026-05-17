@@ -1,20 +1,27 @@
-import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, AfterViewInit, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { TreeNode } from 'primeng/api';
 import { FileReaderService } from '../../services/file-reader.service';
-import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
+import { OpenapiTreenodeConverterService, OperationTreeNode } from '../../services/openapi-treenode-converter.service';
 import { UserPreferenceControllerService } from '../../controllers/user-preference-controller.service';
 
 
 import { toBlob } from 'html-to-image';
 
 @Component({
+  standalone: false,
   selector: 'app-api-path-tree',
   templateUrl: './api-path-tree.component.html'
 })
-export class ApiPathTreeComponent implements OnInit {
+export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
+
+  private preferenceService = inject(UserPreferenceControllerService);
+  private fileReaderService = inject(FileReaderService);
+  private openApiConverterService = inject(OpenapiTreenodeConverterService);
 
   /* DOM element holding the API tree view */
   @ViewChild('treeView') treeViewElement: ElementRef;
+
+  @ViewChild('pathTreeLayout') pathTreeLayoutElement: ElementRef<HTMLElement>;
 
   /**
    * Object hoilding the tree nodes to display
@@ -25,6 +32,12 @@ export class ApiPathTreeComponent implements OnInit {
    * The selected node
    */
   selectedNode: TreeNode;
+
+  selectedOperationNode?: OperationTreeNode;
+
+  endpointDialogVisible = false;
+
+  pathTreeMinHeight?: number;
 
   /* Boolean holding the state on if an image generation is in progress */
   generatingImage = false;
@@ -46,10 +59,8 @@ export class ApiPathTreeComponent implements OnInit {
    */
   private apiPathNodesOrig: TreeNode[];
 
-  constructor(
-    private preferenceService: UserPreferenceControllerService,
-    private fileReaderService: FileReaderService,
-    private openApiConverterService: OpenapiTreenodeConverterService ) { }
+  private measureTimeoutId?: ReturnType<typeof setTimeout>;
+  private resizeObserver?: ResizeObserver;
 
   get horizontalView(): boolean {
     return this.preferenceService.horizontalView;
@@ -58,8 +69,11 @@ export class ApiPathTreeComponent implements OnInit {
   set horizontalView(value: boolean) {
     /* Deselect any item */
     this.selectedNode = undefined;
+    this.selectedOperationNode = undefined;
+    this.endpointDialogVisible = false;
     /* Change the view */
     this.preferenceService.horizontalView = value;
+    this.schedulePathTreeMeasurement();
   }
 
   get joinNodesWithNoLeaves(): boolean {
@@ -69,12 +83,15 @@ export class ApiPathTreeComponent implements OnInit {
   set joinNodesWithNoLeaves(value: boolean) {
     /* Deselect any item */
     this.selectedNode = undefined;
+    this.selectedOperationNode = undefined;
+    this.endpointDialogVisible = false;
 
     /* Set the value */
     this.preferenceService.joinNodesWithNoLeaves = value;
 
     /* Reprocess the tree */
     this.setTreeNodes();
+    this.schedulePathTreeMeasurement();
   }
 
   ngOnInit() {
@@ -92,6 +109,20 @@ export class ApiPathTreeComponent implements OnInit {
       this.apiPathNodesOrig = value;
       this.setTreeNodes();
     });
+  }
+
+  ngAfterViewInit() {
+    this.resizeObserver = new ResizeObserver(() => this.schedulePathTreeMeasurement());
+    this.resizeObserver.observe(this.pathTreeLayoutElement.nativeElement);
+    this.schedulePathTreeMeasurement();
+  }
+
+  ngOnDestroy() {
+    if (this.measureTimeoutId) {
+      clearTimeout(this.measureTimeoutId);
+    }
+
+    this.resizeObserver?.disconnect();
   }
 
   /**
@@ -156,6 +187,20 @@ export class ApiPathTreeComponent implements OnInit {
     } else {
       this.apiPathNodes = nodesCopy;
     }
+
+    this.schedulePathTreeMeasurement();
+  }
+
+  openEndpointDetail(event: { node: TreeNode }) {
+    const node = event.node as OperationTreeNode;
+    if (node.type !== 'operation') {
+      this.endpointDialogVisible = false;
+      this.selectedOperationNode = undefined;
+      return;
+    }
+
+    this.selectedOperationNode = node;
+    this.endpointDialogVisible = true;
   }
 
   /**  When we compress the view, we will merge any nodes which have only a
@@ -193,5 +238,31 @@ export class ApiPathTreeComponent implements OnInit {
     console.debug('Compress returning: %o', nodes);
 
     return nodes;
+  }
+
+  private schedulePathTreeMeasurement() {
+    if (this.measureTimeoutId) {
+      clearTimeout(this.measureTimeoutId);
+    }
+
+    this.measureTimeoutId = setTimeout(() => this.updatePathTreeMinHeight(), 0);
+  }
+
+  private updatePathTreeMinHeight() {
+    if (!this.pathTreeLayoutElement) {
+      return;
+    }
+
+    const layoutElement = this.pathTreeLayoutElement.nativeElement;
+    const layoutTop = layoutElement.getBoundingClientRect().top;
+    const renderedElements = Array.from(layoutElement.querySelectorAll('*')) as HTMLElement[];
+    const renderedBottom = renderedElements.reduce((bottom, element) => {
+      const rect = element.getBoundingClientRect();
+
+      return Math.max(bottom, rect.bottom);
+    }, layoutElement.getBoundingClientRect().bottom);
+    const measuredHeight = Math.ceil(renderedBottom - layoutTop);
+
+    this.pathTreeMinHeight = measuredHeight > 0 ? measuredHeight : undefined;
   }
 }

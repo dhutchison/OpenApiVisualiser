@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { SchemaObject, ReferenceObject, OpenAPIObject } from 'openapi3-ts/oas31';
 import { FileReaderService } from '../../services/file-reader.service';
 
@@ -7,17 +7,17 @@ export class SchemaContainer {
 }
 
 @Component({
+  standalone: false,
   selector: 'app-api-components-detail',
   templateUrl: './api-components-detail.component.html'
 })
 export class ApiComponentsDetailComponent implements OnInit {
 
+  private fileReaderService = inject(FileReaderService);
+
   apiSpec?: OpenAPIObject;
   schemas?: SchemaContainer;
   items?: string[] = [];
-
-  constructor(
-    private fileReaderService: FileReaderService) { }
 
   ngOnInit() {
     this.fileReaderService.apiChanged.subscribe(value => {

@@ -4,12 +4,13 @@ import { FormsModule } from '@angular/forms';
 
 import { ApiPathTreeComponent } from './api-path-tree.component';
 import { NodeMethodDetailComponent } from '../node-detail/node-method-detail/node-method-detail.component';
+import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
 
 import { PipesModule } from '../../pipes/pipes.module';
 
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { FieldsetModule } from 'primeng/fieldset';
-import { InputSwitchModule } from 'primeng/inputswitch';
 import { PanelModule } from 'primeng/panel';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
@@ -23,12 +24,13 @@ describe('ApiPathTreeComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         ApiPathTreeComponent,
+        EndpointSwaggerComponent,
         NodeMethodDetailComponent,
       ],
       imports: [
         ButtonModule,
+        DialogModule,
         FieldsetModule,
-        InputSwitchModule,
         FormsModule,
         PanelModule,
         PipesModule,

@@ -1,17 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 import { TagObject } from 'openapi3-ts/oas31';
 
 @Component({
+  standalone: false,
   selector: 'app-api-tags',
   templateUrl: './api-tags.component.html'
 })
 export class ApiTagsComponent implements OnInit {
 
-  tags: TagObject[] = [];
+  private fileReaderService = inject(FileReaderService);
 
-  constructor(
-    private fileReaderService: FileReaderService) { }
+  tags: TagObject[] = [];
 
   ngOnInit() {
     this.fileReaderService.apiChanged.subscribe(value => {

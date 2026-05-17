@@ -2,14 +2,16 @@
 <div *ngIf="schemas">
   <h3>Schemas</h3>
   <p-accordion [multiple]="true">
-      <p-accordionTab
+      <p-accordion-panel
       *ngFor="let item of items"
-      [header]="item" >
+      [value]="item">
+        <p-accordion-header>{{item}}</p-accordion-header>
+        <p-accordion-content>
         <app-schema-detail 
           id="components_schemas_{{item}}"
           [apiSpec]="apiSpec"
           [schema]="schemas[item]"></app-schema-detail>
-      </p-accordionTab>
+        </p-accordion-content>
+      </p-accordion-panel>
   </p-accordion>
 </div>
-

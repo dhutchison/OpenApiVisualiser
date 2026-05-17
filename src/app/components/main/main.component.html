@@ -4,21 +4,36 @@
     <app-url-chooser></app-url-chooser>
     <app-export></app-export>
   </div>
-  <p-accordion [multiple]="true"> 
-    <p-accordionTab header="API Information" id="api-information-tab">
+  <p-accordion [(value)]="activePanels" [multiple]="true">
+    <p-accordion-panel value="0">
+      <p-accordion-header id="api-information-tab">API Information</p-accordion-header>
+      <p-accordion-content>
       <app-api-information></app-api-information>
-    </p-accordionTab>
-    <p-accordionTab header="Summary" id="summary-tab">
+      </p-accordion-content>
+    </p-accordion-panel>
+    <p-accordion-panel value="1">
+      <p-accordion-header id="summary-tab">Summary</p-accordion-header>
+      <p-accordion-content>
       <app-summary></app-summary>
-    </p-accordionTab>
-    <p-accordionTab header="API Paths" id="api-path-tab">
+      </p-accordion-content>
+    </p-accordion-panel>
+    <p-accordion-panel value="2">
+      <p-accordion-header id="api-path-tab">API Paths</p-accordion-header>
+      <p-accordion-content>
       <app-api-path-tree></app-api-path-tree>
-    </p-accordionTab>
-    <p-accordionTab header="Tags" id="tags-tab">
+      </p-accordion-content>
+    </p-accordion-panel>
+    <p-accordion-panel value="3">
+      <p-accordion-header id="tags-tab">Tags</p-accordion-header>
+      <p-accordion-content>
       <app-api-tags></app-api-tags>
-    </p-accordionTab>
-    <p-accordionTab header="Components" id="components-tab">
+      </p-accordion-content>
+    </p-accordion-panel>
+    <p-accordion-panel value="4">
+      <p-accordion-header id="components-tab">Components</p-accordion-header>
+      <p-accordion-content>
         <app-api-components-detail></app-api-components-detail>
-    </p-accordionTab>
+      </p-accordion-content>
+    </p-accordion-panel>
   </p-accordion>
 </div>

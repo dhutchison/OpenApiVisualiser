@@ -17,13 +17,14 @@ import { MainComponent } from './components/main/main.component';
 import { PipesModule } from './pipes/pipes.module';
 import { FileChooserComponent } from './components/file-chooser/file-chooser.component';
 import { UrlChooserComponent } from './components/url-chooser/url-chooser.component';
+import { SummaryComponent } from './components/summary/summary.component';
+import { EndpointSwaggerComponent } from './components/endpoint-swagger/endpoint-swagger.component';
 
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { FieldsetModule } from 'primeng/fieldset';
 import { FileUploadModule } from 'primeng/fileupload';
-import { InputSwitchModule } from 'primeng/inputswitch';
 import { PanelModule } from 'primeng/panel';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TreeModule } from 'primeng/tree';
@@ -45,7 +46,6 @@ describe('AppComponent', () => {
         FieldsetModule,
         FileUploadModule,
         FormsModule,
-        InputSwitchModule,
         PanelModule,
         SelectButtonModule,
         TooltipModule,
@@ -63,11 +63,13 @@ describe('AppComponent', () => {
         ApiPathTreeComponent,
         ApiTagsComponent,
         ExportComponent,
+        EndpointSwaggerComponent,
         ExternalDocsComponent,
         FileChooserComponent,
         MainComponent,
         NodeMethodDetailComponent,
         SchemaDetailComponent,
+        SummaryComponent,
         UrlChooserComponent
       ]
     }).compileComponents();

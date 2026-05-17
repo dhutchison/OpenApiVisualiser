@@ -1,0 +1,18 @@
+.endpoint-swagger {
+  min-height: 60vh;
+}
+
+.endpoint-swagger-error {
+  color: #b00020;
+  font-weight: 600;
+}
+
+:host ::ng-deep {
+  .swagger-ui .wrapper {
+    padding: 0;
+  }
+
+  .swagger-ui .information-container {
+    display: none;
+  }
+}

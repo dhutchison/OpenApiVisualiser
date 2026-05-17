@@ -76,14 +76,13 @@
           "defaultConfiguration": ""
         },
         "serve": {
-          "builder": "ngx-build-plus:dev-server",
+          "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "OpenAPIVisualiser:build",
-            "extraWebpackConfig": "./cypress/coverage.webpack.js"
+            "buildTarget": "OpenAPIVisualiser:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "OpenAPIVisualiser:build:production"
+              "buildTarget": "OpenAPIVisualiser:build:production"
             }
           }
         },

@@ -1,17 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 
 @Component({
+  standalone: false,
   selector: 'app-url-chooser',
   templateUrl: './url-chooser.component.html'
 })
 export class UrlChooserComponent {
 
+  private fileReaderService = inject(FileReaderService);
+
   url: string;
   display = false;
-
-  constructor(
-    private fileReaderService: FileReaderService) { }
 
   showDialog() {
     this.display = true;

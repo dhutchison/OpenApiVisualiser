@@ -1,42 +1,61 @@
-<div class="path-tree-buttons">
-  <p-selectButton
-    [options]="viewTypes"
-    [(ngModel)]="horizontalView"
-    optionLabel="title"
-    optionValue="value">
-  </p-selectButton>
+<div class="api-path-tree-layout" #pathTreeLayout [style.min-height.px]="pathTreeMinHeight">
+  <div class="path-tree-buttons">
+    <p-selectButton
+      [options]="viewTypes"
+      [(ngModel)]="horizontalView"
+      optionLabel="title"
+      optionValue="value">
+    </p-selectButton>
 
-  <p-selectButton
-    [options]="expansionTypes"
-    [(ngModel)]="joinNodesWithNoLeaves"
-    optionLabel="title"
-    optionValue="value">
-  </p-selectButton>
+    <p-selectButton
+      [options]="expansionTypes"
+      [(ngModel)]="joinNodesWithNoLeaves"
+      optionLabel="title"
+      optionValue="value">
+    </p-selectButton>
 
-  <button pButton type="button" icon="pi pi-download" label="Download Image"
-    (click)="downloadImage($event)"
-    class="download-image-button"
-    [disabled]="generatingImage" *ngIf="horizontalView">
-  </button>
+    <button pButton type="button" icon="pi pi-download" label="Download Image"
+      (click)="downloadImage($event)"
+      class="download-image-button"
+      [disabled]="generatingImage" *ngIf="horizontalView">
+    </button>
+  </div>
+
+  <div [class.tree-detail-horizontal]="!horizontalView">
+    <div class="tree-view" #treeView>
+      <p-tree [value]="apiPathNodes"
+          selectionMode="single"
+          [(selection)]="selectedNode"
+          (onNodeSelect)="openEndpointDetail($event)"
+          [styleClass]="horizontalView? 'tree-horizontal': 'tree-vertical'"
+          >
+
+        <ng-template let-node pTemplate="operation">
+          <span pTooltip="{{ node.tooltip }}" [escape]=false id="{{ node.id }}-node">{{ node.label }}</span>
+        </ng-template>
+      </p-tree>
+    </div>
+    <div class="selected-node-detail">
+      <app-node-method-detail *ngIf="selectedOperationNode" [method]="selectedOperationNode.method" [path]="selectedOperationNode.path"
+        [node]="selectedOperationNode.operation">
+      </app-node-method-detail>
+    </div>
+  </div>
 </div>
 
-<div [class.tree-detail-horizontal]="!horizontalView">
-  <div class="tree-view" #treeView>
-    <p-tree [value]="apiPathNodes"
-        layout="{{horizontalView | treeOrientation}}"
-        selectionMode="single"
-        [(selection)]="selectedNode"
-        [className]="horizontalView? 'tree-horizontal': 'tree-vertical'"
-        >
-
-      <ng-template let-node pTemplate="operation">
-        <span pTooltip="{{ node.tooltip }}" [escape]=false id="{{ node.id }}-node">{{ node.label }}</span>
-      </ng-template>
-    </p-tree>
-  </div>
-  <div class="selected-node-detail">
-    <app-node-method-detail *ngIf="selectedNode" [(method)]="selectedNode.method" [(path)]="selectedNode.path"
-      [(node)]="selectedNode.operation">
-    </app-node-method-detail>
-  </div>
-</div>
+<p-dialog
+  header="{{ selectedOperationNode?.method }} {{ selectedOperationNode?.path }}"
+  [(visible)]="endpointDialogVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="true"
+  [style]="{width: '90vw'}"
+  [contentStyle]="{'max-height': '80vh', overflow: 'auto'}">
+  <app-endpoint-swagger
+    *ngIf="endpointDialogVisible && selectedOperationNode"
+    [apiSpec]="selectedOperationNode.apiDefinition"
+    [path]="selectedOperationNode.path"
+    [method]="selectedOperationNode.method"
+    [operation]="selectedOperationNode.operation">
+  </app-endpoint-swagger>
+</p-dialog>

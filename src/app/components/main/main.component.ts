@@ -1,17 +1,18 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { Component, AfterViewInit, inject } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
+  standalone: false,
   selector: 'app-main',
   templateUrl: './main.component.html'
 })
 export class MainComponent implements AfterViewInit {
 
-  constructor(
-    private route: ActivatedRoute,
-    private fileReaderService: FileReaderService
-  ) { }
+  private route = inject(ActivatedRoute);
+  private fileReaderService = inject(FileReaderService);
+
+  activePanels: string[] = [];
 
   ngAfterViewInit() {
     /* Only process query parameters after the child components have been initialized */

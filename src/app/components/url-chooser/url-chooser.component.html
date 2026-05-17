@@ -5,7 +5,7 @@
         <input id="url-input" type="url" name='url' [(ngModel)]='url' pInputText required>
         <label for="url-input">URL</label>
       </span>
-      <p-footer>
+      <ng-template pTemplate="footer">
           <button type="submit" pButton icon="pi pi-check"
             label="Import"
             [disabled]="!(url && url.length > 0)"
@@ -13,7 +13,7 @@
           <button type="button" pButton icon="pi pi-times"
             (click)="display=false" label="Cancel"
             class="p-button-secondary"></button>
-      </p-footer>
+      </ng-template>
 </p-dialog>
 
 <button type="button" (click)="showDialog()" pButton icon="pi pi-cloud-upload" label="Import from URL"></button>

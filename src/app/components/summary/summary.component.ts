@@ -1,24 +1,22 @@
-import { Component, OnInit } from '@angular/core';
-import { FileReaderService } from '../../services/file-reader.service';
+import { Component, OnInit, inject } from '@angular/core';
 import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
 import { TreeNode } from 'primeng/api';
 
 @Component({
+  standalone: false,
   selector: 'app-summary',
   templateUrl: './summary.component.html',
   styleUrls: ['./summary.component.sass']
 })
 export class SummaryComponent implements OnInit {
 
+  private openApiConverterService = inject(OpenapiTreenodeConverterService);
+
   /**
    * Object hoilding the tree nodes to display
    */
   apiPathNodes: TreeNode[] = [];
   methodSummary =  new Map<string, number>();
-
-  constructor(
-    private fileReaderService: FileReaderService,
-    private openApiConverterService: OpenapiTreenodeConverterService ) { }
 
     ngOnInit() {
       this.openApiConverterService.treeNodesChanged.subscribe(value => {

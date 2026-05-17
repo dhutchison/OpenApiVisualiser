@@ -1,20 +1,21 @@
-import { Component, Input, SimpleChanges, OnChanges } from '@angular/core';
+import { Component, Input, SimpleChanges, OnChanges, inject } from '@angular/core';
 import { OpenAPIObject, SchemaObject } from 'openapi3-ts/oas31';
 import { TreeNode } from 'primeng/api';
 import { OpenapiTreenodeConverterService } from '../../../services/openapi-treenode-converter.service';
 
 @Component({
+  standalone: false,
   selector: 'app-schema-detail',
   templateUrl: './schema-detail.component.html',
   styleUrls: ['./schema-detail.component.scss']
 })
 export class SchemaDetailComponent implements OnChanges {
 
+  private treeNodeService = inject(OpenapiTreenodeConverterService);
+
   @Input() apiSpec?: OpenAPIObject
   @Input() schema?: SchemaObject;
   treeModel: TreeNode[] = [];
-
-  constructor(private treeNodeService: OpenapiTreenodeConverterService) { }
 
   /**
    * Lifecycle hook triggered when @Input() changes.
