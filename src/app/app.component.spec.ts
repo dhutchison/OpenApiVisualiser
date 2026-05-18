@@ -19,7 +19,6 @@ import { UrlChooserComponent } from './components/url-chooser/url-chooser.compon
 import { SummaryComponent } from './components/summary/summary.component';
 import { EndpointSwaggerComponent } from './components/endpoint-swagger/endpoint-swagger.component';
 
-import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { FieldsetModule } from 'primeng/fieldset';
@@ -38,7 +37,6 @@ describe('AppComponent', () => {
       imports: [
         PipesModule,
 
-        AccordionModule,
         BrowserAnimationsModule,
         ButtonModule,
         DialogModule,

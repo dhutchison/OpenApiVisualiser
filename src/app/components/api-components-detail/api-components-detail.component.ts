@@ -25,6 +25,8 @@ export class ApiComponentsDetailComponent implements OnInit {
   schemas?: SchemaContainer;
   items?: string[] = [];
   componentSections: ComponentSection[] = [];
+  expandedSchemas: string[] = [];
+  expandedComponentSections: Array<keyof ComponentsObject> = [];
 
   private readonly componentSectionLabels: Array<{key: keyof ComponentsObject; label: string}> = [
     {key: 'responses', label: 'Responses'},
@@ -44,6 +46,8 @@ export class ApiComponentsDetailComponent implements OnInit {
       this.schemas = value.components?.schemas ?? {};
       this.items = Object.keys(this.schemas);
       this.componentSections = this.createComponentSections(value.components);
+      this.expandedSchemas = [];
+      this.expandedComponentSections = [];
     });
 
     this.fileReaderService.resetFiles.subscribe(v => {
@@ -51,7 +55,25 @@ export class ApiComponentsDetailComponent implements OnInit {
       this.schemas = {};
       this.items = [];
       this.componentSections = [];
+      this.expandedSchemas = [];
+      this.expandedComponentSections = [];
     });
+  }
+
+  toggleSchema(schemaName: string) {
+    this.expandedSchemas = this.toggleExpandedItem(this.expandedSchemas, schemaName);
+  }
+
+  isSchemaExpanded(schemaName: string): boolean {
+    return this.expandedSchemas.includes(schemaName);
+  }
+
+  toggleComponentSection(sectionKey: keyof ComponentsObject) {
+    this.expandedComponentSections = this.toggleExpandedItem(this.expandedComponentSections, sectionKey);
+  }
+
+  isComponentSectionExpanded(sectionKey: keyof ComponentsObject): boolean {
+    return this.expandedComponentSections.includes(sectionKey);
   }
 
   isReference(schema: SchemaObject | ReferenceObject): schema is ReferenceObject {
@@ -166,6 +188,14 @@ export class ApiComponentsDetailComponent implements OnInit {
         items: Object.keys(components?.[section.key] ?? {})
       }))
       .filter(section => section.items.length > 0);
+  }
+
+  private toggleExpandedItem<T>(items: T[], item: T): T[] {
+    if (items.includes(item)) {
+      return items.filter(existingItem => existingItem !== item);
+    }
+
+    return [...items, item];
   }
 
 }

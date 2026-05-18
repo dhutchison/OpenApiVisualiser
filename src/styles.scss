@@ -268,7 +268,8 @@ $putHighlightColour: #fca130;
 }
 
 .p-accordion {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 0.75rem;
 }
 
@@ -283,10 +284,34 @@ $putHighlightColour: #fca130;
 
 .p-accordionheader,
 .p-accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
     min-height: 3.5rem;
     padding: 0 1rem;
+    border: 0;
     font-size: 1.02rem;
     font-weight: 800;
+    text-align: left;
+    cursor: pointer;
+}
+
+.component-header-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.accordion-toggle-icon {
+    color: var(--app-text-muted);
+    font-size: 0.9rem;
+    transition: transform 0.16s ease, color 0.16s ease;
+}
+
+.accordion-toggle-icon.is-expanded {
+    transform: rotate(180deg);
+    color: var(--app-text);
 }
 
 .p-accordioncontent-content,
@@ -294,6 +319,19 @@ $putHighlightColour: #fca130;
     padding: 1rem;
     border-color: var(--app-border);
     background: var(--app-surface-solid);
+}
+
+/* PrimeNG animates accordion content with an explicit height measurement.
+ * Safari can hold onto a stale measured height for nested/dynamic content,
+ * so force open panels back to their natural size.
+ */
+.p-accordionpanel[data-p-active="true"] > .p-accordioncontent > .p-accordioncontent-content,
+.p-accordion-panel[data-p-active="true"] > .p-accordion-content > .p-accordion-content-content,
+.p-accordionpanel[data-p-active="true"] > .p-accordioncontent > .p-accordion-content-content,
+.p-accordion-panel[data-p-active="true"] > .p-accordion-content > .p-accordioncontent-content {
+    height: auto !important;
+    overflow: visible;
+    visibility: visible;
 }
 
 

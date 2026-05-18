@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import Aura from '@primeuix/themes/aura';
 
-import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { FieldsetModule } from 'primeng/fieldset';
 import { PanelModule } from 'primeng/panel';
@@ -62,7 +61,6 @@ import { EndpointSwaggerComponent } from './components/endpoint-swagger/endpoint
 
     BrowserAnimationsModule,
 
-    AccordionModule,
     ButtonModule,
     DialogModule,
     FieldsetModule,

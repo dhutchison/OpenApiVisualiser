@@ -1,5 +1,12 @@
 describe('The Home Page', () => {
 
+    const getPageTop = (element) => {
+      const { top } = element.getBoundingClientRect();
+      const scrollY = element.ownerDocument.defaultView?.scrollY ?? 0;
+
+      return top + scrollY;
+    }
+
     /* Test the app launches at all */
     it('successfully loads', () => {
       /* Open the application */
@@ -268,20 +275,20 @@ describe('The Home Page', () => {
       cy.visit('/?url=http://local.test/petstore.yaml')
 
       cy.contains('[role="button"]', 'Components').then(($componentsHeader) => {
-        const initialTop = $componentsHeader[0].getBoundingClientRect().top;
+        const initialTop = getPageTop($componentsHeader[0]);
 
         cy.contains('API Paths').click();
         cy.get('#listPets-node').should('be.visible');
 
         cy.contains('[role="button"]', 'Components').should(($expandedComponentsHeader) => {
-          const expandedTop = $expandedComponentsHeader[0].getBoundingClientRect().top;
-          const apiPathBottom = Cypress.$('.api-path-tree-layout')[0].getBoundingClientRect().bottom;
+          const expandedTop = getPageTop($expandedComponentsHeader[0]);
+          const apiPathBottom = getPageTop(Cypress.$('.api-path-tree-layout')[0]) + Cypress.$('.api-path-tree-layout')[0].getBoundingClientRect().height;
 
           expect(expandedTop).to.be.greaterThan(apiPathBottom - 1);
         });
 
         cy.contains('[role="button"]', 'Components').should(($expandedComponentsHeader) => {
-          const expandedTop = $expandedComponentsHeader[0].getBoundingClientRect().top;
+          const expandedTop = getPageTop($expandedComponentsHeader[0]);
 
           expect(expandedTop).to.be.greaterThan(initialTop + 100);
         });
@@ -366,13 +373,23 @@ describe('The Home Page', () => {
 
       cy.contains('[role="button"]', 'Components').click();
       cy.contains('[role="button"]', 'Pets').then(($petsHeader) => {
-        const initialTop = $petsHeader[0].getBoundingClientRect().top;
+        const initialTop = getPageTop($petsHeader[0]);
 
         cy.contains('[role="button"]', 'Pet').click();
         cy.get('#components_schemas_Pet').should('be.visible');
 
+        cy.contains('[role="button"]', 'Pet')
+            .closest('.p-accordionpanel, .p-accordion-panel')
+            .find('.p-accordioncontent-content, .p-accordion-content-content')
+            .should(($content) => {
+              const content = $content[0];
+
+              expect(content.getBoundingClientRect().height).to.be.greaterThan(0);
+              expect(content.getBoundingClientRect().height + 1).to.be.greaterThan(content.scrollHeight);
+            });
+
         cy.contains('[role="button"]', 'Pets').should(($expandedPetsHeader) => {
-          const expandedTop = $expandedPetsHeader[0].getBoundingClientRect().top;
+          const expandedTop = getPageTop($expandedPetsHeader[0]);
 
           expect(expandedTop).to.be.greaterThan(initialTop + 20);
         });

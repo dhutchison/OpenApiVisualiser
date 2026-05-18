@@ -4,36 +4,37 @@
     <app-url-chooser></app-url-chooser>
     <app-export></app-export>
   </div>
-  <p-accordion [(value)]="activePanels" [multiple]="true">
-    <p-accordion-panel value="0">
-      <p-accordion-header id="api-information-tab">API Information</p-accordion-header>
-      <p-accordion-content>
-      <app-api-information></app-api-information>
-      </p-accordion-content>
-    </p-accordion-panel>
-    <p-accordion-panel value="1">
-      <p-accordion-header id="summary-tab">Summary</p-accordion-header>
-      <p-accordion-content>
-      <app-summary></app-summary>
-      </p-accordion-content>
-    </p-accordion-panel>
-    <p-accordion-panel value="2">
-      <p-accordion-header id="api-path-tab">API Paths</p-accordion-header>
-      <p-accordion-content>
-      <app-api-path-tree></app-api-path-tree>
-      </p-accordion-content>
-    </p-accordion-panel>
-    <p-accordion-panel value="3">
-      <p-accordion-header id="tags-tab">Tags</p-accordion-header>
-      <p-accordion-content>
-      <app-api-tags></app-api-tags>
-      </p-accordion-content>
-    </p-accordion-panel>
-    <p-accordion-panel value="4">
-      <p-accordion-header id="components-tab">Components</p-accordion-header>
-      <p-accordion-content>
-        <app-api-components-detail></app-api-components-detail>
-      </p-accordion-content>
-    </p-accordion-panel>
-  </p-accordion>
+  <div class="p-accordion">
+    <section class="p-accordionpanel" *ngFor="let section of sections" [attr.data-p-active]="isSectionExpanded(section.id)">
+      <button
+        type="button"
+        role="button"
+        class="p-accordionheader"
+        [id]="section.headerId"
+        [attr.aria-expanded]="isSectionExpanded(section.id)"
+        [attr.aria-controls]="'main-panel-' + section.id"
+        (click)="toggleSection(section.id)">
+        <span>{{ section.title }}</span>
+        <span
+          class="accordion-toggle-icon pi pi-chevron-down"
+          [class.is-expanded]="isSectionExpanded(section.id)"
+          aria-hidden="true"></span>
+      </button>
+
+      <div
+        class="p-accordioncontent"
+        [id]="'main-panel-' + section.id"
+        [hidden]="!isSectionExpanded(section.id)"
+        role="region"
+        [attr.aria-labelledby]="section.headerId">
+        <div class="p-accordioncontent-content">
+          <app-api-information *ngIf="section.id === '0'"></app-api-information>
+          <app-summary *ngIf="section.id === '1'"></app-summary>
+          <app-api-path-tree *ngIf="section.id === '2'"></app-api-path-tree>
+          <app-api-tags *ngIf="section.id === '3'"></app-api-tags>
+          <app-api-components-detail *ngIf="section.id === '4'"></app-api-components-detail>
+        </div>
+      </div>
+    </section>
+  </div>
 </div>

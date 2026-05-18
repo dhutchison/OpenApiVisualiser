@@ -2,11 +2,11 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { By } from '@angular/platform-browser';
 import { RouterTestingModule } from '@angular/router/testing';
 
 import { MainComponent } from './main.component';
 
-import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { FieldsetModule } from 'primeng/fieldset';
@@ -55,7 +55,6 @@ describe('MainComponent', () => {
       imports: [
         PipesModule,
 
-        AccordionModule,
         BrowserAnimationsModule,
         ButtonModule,
         DialogModule,
@@ -84,5 +83,31 @@ describe('MainComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should render section headers as buttons', () => {
+    const headers = fixture.debugElement.queryAll(By.css('.p-accordionheader'));
+
+    expect(headers.length).toBe(5);
+    expect(headers[0].nativeElement.textContent).toContain('API Information');
+  });
+
+  it('should toggle sections open and closed', () => {
+    const apiPathsHeader = fixture.debugElement.query(By.css('#api-path-tab'));
+    const apiPathsPanel = () => fixture.debugElement.query(By.css('#main-panel-2')).nativeElement as HTMLElement;
+
+    expect(apiPathsPanel().hidden).toBeTrue();
+
+    apiPathsHeader.nativeElement.click();
+    fixture.detectChanges();
+
+    expect(component.activePanels).toEqual(['2']);
+    expect(apiPathsPanel().hidden).toBeFalse();
+
+    apiPathsHeader.nativeElement.click();
+    fixture.detectChanges();
+
+    expect(component.activePanels).toEqual([]);
+    expect(apiPathsPanel().hidden).toBeTrue();
   });
 });
