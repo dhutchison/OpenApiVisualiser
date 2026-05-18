@@ -26,6 +26,7 @@ export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDes
   @ViewChild('swaggerContainer') swaggerContainer?: ElementRef<HTMLDivElement>;
 
   errorMessage?: string;
+  warningMessage?: string;
 
   private viewReady = false;
   private destroyed = false;
@@ -71,6 +72,7 @@ export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDes
 
     const spec = this.createEndpointSpec();
     this.errorMessage = undefined;
+    this.warningMessage = this.createWarningMessage(spec);
     this.swaggerContainer.nativeElement.replaceChildren();
 
     try {
@@ -140,5 +142,31 @@ export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDes
         [this.path]: selectedPathItem
       }
     };
+  }
+
+  private createWarningMessage(spec: OpenAPIObject): string | undefined {
+    const serverUrl = spec.servers?.[0]?.url;
+
+    if (!serverUrl || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    try {
+      const resolvedServerUrl = new URL(serverUrl, window.location.href);
+      const pageProtocol = window.location.protocol;
+      const serverProtocol = resolvedServerUrl.protocol;
+
+      if (pageProtocol === 'https:' && serverProtocol === 'http:') {
+        return `This endpoint uses the server ${resolvedServerUrl.origin}, which may be blocked by the browser as mixed content when this app is loaded over HTTPS. You can still use the generated cURL command or open the API from an HTTP environment.`;
+      }
+
+      if (serverProtocol !== 'http:' && serverProtocol !== 'https:') {
+        return `This endpoint uses the server URL ${resolvedServerUrl.toString()}, but browser-based "Try it out" requests only work with HTTP or HTTPS servers. You can still use the generated cURL command to try the request outside the browser.`;
+      }
+    } catch {
+      return `This endpoint's server URL could not be resolved in the browser. You can still use the generated cURL command to try the request manually.`;
+    }
+
+    return undefined;
   }
 }

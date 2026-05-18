@@ -295,6 +295,44 @@ describe('The Home Page', () => {
       });
     })
 
+    it('Shows a warning above the embedded Swagger UI when the server URL cannot be used by the browser', () => {
+
+      cy.fixture('petstore.yaml', 'utf8').then((data) => {
+
+        const response = {
+          statusCode: 200,
+          body: data.replace('http://petstore.swagger.io/v1', 'mailto:petstore@example.com'),
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8'
+          }
+        };
+        cy.intercept(
+          'GET',
+          /^http:\/\/local.test\/petstore.yaml$/,
+          response)
+      })
+
+      cy.visit('/?url=http://local.test/petstore.yaml')
+
+      cy.contains('API Paths').click()
+      cy.get('#listPets-node').click()
+
+      cy.get('.p-dialog')
+          .should('be.visible')
+          .contains('GET /pets')
+
+      cy.get('.endpoint-swagger-warning', { timeout: 20000 })
+          .should('be.visible')
+          .and('contain.text', 'browser-based "Try it out" requests only work with HTTP or HTTPS servers')
+          .and('contain.text', 'generated cURL command')
+
+      cy.get('.endpoint-swagger-warning')
+          .next('.endpoint-swagger')
+          .find('.swagger-ui')
+          .should('exist')
+          .and('contain.text', 'List all pets')
+    })
+
     it('Renders API Paths Tree as a horizontal diagram', () => {
 
       cy.fixture('petstore.yaml', 'utf8').then((data) => {
