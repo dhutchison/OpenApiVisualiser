@@ -249,6 +249,7 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     const layoutElement = this.pathTreeLayoutElement.nativeElement;
+    this.updateHorizontalConnectorBounds(layoutElement);
     const layoutTop = layoutElement.getBoundingClientRect().top;
     const renderedElements = Array.from(layoutElement.querySelectorAll('*')) as HTMLElement[];
     const renderedBottom = renderedElements.reduce((bottom, element) => {
@@ -259,5 +260,44 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     const measuredHeight = Math.ceil(renderedBottom - layoutTop);
 
     this.pathTreeMinHeight = measuredHeight > 0 ? measuredHeight : undefined;
+  }
+
+  private updateHorizontalConnectorBounds(layoutElement: HTMLElement) {
+    const childLists = Array.from(layoutElement.querySelectorAll('.tree-horizontal .p-tree-node-children')) as HTMLElement[];
+
+    childLists.forEach((childList) => {
+      const immediateChildContents = this.getImmediateChildNodeContents(childList);
+
+      if (immediateChildContents.length < 2) {
+        childList.style.removeProperty('--tree-connector-top');
+        childList.style.removeProperty('--tree-connector-bottom');
+        return;
+      }
+
+      const childListRect = childList.getBoundingClientRect();
+      const firstChildRect = immediateChildContents[0].getBoundingClientRect();
+      const lastChildRect = immediateChildContents[immediateChildContents.length - 1].getBoundingClientRect();
+      const firstChildCenter = firstChildRect.top - childListRect.top + (firstChildRect.height / 2);
+      const lastChildCenter = lastChildRect.top - childListRect.top + (lastChildRect.height / 2);
+
+      childList.style.setProperty('--tree-connector-top', `${firstChildCenter}px`);
+      childList.style.setProperty('--tree-connector-bottom', `${lastChildCenter}px`);
+    });
+  }
+
+  private getImmediateChildNodeContents(childList: HTMLElement): HTMLElement[] {
+    return Array.from(childList.children)
+      .map((childElement) => {
+        if (!(childElement instanceof HTMLElement)) {
+          return undefined;
+        }
+
+        if (childElement.matches('.p-tree-node')) {
+          return childElement.querySelector(':scope > .p-tree-node-content') as HTMLElement | null;
+        }
+
+        return childElement.querySelector(':scope > .p-tree-node > .p-tree-node-content') as HTMLElement | null;
+      })
+      .filter((contentElement): contentElement is HTMLElement => contentElement instanceof HTMLElement);
   }
 }

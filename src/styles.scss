@@ -478,9 +478,9 @@ $putHighlightColour: #fca130;
 
     .p-tree-node-children:has(> .p-tree-node:nth-child(2))::after,
     .p-tree-node-children:has(> p-treenode:nth-child(2))::after {
-        bottom: 1.35rem;
+        bottom: calc(100% - var(--tree-connector-bottom, 1.35rem));
         display: block;
-        top: 1.35rem;
+        top: var(--tree-connector-top, 1.35rem);
     }
 
     .p-tree-node-children > .p-tree-node::before,
