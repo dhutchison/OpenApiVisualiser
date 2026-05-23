@@ -149,7 +149,7 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     /* Do the work. This uses a promise to async the work */
     console.log(this.treeViewElement.nativeElement);
 
-    toBlob(this.treeViewElement.nativeElement, exportOptions)
+    return this.createImageBlob(this.treeViewElement.nativeElement, exportOptions)
       .then(blob => {
         window.saveAs(blob, 'API.png');
 
@@ -165,6 +165,10 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
         this.generatingImage = false;
       });
 
+  }
+
+  private createImageBlob(element: HTMLElement, options: object) {
+    return toBlob(element, options);
   }
 
   /**

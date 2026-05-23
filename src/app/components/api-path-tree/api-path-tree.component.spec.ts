@@ -1,7 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import * as htmlToImage from 'html-to-image';
 
 import { ApiPathTreeComponent } from './api-path-tree.component';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
@@ -67,14 +66,13 @@ describe('ApiPathTreeComponent', () => {
   it('should export using the rendered tree background colour', async () => {
     const treeViewElement = fixture.nativeElement.querySelector('.tree-view') as HTMLElement;
     spyOn(window, 'saveAs');
-    spyOn(htmlToImage, 'toBlob').and.resolveTo(new Blob());
+    const createImageBlobSpy = spyOn<any>(component, 'createImageBlob').and.resolveTo(new Blob());
 
     treeViewElement.style.backgroundColor = 'rgb(32, 33, 30)';
 
-    component.downloadImage();
-    await fixture.whenStable();
+    await component.downloadImage();
 
-    expect(htmlToImage.toBlob).toHaveBeenCalledWith(
+    expect(createImageBlobSpy).toHaveBeenCalledWith(
       component.treeViewElement.nativeElement,
       jasmine.objectContaining({
         backgroundColor: 'rgb(32, 33, 30)',

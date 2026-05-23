@@ -267,6 +267,69 @@ $putHighlightColour: #fca130;
     color: var(--app-text);
 }
 
+.url-import-dialog {
+    .p-dialog-content {
+        padding: 1.5rem 2rem 1rem;
+    }
+
+    .p-dialog-footer {
+        padding: 0 2rem 1.5rem;
+    }
+}
+
+.url-import-dialog__body {
+    width: 100%;
+}
+
+.url-import-dialog__field-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.url-import-dialog__label {
+    color: var(--app-text);
+    flex: 0 0 auto;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.url-import-dialog__input-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+}
+
+.url-import-dialog__input {
+    display: block;
+    min-width: 0;
+    width: 100%;
+}
+
+.url-import-dialog__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+@media (max-width: 640px) {
+    .url-import-dialog__field-row {
+        align-items: stretch;
+        flex-direction: column;
+        row-gap: 0.75rem;
+    }
+
+    .url-import-dialog__footer {
+        flex-direction: column;
+    }
+
+    .url-import-dialog__footer .p-button {
+        width: 100%;
+    }
+}
+
 .p-accordion {
     display: flex;
     flex-direction: column;

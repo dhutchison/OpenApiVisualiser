@@ -153,6 +153,28 @@ describe('The Home Page', () => {
 
     })
 
+    it('Lets the URL input fill the dialog body width', () => {
+      cy.visit('/')
+
+      cy.contains('Import from URL').click()
+
+      cy.get('.url-import-dialog').should('be.visible')
+      cy.get('.url-import-dialog__field-row').should('be.visible')
+      cy.get('.url-import-dialog__input-wrap').should('be.visible')
+      cy.get('#url-input').should('be.visible')
+
+      cy.get('.url-import-dialog__input-wrap').then(($wrap) => {
+        const wrapRect = $wrap[0].getBoundingClientRect()
+
+        cy.get('#url-input').should(($input) => {
+          const inputRect = $input[0].getBoundingClientRect()
+
+          expect(inputRect.width).to.be.greaterThan(wrapRect.width - 4)
+          expect(Math.abs(inputRect.right - wrapRect.right)).to.be.lessThan(3)
+        })
+      })
+    })
+
     /* Test we can load a spec from a file */
     it('Loads from a single file', () => {
         cy.visit('/')

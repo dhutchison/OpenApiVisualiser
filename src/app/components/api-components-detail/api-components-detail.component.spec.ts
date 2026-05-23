@@ -89,7 +89,8 @@ describe('ApiComponentsDetailComponent', () => {
       components: {
         schemas: {
           Pet: {
-            type: 'object'
+            type: 'object',
+            properties: {}
           }
         }
       }
