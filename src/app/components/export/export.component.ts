@@ -100,7 +100,7 @@ export class ExportComponent implements OnInit {
 
   private convertToOpenAPIYaml(spec: OpenAPIObject): string {
 
-    return jsyaml.safeDump(spec);
+    return jsyaml.dump(spec);
   }
 
   private convertToOpenAPIJson(spec: OpenAPIObject): string {
