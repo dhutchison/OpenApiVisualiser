@@ -11,7 +11,7 @@ import * as jsyaml from 'js-yaml';
 })
 export class FileReaderService {
 
-  private http = inject(HttpClient);
+  private readonly http = inject(HttpClient);
 
   /**
    * Subject used to notify that a new Api Specification has been read.

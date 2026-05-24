@@ -10,7 +10,7 @@ import { TreeNode } from 'primeng/api';
 })
 export class SummaryComponent implements OnInit {
 
-  private openApiConverterService = inject(OpenapiTreenodeConverterService);
+  private readonly openApiConverterService = inject(OpenapiTreenodeConverterService);
 
   /**
    * Object hoilding the tree nodes to display

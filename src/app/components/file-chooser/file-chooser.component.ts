@@ -8,7 +8,7 @@ import { FileReaderService } from '../../services/file-reader.service';
 })
 export class FileChooserComponent {
 
-  private fileReaderService = inject(FileReaderService);
+  private readonly fileReaderService = inject(FileReaderService);
 
   readonly yamlFilenamePattern = /\.y(a)?ml/;
   readonly jsonFilenamePattern = /\.json/;

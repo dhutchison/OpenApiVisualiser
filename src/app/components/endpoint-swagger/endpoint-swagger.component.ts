@@ -101,7 +101,7 @@ export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDes
 
   private async getSwaggerUiFactory(): Promise<(config: object) => any> {
     const SwaggerUIModule = await import('swagger-ui');
-    const swaggerUiModule = SwaggerUIModule as any;
+    const swaggerUiModule: any = SwaggerUIModule;
     const candidates = [
       swaggerUiModule,
       swaggerUiModule.default,
@@ -122,7 +122,7 @@ export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDes
   }
 
   private createEndpointSpec(): OpenAPIObject {
-    const pathItem = this.apiSpec.paths?.[this.path] as PathItemObject | undefined;
+    const pathItem = this.apiSpec.paths?.[this.path];
     const method = this.method.toLowerCase();
     const selectedPathItem: PathItemObject = {
       parameters: pathItem?.parameters
@@ -147,13 +147,13 @@ export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDes
   private createWarningMessage(spec: OpenAPIObject): string | undefined {
     const serverUrl = spec.servers?.[0]?.url;
 
-    if (!serverUrl || typeof window === 'undefined') {
+    if (!serverUrl || typeof globalThis.window === 'undefined') {
       return undefined;
     }
 
     try {
-      const resolvedServerUrl = new URL(serverUrl, window.location.href);
-      const pageProtocol = window.location.protocol;
+      const resolvedServerUrl = new URL(serverUrl, globalThis.location.href);
+      const pageProtocol = globalThis.location.protocol;
       const serverProtocol = resolvedServerUrl.protocol;
 
       if (pageProtocol === 'https:' && serverProtocol === 'http:') {

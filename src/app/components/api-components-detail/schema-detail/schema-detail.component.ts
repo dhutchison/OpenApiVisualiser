@@ -11,7 +11,7 @@ import { OpenapiTreenodeConverterService } from '../../../services/openapi-treen
 })
 export class SchemaDetailComponent implements OnChanges {
 
-  private treeNodeService = inject(OpenapiTreenodeConverterService);
+  private readonly treeNodeService = inject(OpenapiTreenodeConverterService);
 
   @Input() apiSpec?: OpenAPIObject
   @Input() schema?: SchemaObject;

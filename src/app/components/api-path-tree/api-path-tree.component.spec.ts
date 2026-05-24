@@ -65,7 +65,7 @@ describe('ApiPathTreeComponent', () => {
 
   it('should export using the rendered tree background colour', async () => {
     const treeViewElement = fixture.nativeElement.querySelector('.tree-view') as HTMLElement;
-    spyOn(window, 'saveAs');
+    spyOn(globalThis, 'saveAs');
     const createImageBlobSpy = spyOn<any>(component, 'createImageBlob').and.resolveTo(new Blob());
 
     treeViewElement.style.backgroundColor = 'rgb(32, 33, 30)';
@@ -79,7 +79,7 @@ describe('ApiPathTreeComponent', () => {
         pixelRatio: 1
       })
     );
-    expect(window.saveAs).toHaveBeenCalled();
+    expect(globalThis.saveAs).toHaveBeenCalled();
   });
 
 });

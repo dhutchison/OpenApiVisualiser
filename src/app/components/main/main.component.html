@@ -8,7 +8,6 @@
     <section class="p-accordionpanel" *ngFor="let section of sections" [attr.data-p-active]="isSectionExpanded(section.id)">
       <button
         type="button"
-        role="button"
         class="p-accordionheader"
         [id]="section.headerId"
         [attr.aria-expanded]="isSectionExpanded(section.id)"
@@ -21,11 +20,10 @@
           aria-hidden="true"></span>
       </button>
 
-      <div
+      <section
         class="p-accordioncontent"
         [id]="'main-panel-' + section.id"
         [hidden]="!isSectionExpanded(section.id)"
-        role="region"
         [attr.aria-labelledby]="section.headerId">
         <div class="p-accordioncontent-content">
           <app-api-information *ngIf="section.id === '0'"></app-api-information>
@@ -34,7 +32,7 @@
           <app-api-tags *ngIf="section.id === '3'"></app-api-tags>
           <app-api-components-detail *ngIf="section.id === '4'"></app-api-components-detail>
         </div>
-      </div>
+      </section>
     </section>
   </div>
 </div>

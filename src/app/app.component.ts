@@ -7,7 +7,7 @@ import { Component, OnInit, inject } from '@angular/core';
   templateUrl: './app.component.html'
 })
 export class AppComponent implements OnInit {
-  private document = inject(DOCUMENT);
+  private readonly document = inject(DOCUMENT);
 
   title = 'OpenAPIVisualiser';
   darkMode = false;
@@ -18,7 +18,7 @@ export class AppComponent implements OnInit {
     if (storedPreference) {
       this.darkMode = storedPreference === 'dark';
     } else {
-      this.darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      this.darkMode = globalThis.matchMedia('(prefers-color-scheme: dark)').matches;
     }
 
     this.applyTheme();

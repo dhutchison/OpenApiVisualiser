@@ -8,7 +8,7 @@ import { FileReaderService } from '../../services/file-reader.service';
 })
 export class UrlChooserComponent {
 
-  private fileReaderService = inject(FileReaderService);
+  private readonly fileReaderService = inject(FileReaderService);
 
   url: string;
   display = false;

@@ -14,7 +14,7 @@ interface ComponentSummary {
 })
 export class ApiInformationComponent implements OnInit {
 
-  private fileReaderService = inject(FileReaderService);
+  private readonly fileReaderService = inject(FileReaderService);
 
   apiDefinitions: OpenAPIObject[] = [];
 

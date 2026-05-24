@@ -14,9 +14,9 @@ import { toBlob } from 'html-to-image';
 })
 export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
 
-  private preferenceService = inject(UserPreferenceControllerService);
-  private fileReaderService = inject(FileReaderService);
-  private openApiConverterService = inject(OpenapiTreenodeConverterService);
+  private readonly preferenceService = inject(UserPreferenceControllerService);
+  private readonly fileReaderService = inject(FileReaderService);
+  private readonly openApiConverterService = inject(OpenapiTreenodeConverterService);
 
   /* DOM element holding the API tree view */
   @ViewChild('treeView') treeViewElement: ElementRef;
@@ -151,7 +151,7 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
 
     return this.createImageBlob(this.treeViewElement.nativeElement, exportOptions)
       .then(blob => {
-        window.saveAs(blob, 'API.png');
+        globalThis.saveAs(blob, 'API.png');
 
         /* Mark that the generation is complete */
         this.generatingImage = false;
@@ -178,7 +178,7 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
    */
   private setTreeNodes() {
     /* First, lets do a pretty dumb (deep) clone of the objects we got */
-    const nodesCopy: TreeNode[] = JSON.parse(JSON.stringify(this.apiPathNodesOrig));
+    const nodesCopy: TreeNode[] = structuredClone(this.apiPathNodesOrig);
 
     if (this.preferenceService.joinNodesWithNoLeaves) {
       /* Then compress */
@@ -280,7 +280,7 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
 
       const childListRect = childList.getBoundingClientRect();
       const firstChildRect = immediateChildContents[0].getBoundingClientRect();
-      const lastChildRect = immediateChildContents[immediateChildContents.length - 1].getBoundingClientRect();
+      const lastChildRect = immediateChildContents.at(-1).getBoundingClientRect();
       const firstChildCenter = firstChildRect.top - childListRect.top + (firstChildRect.height / 2);
       const lastChildCenter = lastChildRect.top - childListRect.top + (lastChildRect.height / 2);
 

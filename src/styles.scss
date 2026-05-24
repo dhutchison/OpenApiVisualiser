@@ -362,8 +362,10 @@ $putHighlightColour: #fca130;
 
 .component-header-meta {
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.6rem;
+    margin-left: auto;
 }
 
 .accordion-toggle-icon {
@@ -715,8 +717,7 @@ select {
     background: var(--app-surface-muted);
 }
 
-.section-heading,
-.component-header-meta {
+.section-heading {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -730,10 +731,6 @@ select {
     h3 {
         margin: 0;
     }
-}
-
-.component-header-meta {
-    margin-left: auto;
 }
 
 .compact-list,

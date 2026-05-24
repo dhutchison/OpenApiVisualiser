@@ -12,7 +12,7 @@ import * as jsyaml from 'js-yaml';
 })
 export class ExportComponent implements OnInit {
 
-  private fileReaderService = inject(FileReaderService);
+  private readonly fileReaderService = inject(FileReaderService);
 
   // TODO: A lot of comonality with this and the api-information component.
   display = false;

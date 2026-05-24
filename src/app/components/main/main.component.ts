@@ -15,8 +15,8 @@ interface MainSection {
 })
 export class MainComponent implements AfterViewInit {
 
-  private route = inject(ActivatedRoute);
-  private fileReaderService = inject(FileReaderService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly fileReaderService = inject(FileReaderService);
 
   activePanels: string[] = [];
   readonly sections: MainSection[] = [

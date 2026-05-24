@@ -17,7 +17,7 @@ interface TagSummary {
 })
 export class ApiTagsComponent implements OnInit {
 
-  private fileReaderService = inject(FileReaderService);
+  private readonly fileReaderService = inject(FileReaderService);
 
   tagSummaries: TagSummary[] = [];
 

@@ -19,7 +19,7 @@ interface ComponentSection {
 })
 export class ApiComponentsDetailComponent implements OnInit {
 
-  private fileReaderService = inject(FileReaderService);
+  private readonly fileReaderService = inject(FileReaderService);
 
   apiSpec?: OpenAPIObject;
   schemas?: SchemaContainer;
