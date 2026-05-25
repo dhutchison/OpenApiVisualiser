@@ -1,7 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  standalone: false,
   name: 'replaceSlash'
 })
 export class StringReplacePipe implements PipeTransform {

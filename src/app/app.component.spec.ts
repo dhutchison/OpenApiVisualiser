@@ -35,6 +35,19 @@ describe('AppComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [
+        AppComponent,
+        ApiComponentsDetailComponent,
+        ApiInformationComponent,
+        ApiPathTreeComponent,
+        ApiTagsComponent,
+        ExportComponent,
+        EndpointSwaggerComponent,
+        ExternalDocsComponent,
+        FileChooserComponent,
+        MainComponent,
+        SchemaDetailComponent,
+        SummaryComponent,
+        UrlChooserComponent,
         PipesModule,
 
         BrowserAnimationsModule,
@@ -51,22 +64,6 @@ describe('AppComponent', () => {
 
         HttpClientTestingModule,
         RouterTestingModule
-      ],
-      declarations: [
-        AppComponent,
-
-        ApiComponentsDetailComponent,
-        ApiInformationComponent,
-        ApiPathTreeComponent,
-        ApiTagsComponent,
-        ExportComponent,
-        EndpointSwaggerComponent,
-        ExternalDocsComponent,
-        FileChooserComponent,
-        MainComponent,
-        SchemaDetailComponent,
-        SummaryComponent,
-        UrlChooserComponent
       ]
     }).compileComponents();
   }));

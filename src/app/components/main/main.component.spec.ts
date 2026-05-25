@@ -37,7 +37,7 @@ describe('MainComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [
+      imports: [
         MainComponent,
 
         ApiComponentsDetailComponent,
@@ -50,9 +50,7 @@ describe('MainComponent', () => {
         FileChooserComponent,
         SchemaDetailComponent,
         SummaryComponent,
-        UrlChooserComponent
-      ],
-      imports: [
+        UrlChooserComponent,
         PipesModule,
 
         BrowserAnimationsModule,

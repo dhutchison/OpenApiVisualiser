@@ -11,11 +11,9 @@ describe('ApiTagsComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [
-        ApiTagsComponent,
-        ExternalDocsComponent
-      ],
       imports: [
+        ApiTagsComponent,
+        ExternalDocsComponent,
         HttpClientTestingModule,
         PipesModule,
       ]

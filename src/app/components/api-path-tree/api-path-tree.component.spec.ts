@@ -21,13 +21,11 @@ describe('ApiPathTreeComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [
-        ApiPathTreeComponent,
-        EndpointSwaggerComponent
-      ],
       imports: [
+        ApiPathTreeComponent,
         ButtonModule,
         DialogModule,
+        EndpointSwaggerComponent,
         FieldsetModule,
         FormsModule,
         PanelModule,

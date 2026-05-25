@@ -1,10 +1,13 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
 import { TreeNode } from 'primeng/api';
 
 @Component({
-  standalone: false,
   selector: 'app-summary',
+  imports: [
+    CommonModule
+  ],
   templateUrl: './summary.component.html',
   styleUrls: ['./summary.component.sass']
 })

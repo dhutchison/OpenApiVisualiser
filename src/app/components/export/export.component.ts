@@ -1,13 +1,22 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { FileReaderService } from '../../services/file-reader.service';
 
 import { saveAs } from 'file-saver';
 import * as jsyaml from 'js-yaml';
 
 @Component({
-  standalone: false,
   selector: 'app-export',
+  imports: [
+    ButtonModule,
+    CommonModule,
+    DialogModule,
+    FormsModule
+  ],
   templateUrl: './export.component.html'
 })
 export class ExportComponent implements OnInit {

@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -11,8 +12,10 @@ import {
 import { OpenAPIObject, OperationObject, PathItemObject } from 'openapi3-ts/oas31';
 
 @Component({
-  standalone: false,
   selector: 'app-endpoint-swagger',
+  imports: [
+    CommonModule
+  ],
   templateUrl: './endpoint-swagger.component.html',
   styleUrls: ['./endpoint-swagger.component.scss']
 })

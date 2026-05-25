@@ -1,6 +1,10 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { SchemaObject, ReferenceObject, OpenAPIObject, ComponentsObject } from 'openapi3-ts/oas31';
 import { FileReaderService } from '../../services/file-reader.service';
+import { MarkdownifyPipe } from '../../pipes/markdownify.pipe';
+import { ExternalDocsComponent } from '../external-docs/external-docs.component';
+import { SchemaDetailComponent } from './schema-detail/schema-detail.component';
 
 export class SchemaContainer {
   [schema: string]: SchemaObject | ReferenceObject;
@@ -13,8 +17,13 @@ interface ComponentSection {
 }
 
 @Component({
-  standalone: false,
   selector: 'app-api-components-detail',
+  imports: [
+    CommonModule,
+    ExternalDocsComponent,
+    MarkdownifyPipe,
+    SchemaDetailComponent
+  ],
   templateUrl: './api-components-detail.component.html'
 })
 export class ApiComponentsDetailComponent implements OnInit {

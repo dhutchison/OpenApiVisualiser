@@ -1,15 +1,32 @@
+import { CommonModule } from '@angular/common';
 import { Component, AfterViewInit, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { TreeNode } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { TooltipModule } from 'primeng/tooltip';
+import { TreeModule } from 'primeng/tree';
 import { FileReaderService } from '../../services/file-reader.service';
 import { OpenapiTreenodeConverterService, OperationTreeNode } from '../../services/openapi-treenode-converter.service';
 import { UserPreferenceControllerService } from '../../controllers/user-preference-controller.service';
+import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
 
 
 import { toBlob } from 'html-to-image';
 
 @Component({
-  standalone: false,
   selector: 'app-api-path-tree',
+  imports: [
+    ButtonModule,
+    CommonModule,
+    DialogModule,
+    EndpointSwaggerComponent,
+    FormsModule,
+    SelectButtonModule,
+    TooltipModule,
+    TreeModule
+  ],
   templateUrl: './api-path-tree.component.html'
 })
 export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {

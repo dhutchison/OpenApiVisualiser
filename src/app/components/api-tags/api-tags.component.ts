@@ -1,6 +1,9 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 import { OpenAPIObject, OperationObject, PathItemObject, TagObject } from 'openapi3-ts/oas31';
+import { MarkdownifyPipe } from '../../pipes/markdownify.pipe';
+import { ExternalDocsComponent } from '../external-docs/external-docs.component';
 
 interface TagSummary {
   name: string;
@@ -11,8 +14,12 @@ interface TagSummary {
 }
 
 @Component({
-  standalone: false,
   selector: 'app-api-tags',
+  imports: [
+    CommonModule,
+    ExternalDocsComponent,
+    MarkdownifyPipe
+  ],
   templateUrl: './api-tags.component.html'
 })
 export class ApiTagsComponent implements OnInit {

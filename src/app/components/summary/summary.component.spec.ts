@@ -9,10 +9,8 @@ describe('SummaryComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [
-        SummaryComponent
-      ],
       imports: [
+        SummaryComponent,
         HttpClientTestingModule
       ]
     })

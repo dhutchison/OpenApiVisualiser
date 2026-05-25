@@ -45,6 +45,7 @@
 </div>
 
 <p-dialog
+  *ngIf="endpointDialogVisible && selectedOperationNode"
   header="{{ selectedOperationNode?.method }} {{ selectedOperationNode?.path }}"
   [(visible)]="endpointDialogVisible"
   [modal]="true"
@@ -52,11 +53,12 @@
   [resizable]="true"
   [style]="{width: '90vw'}"
   [contentStyle]="{'max-height': '80vh', overflow: 'auto'}">
-  <app-endpoint-swagger
-    *ngIf="endpointDialogVisible && selectedOperationNode"
-    [apiSpec]="selectedOperationNode.apiDefinition"
-    [path]="selectedOperationNode.path"
-    [method]="selectedOperationNode.method"
-    [operation]="selectedOperationNode.operation">
-  </app-endpoint-swagger>
+  <ng-template pTemplate="content">
+    <app-endpoint-swagger
+      [apiSpec]="selectedOperationNode.apiDefinition"
+      [path]="selectedOperationNode.path"
+      [method]="selectedOperationNode.method"
+      [operation]="selectedOperationNode.operation">
+    </app-endpoint-swagger>
+  </ng-template>
 </p-dialog>

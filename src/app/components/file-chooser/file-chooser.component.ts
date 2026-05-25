@@ -1,9 +1,12 @@
 import { Component, inject } from '@angular/core';
+import { FileUploadModule } from 'primeng/fileupload';
 import { FileReaderService } from '../../services/file-reader.service';
 
 @Component({
-  standalone: false,
   selector: 'app-file-chooser',
+  imports: [
+    FileUploadModule
+  ],
   templateUrl: './file-chooser.component.html'
 })
 export class FileChooserComponent {

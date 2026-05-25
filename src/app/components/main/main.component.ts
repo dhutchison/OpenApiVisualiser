@@ -1,6 +1,15 @@
+import { CommonModule } from '@angular/common';
 import { Component, AfterViewInit, inject } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 import { ActivatedRoute } from '@angular/router';
+import { ApiComponentsDetailComponent } from '../api-components-detail/api-components-detail.component';
+import { ApiInformationComponent } from '../api-information/api-information.component';
+import { ApiPathTreeComponent } from '../api-path-tree/api-path-tree.component';
+import { ApiTagsComponent } from '../api-tags/api-tags.component';
+import { ExportComponent } from '../export/export.component';
+import { FileChooserComponent } from '../file-chooser/file-chooser.component';
+import { SummaryComponent } from '../summary/summary.component';
+import { UrlChooserComponent } from '../url-chooser/url-chooser.component';
 
 interface MainSection {
   id: string;
@@ -9,8 +18,18 @@ interface MainSection {
 }
 
 @Component({
-  standalone: false,
   selector: 'app-main',
+  imports: [
+    ApiComponentsDetailComponent,
+    ApiInformationComponent,
+    ApiPathTreeComponent,
+    ApiTagsComponent,
+    CommonModule,
+    ExportComponent,
+    FileChooserComponent,
+    SummaryComponent,
+    UrlChooserComponent
+  ],
   templateUrl: './main.component.html'
 })
 export class MainComponent implements AfterViewInit {
@@ -35,7 +54,7 @@ export class MainComponent implements AfterViewInit {
 
       if (params.url) {
         /* URL supplied as a query parameter, load it */
-        this.fileReaderService.loadFileFromURL(params.url);
+        setTimeout(() => this.fileReaderService.loadFileFromURL(params.url));
       }
     });
   }

@@ -1,9 +1,14 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
-  standalone: false,
   selector: 'app-root',
+  imports: [
+    ButtonModule,
+    RouterOutlet
+  ],
   templateUrl: './app.component.html'
 })
 export class AppComponent implements OnInit {

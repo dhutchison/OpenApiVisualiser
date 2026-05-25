@@ -5,13 +5,11 @@ import { TreeOrientationPipe } from './tree-orientation.pipe';
 import { MarkdownifyPipe } from './markdownify.pipe';
 
 @NgModule({
-  declarations: [
+  imports: [
+    CommonModule,
     MarkdownifyPipe,
     StringReplacePipe,
     TreeOrientationPipe
-  ],
-  imports: [
-    CommonModule
   ],
   exports: [
     MarkdownifyPipe,

@@ -17,11 +17,8 @@ describe('FileChooserComponent', () => {
   beforeEach(waitForAsync(() => {
 
     TestBed.configureTestingModule({
-      declarations: [
-        FileChooserComponent
-      ],
       imports: [
-        FileUploadModule,
+        FileChooserComponent,
         HttpClientTestingModule
       ]
     })

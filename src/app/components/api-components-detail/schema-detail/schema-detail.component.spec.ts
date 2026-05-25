@@ -10,10 +10,8 @@ describe('SchemaDetailComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [
-        SchemaDetailComponent,
-      ],
       imports: [
+        SchemaDetailComponent,
         PipesModule,
         TreeTableModule
       ]

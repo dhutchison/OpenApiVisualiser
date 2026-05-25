@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { Observable, ReplaySubject, Subject } from 'rxjs';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
 
 import { HttpClient } from '@angular/common/http';
@@ -16,7 +16,7 @@ export class FileReaderService {
   /**
    * Subject used to notify that a new Api Specification has been read.
    */
-  readonly apiChanged = new Subject<OpenAPIObject>();
+  readonly apiChanged = new ReplaySubject<OpenAPIObject>(1);
 
   /**
    * Subject used to notify that all files have been closed and components

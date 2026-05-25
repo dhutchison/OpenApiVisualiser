@@ -12,10 +12,8 @@ describe('ApiInformationComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [
-        ApiInformationComponent
-      ],
       imports: [
+        ApiInformationComponent,
         HttpClientTestingModule,
 
         FieldsetModule,

@@ -10,10 +10,8 @@ describe('ExternalDocsComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [
-        ExternalDocsComponent
-      ],
       imports: [
+        ExternalDocsComponent,
         PipesModule
       ]
     })

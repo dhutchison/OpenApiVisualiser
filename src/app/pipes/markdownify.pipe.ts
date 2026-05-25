@@ -5,7 +5,6 @@ import { Parser, HtmlRenderer } from 'commonmark';
  * Pipe implementation which converts a Markdown (commonmark) formatted string into HTML.
  */
 @Pipe({
-  standalone: false,
   name: 'markdownify'
 })
 export class MarkdownifyPipe implements PipeTransform {

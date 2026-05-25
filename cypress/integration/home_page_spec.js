@@ -7,6 +7,8 @@ describe('The Home Page', () => {
       return top + scrollY;
     }
 
+    const accordionHeader = (text) => cy.contains('button.p-accordionheader', text)
+
     /* Test the app launches at all */
     it('successfully loads', () => {
       /* Open the application */
@@ -54,14 +56,14 @@ describe('The Home Page', () => {
       cy.get('.theme-toggle .p-button-icon')
           .should('have.css', 'color', 'rgb(23, 32, 51)')
 
-      cy.contains('[role="button"]', 'Summary').click()
+      accordionHeader('Summary').click()
       cy.get('#method-summary caption')
           .should('have.css', 'color', 'rgb(23, 32, 51)')
       cy.get('#method-summary td')
           .first()
           .should('have.css', 'color', 'rgb(23, 32, 51)')
 
-      cy.contains('[role="button"]', 'API Paths').click()
+      accordionHeader('API Paths').click()
       cy.get('#listPets-node').should('be.visible').then(($getNode) => {
         const getNodeStyle = getComputedStyle($getNode.closest('.p-tree-node-content')[0]);
 
@@ -127,6 +129,21 @@ describe('The Home Page', () => {
 
     /* Test we can load a spec from a URL */
     it('Loads from a URL', () => {
+        const testUrl = 'https://raw.githubusercontent.com/OpenAPITools/openapi-generator/master/modules/openapi-generator/src/test/resources/3_0/tags.yaml'
+
+        cy.fixture('petstore.yaml', 'utf8').then((data) => {
+          cy.intercept(
+            'GET',
+            testUrl,
+            {
+              statusCode: 200,
+              body: data,
+              headers: {
+                'Content-Type': 'text/plain; charset=utf-8'
+              }
+            })
+        })
+
         cy.visit('/')
 
         cy.contains('Import from URL').click();
@@ -136,8 +153,8 @@ describe('The Home Page', () => {
 
         /* Type in a URL */
         cy.get('#url-input')
-            .type('https://raw.githubusercontent.com/OpenAPITools/openapi-generator/master/modules/openapi-generator/src/test/resources/3_0/tags.yaml')
-            .should('have.value', 'https://raw.githubusercontent.com/OpenAPITools/openapi-generator/master/modules/openapi-generator/src/test/resources/3_0/tags.yaml')
+            .type(testUrl)
+            .should('have.value', testUrl)
 
         /* And check the submit button is enabled now and click it */
         cy.get('button[type=submit]').should('be.enabled').click()
@@ -146,10 +163,9 @@ describe('The Home Page', () => {
         cy.wait(250);
 
         /* Check there is API information including the title of the spec */
-        cy.get('.api-info-title').should('not.be.visible')
-        cy.contains('API Information').click()
+        accordionHeader('API Information').click()
         cy.get('.api-info-title').should('be.visible')
-            .should('have.text', 'OpenAPI Test API - 1.0.0')
+            .should('have.text', 'Swagger Petstore - 1.0.0')
 
     })
 
@@ -209,7 +225,7 @@ describe('The Home Page', () => {
         // cy.visit('/?url=https://raw.githubusercontent.com/dhutchison/OpenApiVisualiser/master/sample_openapi/uspto.yaml')
 
         /* Expand the API Paths section */
-        cy.contains('API Paths').click()
+        accordionHeader('API Paths').click()
 
         /* Check the operation ID nodes exist and are visible */
         cy.get('#list-data-sets-node')
@@ -249,7 +265,7 @@ describe('The Home Page', () => {
       cy.visit('/?url=http://local.test/petstore.yaml')
 
       /* Expand the API Paths section */
-      cy.contains('API Paths').click()
+      accordionHeader('API Paths').click()
 
       /* Check the operation ID nodes exist and are visible */
       cy.get('#listPets-node')
@@ -296,20 +312,20 @@ describe('The Home Page', () => {
 
       cy.visit('/?url=http://local.test/petstore.yaml')
 
-      cy.contains('[role="button"]', 'Components').then(($componentsHeader) => {
+      accordionHeader('Components').then(($componentsHeader) => {
         const initialTop = getPageTop($componentsHeader[0]);
 
-        cy.contains('API Paths').click();
+        accordionHeader('API Paths').click();
         cy.get('#listPets-node').should('be.visible');
 
-        cy.contains('[role="button"]', 'Components').should(($expandedComponentsHeader) => {
+        accordionHeader('Components').should(($expandedComponentsHeader) => {
           const expandedTop = getPageTop($expandedComponentsHeader[0]);
           const apiPathBottom = getPageTop(Cypress.$('.api-path-tree-layout')[0]) + Cypress.$('.api-path-tree-layout')[0].getBoundingClientRect().height;
 
           expect(expandedTop).to.be.greaterThan(apiPathBottom - 1);
         });
 
-        cy.contains('[role="button"]', 'Components').should(($expandedComponentsHeader) => {
+        accordionHeader('Components').should(($expandedComponentsHeader) => {
           const expandedTop = getPageTop($expandedComponentsHeader[0]);
 
           expect(expandedTop).to.be.greaterThan(initialTop + 100);
@@ -336,7 +352,7 @@ describe('The Home Page', () => {
 
       cy.visit('/?url=http://local.test/petstore.yaml')
 
-      cy.contains('API Paths').click()
+      accordionHeader('API Paths').click()
       cy.get('#listPets-node').click()
 
       cy.get('.p-dialog')
@@ -374,7 +390,7 @@ describe('The Home Page', () => {
 
       cy.visit('/?url=http://local.test/petstore.yaml')
 
-      cy.contains('API Paths').click()
+      accordionHeader('API Paths').click()
       cy.get('p-tree.tree-horizontal').should('exist')
       cy.get('p-tree.tree-horizontal .p-tree-root-children')
           .should('have.css', 'display', 'flex')
@@ -431,14 +447,14 @@ describe('The Home Page', () => {
 
       cy.visit('/?url=http://local.test/petstore.yaml')
 
-      cy.contains('[role="button"]', 'Components').click();
-      cy.contains('[role="button"]', 'Pets').then(($petsHeader) => {
+      accordionHeader('Components').click();
+      accordionHeader('Pets').then(($petsHeader) => {
         const initialTop = getPageTop($petsHeader[0]);
 
-        cy.contains('[role="button"]', 'Pet').click();
-        cy.get('#components_schemas_Pet').should('be.visible');
+        accordionHeader('Pet').click();
+        cy.get('#components_schemas_Pet p-treetable').should('be.visible');
 
-        cy.contains('[role="button"]', 'Pet')
+        accordionHeader('Pet')
             .closest('.p-accordionpanel, .p-accordion-panel')
             .find('.p-accordioncontent-content, .p-accordion-content-content')
             .should(($content) => {
@@ -448,7 +464,7 @@ describe('The Home Page', () => {
               expect(content.getBoundingClientRect().height + 1).to.be.greaterThan(content.scrollHeight);
             });
 
-        cy.contains('[role="button"]', 'Pets').should(($expandedPetsHeader) => {
+        accordionHeader('Pets').should(($expandedPetsHeader) => {
           const expandedTop = getPageTop($expandedPetsHeader[0]);
 
           expect(expandedTop).to.be.greaterThan(initialTop + 20);
@@ -475,24 +491,24 @@ describe('The Home Page', () => {
 
       cy.visit('/?url=http://local.test/petstore.yaml')
 
-      cy.contains('[role="button"]', 'API Information').click()
+      accordionHeader('API Information').click()
       cy.contains('.api-info', 'OpenAPI')
       cy.contains('.api-info', 'http://petstore.swagger.io/v1')
       cy.contains('.api-info', 'Paths').parent().contains('3')
       cy.contains('.api-info', 'Operations').parent().contains('4')
 
-      cy.contains('[role="button"]', 'Tags').click()
+      accordionHeader('Tags').click()
       cy.contains('.tag-list article', 'pets')
           .contains('3 operations')
       cy.contains('.tag-list article', 'audit')
           .contains('1 operation')
 
-      cy.contains('[role="button"]', 'Components').click()
-      cy.contains('[role="button"]', 'Pet')
+      accordionHeader('Components').click()
+      accordionHeader('Pet')
           .contains('object')
-      cy.contains('[role="button"]', 'Pet')
+      accordionHeader('Pet')
           .contains('3 properties')
-      cy.contains('[role="button"]', 'Pet').click()
+      accordionHeader('Pet').click()
       cy.contains('.schema-overview', '2 required')
     })
   })

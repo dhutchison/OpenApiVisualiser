@@ -16,11 +16,9 @@ describe('ApiComponentsDetailComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [
+      imports: [
         ApiComponentsDetailComponent,
         SchemaDetailComponent,
-      ],
-      imports: [
         PipesModule,
         TreeTableModule,
 

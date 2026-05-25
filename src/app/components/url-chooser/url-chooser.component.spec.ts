@@ -16,11 +16,8 @@ describe('UrlChooserComponent', () => {
   beforeEach(waitForAsync(() => {
 
     TestBed.configureTestingModule({
-      declarations: [
-        UrlChooserComponent
-      ],
       imports: [
-        FormsModule,
+        UrlChooserComponent,
         HttpClientTestingModule,
 
         DialogModule
