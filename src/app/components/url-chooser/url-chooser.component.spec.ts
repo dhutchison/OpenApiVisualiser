@@ -2,9 +2,9 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { UrlChooserComponent } from './url-chooser.component';
 import { DialogModule } from 'primeng/dialog';
-import { FormsModule } from '@angular/forms';
 import { FileReaderService } from '../../services/file-reader.service';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 describe('UrlChooserComponent', () => {
   let component: UrlChooserComponent;
@@ -16,14 +16,14 @@ describe('UrlChooserComponent', () => {
   beforeEach(waitForAsync(() => {
 
     TestBed.configureTestingModule({
-      declarations: [
-        UrlChooserComponent
-      ],
       imports: [
-        FormsModule,
-        HttpClientTestingModule,
+        UrlChooserComponent,
 
         DialogModule
+      ],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting()
       ]
     })
     .compileComponents();

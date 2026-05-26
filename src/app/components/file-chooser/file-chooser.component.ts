@@ -1,17 +1,20 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { FileUploadModule } from 'primeng/fileupload';
 import { FileReaderService } from '../../services/file-reader.service';
 
 @Component({
   selector: 'app-file-chooser',
+  imports: [
+    FileUploadModule
+  ],
   templateUrl: './file-chooser.component.html'
 })
 export class FileChooserComponent {
 
+  private readonly fileReaderService = inject(FileReaderService);
+
   readonly yamlFilenamePattern = /\.y(a)?ml/;
   readonly jsonFilenamePattern = /\.json/;
-
-  constructor(
-    private fileReaderService: FileReaderService) { }
 
   loadFile(
     event: { files?: File[]; target?: { files: Iterable<File> | ArrayLike<File> } },

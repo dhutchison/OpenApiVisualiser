@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { SummaryComponent } from './summary.component';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 describe('SummaryComponent', () => {
   let component: SummaryComponent;
@@ -9,11 +10,12 @@ describe('SummaryComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [
+      imports: [
         SummaryComponent
       ],
-      imports: [
-        HttpClientTestingModule
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting()
       ]
     })
     .compileComponents();

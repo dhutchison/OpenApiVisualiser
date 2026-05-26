@@ -1,4 +1,4 @@
-import { Injectable, ComponentFactoryResolver } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { TreeNode } from 'primeng/api';
 import { Subject } from 'rxjs';
 import {
@@ -253,7 +253,8 @@ export class OpenapiTreenodeConverterService {
       styleClass: 'p-treenode-http-method-' + method.toLowerCase(),
       operation,
       method,
-      path
+      path,
+      apiDefinition
     };
 
     /* Work out the object complexity */
@@ -479,5 +480,6 @@ export interface OperationTreeNode extends TreeNode {
   method?: string;
   path?: string;
   operation?: OperationObject;
+  apiDefinition?: OpenAPIObject;
   complexity?: number;
 }

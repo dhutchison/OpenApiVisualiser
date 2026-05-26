@@ -1,13 +1,49 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-	"name": "Node.js & TypeScript",
+	"name": "OpenAPI Visualiser",
 	"build": {
 		"dockerfile": "Dockerfile"
-	}
+	},
+	"runArgs": [
+		// Change the seccomp profile slightly for Codex to function.
+		"--security-opt=seccomp=.devcontainer/seccomp-userns.json"
+	],
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"username": "vscode",
+			"userUid": "automatic",
+			"userGid": "automatic",
+			"upgradePackages": false
+		}
+	},
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"openai.chatgpt"
+			]
+		}
+	},
+
+	"mounts": [
+		"source=/run/host-services/ssh-auth.sock,target=/run/host-services/ssh-auth.sock,type=bind",
+		"source=vscode-codex-persist,target=/home/vscode/.codex-persist,type=volume"
+	],
+
+	"containerEnv": {
+		"SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"
+	},
+	"remoteEnv": {
+		"SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock"
+	},
+
+	"onCreateCommand": "sudo /usr/local/bin/devcontainer-post-start",
+	"waitFor": "onCreateCommand",
+	"postStartCommand": "sudo /usr/local/bin/devcontainer-post-start",
+	"remoteUser": "vscode",
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],

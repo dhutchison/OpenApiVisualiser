@@ -1,11 +1,23 @@
 <div class="container">
   <header class="header">
     <div id="masthead"></div>
-    <h1 class="title">
-      {{ title }}
-    </h1>
+    <div class="header-copy">
+      <p class="eyebrow">OpenAPI diagram explorer</p>
+      <h1 class="title">
+        {{ title }}
+      </h1>
 
-    <p>A utility for visualising the paths of an OpenAPI definition</p>
+      <p>A utility for visualising the paths of an OpenAPI definition</p>
+    </div>
+    <button
+      type="button"
+      pButton
+      class="theme-toggle p-button-secondary"
+      [icon]="darkMode ? 'pi pi-sun' : 'pi pi-moon'"
+      [label]="darkMode ? 'Light' : 'Dark'"
+      [attr.aria-pressed]="darkMode"
+      (click)="toggleDarkMode()">
+    </button>
   </header>
 
 

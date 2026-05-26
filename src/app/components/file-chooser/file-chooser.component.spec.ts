@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { FileChooserComponent } from './file-chooser.component';
-import { FileUploadModule } from 'primeng/fileupload';
 import { FileReaderService } from '../../services/file-reader.service';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 describe('FileChooserComponent', () => {
   let component: FileChooserComponent;
@@ -17,12 +17,12 @@ describe('FileChooserComponent', () => {
   beforeEach(waitForAsync(() => {
 
     TestBed.configureTestingModule({
-      declarations: [
+      imports: [
         FileChooserComponent
       ],
-      imports: [
-        FileUploadModule,
-        HttpClientTestingModule
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting()
       ]
     })
     .compileComponents();

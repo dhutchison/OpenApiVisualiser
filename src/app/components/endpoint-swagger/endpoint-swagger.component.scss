@@ -1,0 +1,26 @@
+.endpoint-swagger {
+  min-height: 60vh;
+}
+
+.endpoint-swagger-error {
+  color: #b00020;
+  font-weight: 600;
+}
+
+.endpoint-swagger-warning {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid #b26a00;
+  background: #fff4df;
+  color: #7a4b00;
+}
+
+:host ::ng-deep {
+  .swagger-ui .wrapper {
+    padding: 0;
+  }
+
+  .swagger-ui .information-container {
+    display: none;
+  }
+}

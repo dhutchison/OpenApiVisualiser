@@ -7,7 +7,7 @@ export class StringReplacePipe implements PipeTransform {
 
   transform(value: string): string {
     // having to convert this to string to ensure that can call replace()
-    return value.replace(/\//g, '_');
+    return value.replaceAll('/', '_');
   }
 
 }

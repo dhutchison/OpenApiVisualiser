@@ -1,9 +1,69 @@
 <p-panel styleClass="api-info" [toggleable]="true" *ngFor="let api of apiDefinitions">
     <p-header class="api-info-title">{{ api.info.title }} - {{ api.info.version }}</p-header>
+    <dl class="metadata-grid">
+      <div>
+        <dt>OpenAPI</dt>
+        <dd>{{ api.openapi }}</dd>
+      </div>
+      <div>
+        <dt>Paths</dt>
+        <dd>{{ getPathCount(api) }}</dd>
+      </div>
+      <div>
+        <dt>Operations</dt>
+        <dd>{{ getOperationCount(api) }}</dd>
+      </div>
+      <div>
+        <dt>Tags</dt>
+        <dd>{{ api.tags?.length || 0 }}</dd>
+      </div>
+    </dl>
+
     <div [innerHTML]="(api.info.description | markdownify)"></div>
 
+    <section class="detail-section" *ngIf="api.servers?.length">
+      <h3>Servers</h3>
+      <div class="detail-list">
+        <article class="detail-item" *ngFor="let server of api.servers">
+          <code>{{ server.url }}</code>
+          <p *ngIf="server.description">{{ server.description }}</p>
+          <dl class="compact-list" *ngIf="getServerVariables(server).length">
+            <ng-container *ngFor="let variable of getServerVariables(server)">
+              <dt>{{ variable.name }}</dt>
+              <dd>
+                <code>{{ variable.defaultValue }}</code>
+                <span *ngIf="variable.description"> - {{ variable.description }}</span>
+              </dd>
+            </ng-container>
+          </dl>
+        </article>
+      </div>
+    </section>
+
+    <section class="detail-section" *ngIf="getSecurityRequirements(api.security).length">
+      <h3>Security</h3>
+      <ul class="pill-list">
+        <li *ngFor="let requirement of getSecurityRequirements(api.security)">{{ requirement }}</li>
+      </ul>
+    </section>
+
+    <section class="detail-section" *ngIf="getComponentSummaries(api).length">
+      <h3>Reusable Components</h3>
+      <dl class="metadata-grid compact">
+        <div *ngFor="let component of getComponentSummaries(api)">
+          <dt>{{ component.label }}</dt>
+          <dd>{{ component.count }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <p-fieldset legend="External Documentation" *ngIf="api.externalDocs">
+      <app-external-docs [document]="api.externalDocs"></app-external-docs>
+      <div *ngIf="api.externalDocs.description" [innerHTML]="(api.externalDocs.description | markdownify)"></div>
+    </p-fieldset>
+
     <p-fieldset legend="Terms of Service" *ngIf="api.info.termsOfService">
-      <p>{{ api.info.termsOfService }}</p>
+      <a href="{{ api.info.termsOfService }}" target="_blank">{{ api.info.termsOfService }}</a>
     </p-fieldset>
 
     <p-fieldset legend="Contact" *ngIf="api.info.contact">

@@ -1,11 +1,21 @@
-<dl class="summary-items">
-  <ng-container *ngFor="let tag of tags">
-    <ng-container *ngIf="tag">
-      <dt><strong>{{tag.name}}</strong></dt>
-      <dd>
-        <div [innerHTML]="(tag.description | markdownify)"></div>
-      </dd>
-      <dd *ngIf="tag.externalDocs"><app-external-docs [document]="tag.externalDocs"></app-external-docs></dd>
-    </ng-container>
-  </ng-container>
-</dl>
+<div class="empty-state" *ngIf="!tagSummaries.length">No tags are defined or used by this API.</div>
+
+<div class="tag-list" *ngIf="tagSummaries.length">
+  <article class="detail-item" *ngFor="let tag of tagSummaries">
+    <header class="section-heading">
+      <h3>{{ tag.name }}</h3>
+      <span class="count-pill">{{ tag.operationCount }} operation{{ tag.operationCount === 1 ? '' : 's' }}</span>
+    </header>
+    <div *ngIf="tag.description" [innerHTML]="(tag.description | markdownify)"></div>
+    <app-external-docs *ngIf="tag.externalDocs" [document]="tag.externalDocs"></app-external-docs>
+
+    <ul class="operation-list" *ngIf="tag.operations.length">
+      <li *ngFor="let operation of tag.operations">
+        <span class="method-pill method-{{ operation.method | lowercase }}">{{ operation.method }}</span>
+        <code>{{ operation.path }}</code>
+        <span *ngIf="operation.summary">{{ operation.summary }}</span>
+        <span class="muted" *ngIf="!operation.summary && operation.operationId">{{ operation.operationId }}</span>
+      </li>
+    </ul>
+  </article>
+</div>

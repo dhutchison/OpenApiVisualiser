@@ -1,30 +1,55 @@
-import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, AfterViewInit, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { TreeNode } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { TooltipModule } from 'primeng/tooltip';
+import { TreeModule } from 'primeng/tree';
 import { FileReaderService } from '../../services/file-reader.service';
-import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
+import { OpenapiTreenodeConverterService, OperationTreeNode } from '../../services/openapi-treenode-converter.service';
 import { UserPreferenceControllerService } from '../../controllers/user-preference-controller.service';
+import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
 
 
 import { toBlob } from 'html-to-image';
 
 @Component({
   selector: 'app-api-path-tree',
+  imports: [
+    ButtonModule,
+    CommonModule,
+    DialogModule,
+    EndpointSwaggerComponent,
+    FormsModule,
+    SelectButtonModule,
+    TooltipModule,
+    TreeModule
+  ],
   templateUrl: './api-path-tree.component.html'
 })
-export class ApiPathTreeComponent implements OnInit {
+export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
+
+  private readonly preferenceService = inject(UserPreferenceControllerService);
+  private readonly fileReaderService = inject(FileReaderService);
+  private readonly openApiConverterService = inject(OpenapiTreenodeConverterService);
 
   /* DOM element holding the API tree view */
   @ViewChild('treeView') treeViewElement: ElementRef;
+
+  @ViewChild('pathTreeLayout') pathTreeLayoutElement: ElementRef<HTMLElement>;
 
   /**
    * Object hoilding the tree nodes to display
    */
   apiPathNodes: TreeNode[] = [];
 
-  /**
-   * The selected node
-   */
-  selectedNode: TreeNode;
+  selectedOperationNode?: OperationTreeNode;
+
+  endpointDialogVisible = false;
+
+  pathTreeMinHeight?: number;
 
   /* Boolean holding the state on if an image generation is in progress */
   generatingImage = false;
@@ -46,10 +71,8 @@ export class ApiPathTreeComponent implements OnInit {
    */
   private apiPathNodesOrig: TreeNode[];
 
-  constructor(
-    private preferenceService: UserPreferenceControllerService,
-    private fileReaderService: FileReaderService,
-    private openApiConverterService: OpenapiTreenodeConverterService ) { }
+  private measureTimeoutId?: ReturnType<typeof setTimeout>;
+  private resizeObserver?: ResizeObserver;
 
   get horizontalView(): boolean {
     return this.preferenceService.horizontalView;
@@ -57,9 +80,11 @@ export class ApiPathTreeComponent implements OnInit {
 
   set horizontalView(value: boolean) {
     /* Deselect any item */
-    this.selectedNode = undefined;
+    this.selectedOperationNode = undefined;
+    this.endpointDialogVisible = false;
     /* Change the view */
     this.preferenceService.horizontalView = value;
+    this.schedulePathTreeMeasurement();
   }
 
   get joinNodesWithNoLeaves(): boolean {
@@ -68,13 +93,15 @@ export class ApiPathTreeComponent implements OnInit {
 
   set joinNodesWithNoLeaves(value: boolean) {
     /* Deselect any item */
-    this.selectedNode = undefined;
+    this.selectedOperationNode = undefined;
+    this.endpointDialogVisible = false;
 
     /* Set the value */
     this.preferenceService.joinNodesWithNoLeaves = value;
 
     /* Reprocess the tree */
     this.setTreeNodes();
+    this.schedulePathTreeMeasurement();
   }
 
   ngOnInit() {
@@ -94,6 +121,20 @@ export class ApiPathTreeComponent implements OnInit {
     });
   }
 
+  ngAfterViewInit() {
+    this.resizeObserver = new ResizeObserver(() => this.schedulePathTreeMeasurement());
+    this.resizeObserver.observe(this.pathTreeLayoutElement.nativeElement);
+    this.schedulePathTreeMeasurement();
+  }
+
+  ngOnDestroy() {
+    if (this.measureTimeoutId) {
+      clearTimeout(this.measureTimeoutId);
+    }
+
+    this.resizeObserver?.disconnect();
+  }
+
   /**
    * Download an image of the API tree.
    *
@@ -108,9 +149,11 @@ export class ApiPathTreeComponent implements OnInit {
     /* Set marker that an image is being generated */
     this.generatingImage = true;
 
+    const backgroundColor = getComputedStyle(this.treeViewElement.nativeElement).backgroundColor;
+
     /* Configure the export */
     const exportOptions = {
-      backgroundColor: '#ffffff',
+      backgroundColor,
       /*
        * Needing to set this configuration option until
        * https://github.com/bubkoo/html-to-image/issues/74
@@ -123,9 +166,9 @@ export class ApiPathTreeComponent implements OnInit {
     /* Do the work. This uses a promise to async the work */
     console.log(this.treeViewElement.nativeElement);
 
-    toBlob(this.treeViewElement.nativeElement, exportOptions)
+    return this.createImageBlob(this.treeViewElement.nativeElement, exportOptions)
       .then(blob => {
-        window.saveAs(blob, 'API.png');
+        globalThis.saveAs(blob, 'API.png');
 
         /* Mark that the generation is complete */
         this.generatingImage = false;
@@ -141,6 +184,10 @@ export class ApiPathTreeComponent implements OnInit {
 
   }
 
+  private createImageBlob(element: HTMLElement, options: object) {
+    return toBlob(element, options);
+  }
+
   /**
    * Method which takes the original (uncompressed) tree
    * nodes and, if required, applies compression before
@@ -148,7 +195,7 @@ export class ApiPathTreeComponent implements OnInit {
    */
   private setTreeNodes() {
     /* First, lets do a pretty dumb (deep) clone of the objects we got */
-    const nodesCopy: TreeNode[] = JSON.parse(JSON.stringify(this.apiPathNodesOrig));
+    const nodesCopy: TreeNode[] = structuredClone(this.apiPathNodesOrig);
 
     if (this.preferenceService.joinNodesWithNoLeaves) {
       /* Then compress */
@@ -156,6 +203,20 @@ export class ApiPathTreeComponent implements OnInit {
     } else {
       this.apiPathNodes = nodesCopy;
     }
+
+    this.schedulePathTreeMeasurement();
+  }
+
+  openEndpointDetail(treeNode: TreeNode) {
+    const node = treeNode as OperationTreeNode;
+    if (node.type !== 'operation') {
+      this.endpointDialogVisible = false;
+      this.selectedOperationNode = undefined;
+      return;
+    }
+
+    this.selectedOperationNode = node;
+    this.endpointDialogVisible = true;
   }
 
   /**  When we compress the view, we will merge any nodes which have only a
@@ -193,5 +254,71 @@ export class ApiPathTreeComponent implements OnInit {
     console.debug('Compress returning: %o', nodes);
 
     return nodes;
+  }
+
+  private schedulePathTreeMeasurement() {
+    if (this.measureTimeoutId) {
+      clearTimeout(this.measureTimeoutId);
+    }
+
+    this.measureTimeoutId = setTimeout(() => this.updatePathTreeMinHeight(), 0);
+  }
+
+  private updatePathTreeMinHeight() {
+    if (!this.pathTreeLayoutElement) {
+      return;
+    }
+
+    const layoutElement = this.pathTreeLayoutElement.nativeElement;
+    this.updateHorizontalConnectorBounds(layoutElement);
+    const layoutTop = layoutElement.getBoundingClientRect().top;
+    const renderedElements = Array.from(layoutElement.querySelectorAll('*')) as HTMLElement[];
+    const renderedBottom = renderedElements.reduce((bottom, element) => {
+      const rect = element.getBoundingClientRect();
+
+      return Math.max(bottom, rect.bottom);
+    }, layoutElement.getBoundingClientRect().bottom);
+    const measuredHeight = Math.ceil(renderedBottom - layoutTop);
+
+    this.pathTreeMinHeight = measuredHeight > 0 ? measuredHeight : undefined;
+  }
+
+  private updateHorizontalConnectorBounds(layoutElement: HTMLElement) {
+    const childLists = Array.from(layoutElement.querySelectorAll('.tree-horizontal .p-tree-node-children')) as HTMLElement[];
+
+    childLists.forEach((childList) => {
+      const immediateChildContents = this.getImmediateChildNodeContents(childList);
+
+      if (immediateChildContents.length < 2) {
+        childList.style.removeProperty('--tree-connector-top');
+        childList.style.removeProperty('--tree-connector-bottom');
+        return;
+      }
+
+      const childListRect = childList.getBoundingClientRect();
+      const firstChildRect = immediateChildContents[0].getBoundingClientRect();
+      const lastChildRect = immediateChildContents.at(-1).getBoundingClientRect();
+      const firstChildCenter = firstChildRect.top - childListRect.top + (firstChildRect.height / 2);
+      const lastChildCenter = lastChildRect.top - childListRect.top + (lastChildRect.height / 2);
+
+      childList.style.setProperty('--tree-connector-top', `${firstChildCenter}px`);
+      childList.style.setProperty('--tree-connector-bottom', `${lastChildCenter}px`);
+    });
+  }
+
+  private getImmediateChildNodeContents(childList: HTMLElement): HTMLElement[] {
+    return Array.from(childList.children)
+      .map((childElement) => {
+        if (!(childElement instanceof HTMLElement)) {
+          return undefined;
+        }
+
+        if (childElement.matches('.p-tree-node')) {
+          return childElement.querySelector(':scope > .p-tree-node-content') as HTMLElement | null;
+        }
+
+        return childElement.querySelector(':scope > .p-tree-node > .p-tree-node-content') as HTMLElement | null;
+      })
+      .filter((contentElement): contentElement is HTMLElement => contentElement instanceof HTMLElement);
   }
 }

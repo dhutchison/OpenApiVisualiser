@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable, ReplaySubject, Subject } from 'rxjs';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
 import * as jsyaml from 'js-yaml';
 
@@ -11,10 +11,12 @@ import * as jsyaml from 'js-yaml';
 })
 export class FileReaderService {
 
+  private readonly http = inject(HttpClient);
+
   /**
    * Subject used to notify that a new Api Specification has been read.
    */
-  readonly apiChanged = new Subject<OpenAPIObject>();
+  readonly apiChanged = new ReplaySubject<OpenAPIObject>(1);
 
   /**
    * Subject used to notify that all files have been closed and components
@@ -22,7 +24,10 @@ export class FileReaderService {
    */
   readonly resetFiles = new Subject<void>();
 
-  constructor(private http: HttpClient) { }
+  /**
+   * Subject used to notify that a file could not be loaded.
+   */
+  readonly loadFailed = new Subject<string>();
 
   /**
    * Load the supplied file as a YAML OpenAPI specification
@@ -49,11 +54,17 @@ export class FileReaderService {
     const fileData = this.http.get(url, {responseType: 'text'});
 
     const yaml = (url.match(/\.yaml/) !== null);
-    fileData.subscribe(
-      fileContent => this.loadData(fileContent, yaml),
-      // TODO: notification of the failure?
-      error => { console.error(error); }
-    );
+    fileData.subscribe({
+      next: fileContent => this.loadData(fileContent, yaml),
+      error: error => this.handleUrlLoadFailure(url, error)
+    });
+  }
+
+  private handleUrlLoadFailure(url: string, error: HttpErrorResponse) {
+    console.error(error);
+
+    const status = error.status > 0 ? ` (${error.status} ${error.statusText})` : '';
+    this.loadFailed.next(`Could not load the API definition from ${url}${status}.`);
   }
 
   /**
@@ -93,9 +104,9 @@ export class FileReaderService {
     const reader = new FileReader();
     reader.readAsText(file);
 
-    return Observable.create(observer => {
+    return new Observable<string>(observer => {
       reader.onloadend = () => {
-        observer.next(reader.result);
+        observer.next(reader.result as string);
         observer.complete();
       };
     });

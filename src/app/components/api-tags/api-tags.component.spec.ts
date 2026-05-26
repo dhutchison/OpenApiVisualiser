@@ -2,7 +2,8 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ApiTagsComponent } from './api-tags.component';
 import { ExternalDocsComponent } from '../external-docs/external-docs.component';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { PipesModule } from '../../pipes/pipes.module';
 
 describe('ApiTagsComponent', () => {
@@ -11,13 +12,14 @@ describe('ApiTagsComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [
-        ApiTagsComponent,
-        ExternalDocsComponent
-      ],
       imports: [
-        HttpClientTestingModule,
-        PipesModule,
+        ApiTagsComponent,
+        ExternalDocsComponent,
+        PipesModule
+      ],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting()
       ]
     })
     .compileComponents();

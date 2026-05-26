@@ -1,15 +1,85 @@
+<div *ngIf="apiSpec?.components">
+  <div class="empty-state" *ngIf="!items.length && !componentSections.length">No reusable components are defined by this API.</div>
 
-<div *ngIf="schemas">
-  <h3>Schemas</h3>
-  <p-accordion [multiple]="true">
-      <p-accordionTab
+  <h3 *ngIf="items.length">Schemas</h3>
+  <div class="p-accordion" *ngIf="items.length">
+      <section
+      class="p-accordionpanel"
       *ngFor="let item of items"
-      [header]="item" >
-        <app-schema-detail 
-          id="components_schemas_{{item}}"
-          [apiSpec]="apiSpec"
-          [schema]="schemas[item]"></app-schema-detail>
-      </p-accordionTab>
-  </p-accordion>
-</div>
+      [attr.data-p-active]="isSchemaExpanded(item)">
+        <button
+          type="button"
+          class="p-accordionheader"
+          [attr.aria-expanded]="isSchemaExpanded(item)"
+          [attr.aria-controls]="'components-schemas-panel-' + item"
+          (click)="toggleSchema(item)">
+          <span>{{item}}</span>
+          <span class="component-header-meta">
+            <span class="count-pill" *ngIf="schemas?.[item]">{{ getSchemaType(schemas[item]) }}</span>
+            <span class="count-pill" *ngIf="schemas?.[item] && getSchemaPropertyCount(schemas[item])">{{ getSchemaPropertyCount(schemas[item]) }} properties</span>
+            <span
+              class="accordion-toggle-icon pi pi-chevron-down"
+              [class.is-expanded]="isSchemaExpanded(item)"
+              aria-hidden="true"></span>
+          </span>
+        </button>
+        <section
+          class="p-accordioncontent"
+          *ngIf="isSchemaExpanded(item)"
+          [id]="'components-schemas-panel-' + item">
+          <div class="p-accordioncontent-content">
+            <div class="schema-overview" *ngIf="schemas?.[item] as schema">
+              <div *ngIf="!isReference(schema) && schema.description" [innerHTML]="(schema.description | markdownify)"></div>
+              <app-external-docs *ngIf="!isReference(schema) && schema.externalDocs" [document]="schema.externalDocs"></app-external-docs>
+              <ul class="pill-list" *ngIf="getSchemaBadges(schema).length">
+                <li *ngFor="let badge of getSchemaBadges(schema)">{{ badge }}</li>
+              </ul>
+            </div>
+            <app-schema-detail 
+              id="components_schemas_{{item}}"
+              [apiSpec]="apiSpec"
+              [schema]="schemas[item]"></app-schema-detail>
+          </div>
+        </section>
+      </section>
+  </div>
 
+  <section class="detail-section" *ngIf="componentSections.length">
+    <h3>Other Components</h3>
+    <div class="p-accordion">
+      <section
+        class="p-accordionpanel"
+        *ngFor="let section of componentSections"
+        [attr.data-p-active]="isComponentSectionExpanded(section.key)">
+        <button
+          type="button"
+          class="p-accordionheader"
+          [attr.aria-expanded]="isComponentSectionExpanded(section.key)"
+          [attr.aria-controls]="'components-section-panel-' + section.key"
+          (click)="toggleComponentSection(section.key)">
+          <span>{{ section.label }}</span>
+          <span class="component-header-meta">
+            <span class="count-pill">{{ section.items.length }}</span>
+            <span
+              class="accordion-toggle-icon pi pi-chevron-down"
+              [class.is-expanded]="isComponentSectionExpanded(section.key)"
+              aria-hidden="true"></span>
+          </span>
+        </button>
+        <section
+          class="p-accordioncontent"
+          *ngIf="isComponentSectionExpanded(section.key)"
+          [id]="'components-section-panel-' + section.key">
+          <div class="p-accordioncontent-content">
+            <dl class="component-list">
+              <ng-container *ngFor="let entry of getComponentEntries(section)">
+                <dt>{{ entry.name }}</dt>
+                <dd>{{ describeComponent(entry.value) }}</dd>
+              </ng-container>
+            </dl>
+          </div>
+        </section>
+      </section>
+    </div>
+  </section>
+</div>

@@ -1,17 +1,26 @@
-import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { FileReaderService } from '../../services/file-reader.service';
 
 @Component({
   selector: 'app-url-chooser',
+  imports: [
+    ButtonModule,
+    CommonModule,
+    DialogModule,
+    FormsModule
+  ],
   templateUrl: './url-chooser.component.html'
 })
 export class UrlChooserComponent {
 
+  private readonly fileReaderService = inject(FileReaderService);
+
   url: string;
   display = false;
-
-  constructor(
-    private fileReaderService: FileReaderService) { }
 
   showDialog() {
     this.display = true;

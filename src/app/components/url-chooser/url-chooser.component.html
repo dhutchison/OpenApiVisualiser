@@ -1,19 +1,35 @@
 
 <p-dialog header="Import from URL" [(visible)]="display" [modal]="true"
-  [style]="{width: '350px', minWidth: '200px'}" [minY]="70">
-      <span class="p-float-label">
-        <input id="url-input" type="url" name='url' [(ngModel)]='url' pInputText required>
-        <label for="url-input">URL</label>
-      </span>
-      <p-footer>
-          <button type="submit" pButton icon="pi pi-check"
-            label="Import"
-            [disabled]="!(url && url.length > 0)"
-            (click)="import()"></button>
-          <button type="button" pButton icon="pi pi-times"
-            (click)="display=false" label="Cancel"
-            class="p-button-secondary"></button>
-      </p-footer>
+  [style]="{width: 'min(42rem, 92vw)'}"
+  [contentStyle]="{overflow: 'visible'}"
+  styleClass="url-import-dialog"
+  [minY]="70">
+      <div class="url-import-dialog__body">
+        <div class="url-import-dialog__field-row">
+          <label class="url-import-dialog__label" for="url-input">URL</label>
+          <div class="url-import-dialog__input-wrap">
+            <input
+              class="url-import-dialog__input"
+              id="url-input"
+              type="url"
+              name="url"
+              [(ngModel)]="url"
+              pInputText
+              required>
+          </div>
+        </div>
+      </div>
+      <ng-template pTemplate="footer">
+          <div class="url-import-dialog__footer">
+            <button type="submit" pButton icon="pi pi-check"
+              label="Import"
+              [disabled]="!(url && url.length > 0)"
+              (click)="import()"></button>
+            <button type="button" pButton icon="pi pi-times"
+              (click)="display=false" label="Cancel"
+              class="p-button-secondary"></button>
+          </div>
+      </ng-template>
 </p-dialog>
 
 <button type="button" (click)="showDialog()" pButton icon="pi pi-cloud-upload" label="Import from URL"></button>

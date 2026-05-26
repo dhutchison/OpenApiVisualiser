@@ -1,5 +1,6 @@
 import { TestBed, getTestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { FileReaderService } from './file-reader.service';
 
@@ -290,6 +291,8 @@ const PETSTORE_JSON = `{
   }
 }`;
 
+const BROKEN_README_QUERY_PARAM_URL = 'https:%2F%2Fraw.githubusercontent.com%2FMermade%2Fopenapi3-examples%2Fmaster%2Fpass%2FOAI%2Fuber.yaml';
+
 describe('FileReaderService', () => {
     let injector: TestBed;
     let service: FileReaderService;
@@ -297,11 +300,10 @@ describe('FileReaderService', () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        imports: [
-          HttpClientTestingModule
-        ],
         providers: [
-          FileReaderService
+          FileReaderService,
+          provideHttpClient(),
+          provideHttpClientTesting()
         ]
       });
       injector = getTestBed();
@@ -344,27 +346,23 @@ describe('FileReaderService', () => {
         request.flush(PETSTORE_JSON);
       });
 
-      it('Error when file not found', (done: DoneFn) => {
+      it('should notify when URL file is not found', (done: DoneFn) => {
         service.apiChanged.subscribe(value => {
           // Should not get a value here
           fail('Unexpected update');
+        });
+
+        service.loadFailed.subscribe(message => {
+          expect(message).toContain(url);
+          expect(message).toContain('404 Not Found');
           done();
         });
 
-        const url = 'http://localhost/not_petstore.json';
-        try {
-          service.loadFileFromURL(url);
-        } catch (error) {
-          console.error(error);
-          done();
-        }
-
+        const url = BROKEN_README_QUERY_PARAM_URL;
+        service.loadFileFromURL(url);
         const request = httpMock.expectOne(url);
         expect(request.request.method).toBe('GET');
         request.flush('Not Found', { status: 404, statusText: 'Not Found'} );
-
-        // TODO: need to fix error handling
-        done();
       });
     });
 

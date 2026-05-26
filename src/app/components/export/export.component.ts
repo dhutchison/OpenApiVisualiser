@@ -1,5 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { FileReaderService } from '../../services/file-reader.service';
 
 import { saveAs } from 'file-saver';
@@ -7,9 +11,17 @@ import * as jsyaml from 'js-yaml';
 
 @Component({
   selector: 'app-export',
+  imports: [
+    ButtonModule,
+    CommonModule,
+    DialogModule,
+    FormsModule
+  ],
   templateUrl: './export.component.html'
 })
 export class ExportComponent implements OnInit {
+
+  private readonly fileReaderService = inject(FileReaderService);
 
   // TODO: A lot of comonality with this and the api-information component.
   display = false;
@@ -30,10 +42,6 @@ export class ExportComponent implements OnInit {
 
   /* The currently selected export format */
   private exportFormatId = 1;
-
-  constructor(
-    private fileReaderService: FileReaderService) { }
-
 
   get buttonEnabled() {
     return (this.apiDefinitions.length === 1);
@@ -101,7 +109,7 @@ export class ExportComponent implements OnInit {
 
   private convertToOpenAPIYaml(spec: OpenAPIObject): string {
 
-    return jsyaml.safeDump(spec);
+    return jsyaml.dump(spec);
   }
 
   private convertToOpenAPIJson(spec: OpenAPIObject): string {
