@@ -580,7 +580,12 @@ $putHighlightColour: #fca130;
 }
 
 .operation-node {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
     cursor: pointer;
+    font: inherit;
     outline: none;
 }
 
@@ -722,9 +727,6 @@ select {
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
-}
-
-.section-heading {
     justify-content: space-between;
     margin-bottom: 0.5rem;
 

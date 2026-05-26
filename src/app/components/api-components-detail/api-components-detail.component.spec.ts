@@ -43,7 +43,7 @@ describe('ApiComponentsDetailComponent', () => {
   });
 
   it('should render schema and component section headers as buttons', () => {
-    const apiSpec = {
+    const apiSpec: OpenAPIObject = {
       openapi: '3.1.0',
       info: {
         title: 'Test API',
@@ -67,7 +67,7 @@ describe('ApiComponentsDetailComponent', () => {
           }
         }
       }
-    } as OpenAPIObject;
+    };
 
     fileReaderService.apiChanged.next(apiSpec);
     fixture.detectChanges();
@@ -95,7 +95,7 @@ describe('ApiComponentsDetailComponent', () => {
           }
         }
       }
-    } as OpenAPIObject);
+    });
     fixture.detectChanges();
 
     const schemaHeader = fixture.debugElement.query(By.css('.p-accordionheader'));

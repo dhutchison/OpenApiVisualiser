@@ -150,7 +150,7 @@ export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDes
   private createWarningMessage(spec: OpenAPIObject): string | undefined {
     const serverUrl = spec.servers?.[0]?.url;
 
-    if (!serverUrl || typeof globalThis.window === 'undefined') {
+    if (!serverUrl || globalThis.window === undefined) {
       return undefined;
     }
 

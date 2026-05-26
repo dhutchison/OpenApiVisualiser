@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { FileChooserComponent } from './file-chooser.component';
-import { FileUploadModule } from 'primeng/fileupload';
 import { FileReaderService } from '../../services/file-reader.service';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';

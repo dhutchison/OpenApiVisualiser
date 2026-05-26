@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
-import { OpenAPIObject, OperationObject, PathItemObject, TagObject } from 'openapi3-ts/oas31';
+import { OpenAPIObject, TagObject } from 'openapi3-ts/oas31';
 import { MarkdownifyPipe } from '../../pipes/markdownify.pipe';
 import { ExternalDocsComponent } from '../external-docs/external-docs.component';
+
+type HttpMethod = 'get' | 'put' | 'post' | 'delete' | 'options' | 'head' | 'patch' | 'trace';
 
 interface TagSummary {
   name: string;
@@ -28,7 +30,7 @@ export class ApiTagsComponent implements OnInit {
 
   tagSummaries: TagSummary[] = [];
 
-  private readonly httpMethods = [
+  private readonly httpMethods: HttpMethod[] = [
     'get',
     'put',
     'post',
@@ -66,7 +68,7 @@ export class ApiTagsComponent implements OnInit {
 
     Object.entries(api.paths ?? {}).forEach(([path, pathItem]) => {
       this.httpMethods.forEach(method => {
-        const operation = (pathItem as PathItemObject)?.[method] as OperationObject | undefined;
+        const operation = pathItem?.[method];
 
         if (!operation) {
           return;

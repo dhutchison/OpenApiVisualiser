@@ -28,16 +28,13 @@
           [styleClass]="horizontalView? 'tree-horizontal': 'tree-vertical'">
 
         <ng-template let-node pTemplate="operation">
-          <span
+          <button
+            type="button"
             class="operation-node"
             pTooltip="{{ node.tooltip }}"
             [escape]=false
             id="{{ node.id }}-node"
-            (click)="openEndpointDetail(node)"
-            (keydown.enter)="openEndpointDetail(node)"
-            (keydown.space)="openEndpointDetail(node); $event.preventDefault()"
-            role="button"
-            tabindex="0">{{ node.label }}</span>
+            (click)="openEndpointDetail(node)">{{ node.label }}</button>
         </ng-template>
       </p-tree>
     </div>
