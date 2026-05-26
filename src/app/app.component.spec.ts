@@ -9,7 +9,7 @@ import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations'; // NOSONAR - PrimeNG components still require Angular's legacy animation renderer.
 import { ExportComponent } from './components/export/export.component';
 import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
 import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
@@ -51,7 +51,7 @@ describe('AppComponent', () => {
         UrlChooserComponent,
         PipesModule,
 
-        BrowserAnimationsModule,
+        BrowserAnimationsModule, // NOSONAR - Keep until PrimeNG no longer depends on legacy animation triggers.
         ButtonModule,
         DialogModule,
         FieldsetModule,

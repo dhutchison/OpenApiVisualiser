@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations'; // NOSONAR - PrimeNG components still require Angular's legacy animation renderer.
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 
@@ -56,7 +56,7 @@ describe('MainComponent', () => {
         UrlChooserComponent,
         PipesModule,
 
-        BrowserAnimationsModule,
+        BrowserAnimationsModule, // NOSONAR - Keep until PrimeNG no longer depends on legacy animation triggers.
         ButtonModule,
         DialogModule,
         FieldsetModule,
