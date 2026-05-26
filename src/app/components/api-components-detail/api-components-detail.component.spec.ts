@@ -5,7 +5,8 @@ import { OpenAPIObject } from 'openapi3-ts/oas31';
 import { ApiComponentsDetailComponent } from './api-components-detail.component';
 import { SchemaDetailComponent } from './schema-detail/schema-detail.component';
 import { TreeTableModule } from 'primeng/treetable';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { PipesModule } from '../../pipes/pipes.module';
 import { FileReaderService } from '../../services/file-reader.service';
 
@@ -20,9 +21,11 @@ describe('ApiComponentsDetailComponent', () => {
         ApiComponentsDetailComponent,
         SchemaDetailComponent,
         PipesModule,
-        TreeTableModule,
-
-        HttpClientTestingModule,
+        TreeTableModule
+      ],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting()
       ]
     })
     .compileComponents();

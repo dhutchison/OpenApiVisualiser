@@ -1,9 +1,10 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
-import { RouterTestingModule } from '@angular/router/testing';
+import { provideRouter } from '@angular/router';
 
 import { MainComponent } from './main.component';
 
@@ -63,10 +64,12 @@ describe('MainComponent', () => {
         SelectButtonModule,
         TooltipModule,
         TreeModule,
-        TreeTableModule,
-
-        HttpClientTestingModule,
-        RouterTestingModule
+        TreeTableModule
+      ],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([])
       ]
 
     })

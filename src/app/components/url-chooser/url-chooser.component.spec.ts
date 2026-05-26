@@ -4,7 +4,8 @@ import { UrlChooserComponent } from './url-chooser.component';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { FileReaderService } from '../../services/file-reader.service';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 describe('UrlChooserComponent', () => {
   let component: UrlChooserComponent;
@@ -18,9 +19,12 @@ describe('UrlChooserComponent', () => {
     TestBed.configureTestingModule({
       imports: [
         UrlChooserComponent,
-        HttpClientTestingModule,
 
         DialogModule
+      ],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting()
       ]
     })
     .compileComponents();

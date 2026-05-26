@@ -1,4 +1,4 @@
-import { Injectable, ComponentFactoryResolver } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { TreeNode } from 'primeng/api';
 import { Subject } from 'rxjs';
 import {

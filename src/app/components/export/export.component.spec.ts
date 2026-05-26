@@ -3,7 +3,8 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ExportComponent } from './export.component';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 describe('ExportComponent', () => {
   let component: ExportComponent;
@@ -14,9 +15,11 @@ describe('ExportComponent', () => {
       imports: [
         ExportComponent,
         DialogModule,
-        FormsModule,
-
-        HttpClientTestingModule
+        FormsModule
+      ],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting()
       ]
     })
     .compileComponents();

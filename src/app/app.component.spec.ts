@@ -1,13 +1,14 @@
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
+import { provideRouter } from '@angular/router';
 
 import { AppComponent } from './app.component';
 import { ApiInformationComponent } from './components/api-information/api-information.component';
 import { ApiPathTreeComponent } from './components/api-path-tree/api-path-tree.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ExportComponent } from './components/export/export.component';
 import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
@@ -60,10 +61,12 @@ describe('AppComponent', () => {
         SelectButtonModule,
         TooltipModule,
         TreeModule,
-        TreeTableModule,
-
-        HttpClientTestingModule,
-        RouterTestingModule
+        TreeTableModule
+      ],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([])
       ]
     }).compileComponents();
   }));

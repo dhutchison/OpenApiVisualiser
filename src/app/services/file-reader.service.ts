@@ -49,11 +49,11 @@ export class FileReaderService {
     const fileData = this.http.get(url, {responseType: 'text'});
 
     const yaml = (url.match(/\.yaml/) !== null);
-    fileData.subscribe(
-      fileContent => this.loadData(fileContent, yaml),
+    fileData.subscribe({
+      next: fileContent => this.loadData(fileContent, yaml),
       // TODO: notification of the failure?
-      error => { console.error(error); }
-    );
+      error: error => { console.error(error); }
+    });
   }
 
   /**
@@ -93,9 +93,9 @@ export class FileReaderService {
     const reader = new FileReader();
     reader.readAsText(file);
 
-    return Observable.create(observer => {
+    return new Observable<string>(observer => {
       reader.onloadend = () => {
-        observer.next(reader.result);
+        observer.next(reader.result as string);
         observer.complete();
       };
     });
