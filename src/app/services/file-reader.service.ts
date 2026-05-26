@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, ReplaySubject, Subject } from 'rxjs';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
 import * as jsyaml from 'js-yaml';
 
@@ -23,6 +23,11 @@ export class FileReaderService {
    * should reset any stored state.
    */
   readonly resetFiles = new Subject<void>();
+
+  /**
+   * Subject used to notify that a file could not be loaded.
+   */
+  readonly loadFailed = new Subject<string>();
 
   /**
    * Load the supplied file as a YAML OpenAPI specification
@@ -51,9 +56,15 @@ export class FileReaderService {
     const yaml = (url.match(/\.yaml/) !== null);
     fileData.subscribe({
       next: fileContent => this.loadData(fileContent, yaml),
-      // TODO: notification of the failure?
-      error: error => { console.error(error); }
+      error: error => this.handleUrlLoadFailure(url, error)
     });
+  }
+
+  private handleUrlLoadFailure(url: string, error: HttpErrorResponse) {
+    console.error(error);
+
+    const status = error.status > 0 ? ` (${error.status} ${error.statusText})` : '';
+    this.loadFailed.next(`Could not load the API definition from ${url}${status}.`);
   }
 
   /**

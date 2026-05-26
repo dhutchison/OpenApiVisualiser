@@ -7,7 +7,7 @@ A utility for visualising the paths of an OpenAPI definition.
 This application supports a query parameter, url, which can be used to pre-load a definition in to the application. 
 
 For example:
-http://localhost:4200/?url=https:%2F%2Fraw.githubusercontent.com%2FMermade%2Fopenapi3-examples%2Fmaster%2Fpass%2FOAI%2Fuber.yaml
+http://localhost:4200/?url=https://raw.githubusercontent.com/Mermade/openapi3-examples/9c2997e1a25919a8182080cc43a4db06d2dc775d/3.0/pass/OAI/uber.yaml
 
 A large number of public API specifications which can be used for testing are available here: https://apis.guru/browse-apis/
 

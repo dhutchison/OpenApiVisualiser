@@ -31,10 +31,12 @@ import { SummaryComponent } from '../summary/summary.component';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
 
 import { PipesModule } from '../../pipes/pipes.module';
+import { FileReaderService } from '../../services/file-reader.service';
 
 describe('MainComponent', () => {
   let component: MainComponent;
   let fixture: ComponentFixture<MainComponent>;
+  let fileReaderService: FileReaderService;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -79,6 +81,7 @@ describe('MainComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(MainComponent);
     component = fixture.componentInstance;
+    fileReaderService = TestBed.inject(FileReaderService);
     fixture.detectChanges();
   });
 
@@ -110,5 +113,15 @@ describe('MainComponent', () => {
 
     expect(component.activePanels).toEqual([]);
     expect(apiPathsPanel().hidden).toBeTrue();
+  });
+
+  it('should show a dialog when a URL import fails', () => {
+    const message = 'Could not load the API definition from http://localhost/missing.yaml (404 Not Found).';
+
+    fileReaderService.loadFailed.next(message);
+    fixture.detectChanges();
+
+    expect(component.displayLoadFailureDialog).toBeTrue();
+    expect(component.loadFailureMessage).toBe(message);
   });
 });

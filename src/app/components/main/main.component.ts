@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, AfterViewInit, inject } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 import { ActivatedRoute } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { ApiComponentsDetailComponent } from '../api-components-detail/api-components-detail.component';
 import { ApiInformationComponent } from '../api-information/api-information.component';
 import { ApiPathTreeComponent } from '../api-path-tree/api-path-tree.component';
@@ -24,7 +26,9 @@ interface MainSection {
     ApiInformationComponent,
     ApiPathTreeComponent,
     ApiTagsComponent,
+    ButtonModule,
     CommonModule,
+    DialogModule,
     ExportComponent,
     FileChooserComponent,
     SummaryComponent,
@@ -38,6 +42,9 @@ export class MainComponent implements AfterViewInit {
   private readonly fileReaderService = inject(FileReaderService);
 
   activePanels: string[] = [];
+  displayLoadFailureDialog = false;
+  loadFailureMessage: string;
+
   readonly sections: MainSection[] = [
     {id: '0', headerId: 'api-information-tab', title: 'API Information'},
     {id: '1', headerId: 'summary-tab', title: 'Summary'},
@@ -47,6 +54,11 @@ export class MainComponent implements AfterViewInit {
   ];
 
   ngAfterViewInit() {
+    this.fileReaderService.loadFailed.subscribe((message) => {
+      this.loadFailureMessage = message;
+      this.displayLoadFailureDialog = true;
+    });
+
     /* Only process query parameters after the child components have been initialized */
     this.route.queryParams.subscribe((params) => {
       console.log('Params: ');

@@ -1,4 +1,20 @@
 <div>
+  <p-dialog
+    header="API definition could not be loaded"
+    [(visible)]="displayLoadFailureDialog"
+    [modal]="true"
+    [style]="{width: 'min(34rem, 92vw)'}">
+    <p>{{ loadFailureMessage }}</p>
+    <ng-template pTemplate="footer">
+      <button
+        type="button"
+        pButton
+        icon="pi pi-times"
+        label="Close"
+        (click)="displayLoadFailureDialog = false"></button>
+    </ng-template>
+  </p-dialog>
+
   <div class="button-bar">
     <app-file-chooser></app-file-chooser>
     <app-url-chooser></app-url-chooser>
