@@ -63,7 +63,7 @@
     "@angular/language-service": "^20.3.21",
     "@commitlint/cli": "^21.0.1",
     "@commitlint/config-conventional": "^21.0.1",
-    "@cypress/code-coverage": "^3.14.7",
+    "@cypress/code-coverage": "^4.0.3",
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
     "@types/commonmark": "^0.27.10",
     "@types/file-saver": "^2.0.7",
