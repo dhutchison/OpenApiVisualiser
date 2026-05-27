@@ -10,7 +10,9 @@ RUN apt-get update \
     # Install the bits required for ChromeHeadless tests
     # Using Chromium instead of full Chrome (saves having to add additional download sites which
     # may be blocked in some environments.
-    && apt-get install -y --no-install-recommends chromium chromium-l10n \
+    && apt-get install -y --no-install-recommends chromium chromium-l10n python3-pip pipx \
+    # Install Commitizen so release configuration can be validated locally.
+    && PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx install commitizen \
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
