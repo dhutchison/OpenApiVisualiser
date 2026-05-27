@@ -12,16 +12,23 @@
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
-		"ghcr.io/devcontainers/features/common-utils:2": {
+		"ghcr.io/devcontainers/features/common-utils:": {
 			"username": "vscode",
 			"userUid": "automatic",
 			"userGid": "automatic",
-			"upgradePackages": false
+			"upgradePackages": false,
+			"installZsh": true,
+			"configureZshAsDefaultShell": true,
+			"installOhMyZsh": true,
+			"installOhMyZshConfig": true
 		}
 	},
 
 	"customizations": {
 		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "zsh"
+			},
 			"extensions": [
 				"openai.chatgpt"
 			]
