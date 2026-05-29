@@ -219,6 +219,18 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     this.endpointDialogVisible = true;
   }
 
+  togglePathNode(treeNode: TreeNode, event?: Event) {
+    event?.stopPropagation();
+
+    const node = treeNode as OperationTreeNode;
+    if (treeNode.leaf || node.type === 'operation') {
+      return;
+    }
+
+    treeNode.expanded = !treeNode.expanded;
+    this.schedulePathTreeMeasurement();
+  }
+
   /**  When we compress the view, we will merge any nodes which have only a
    * single child, and the child is not a leaf.
    *

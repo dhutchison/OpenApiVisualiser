@@ -533,6 +533,10 @@ $putHighlightColour: #fca130;
         display: none;
     }
 
+    .p-tree-node-content:has(.path-node[aria-expanded="false"])::after {
+        display: none;
+    }
+
     .p-tree-node-children::after {
         border-left: 1px solid var(--app-line);
         content: "";
@@ -589,6 +593,30 @@ $putHighlightColour: #fca130;
     outline: none;
 }
 
+.path-node {
+    align-items: center;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-weight: inherit;
+    gap: 0.35rem;
+    outline: none;
+}
+
+.path-node.is-collapsed {
+    color: var(--app-text-muted);
+}
+
+.path-node-toggle {
+    color: var(--app-brand);
+    font-size: 0.75rem;
+}
+
+.path-node:focus-visible,
 .operation-node:focus-visible {
     border-radius: 999px;
     box-shadow: 0 0 0 3px var(--app-focus);

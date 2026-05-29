@@ -27,6 +27,21 @@
           (onNodeSelect)="openEndpointDetail($event)"
           [styleClass]="horizontalView? 'tree-horizontal': 'tree-vertical'">
 
+        <ng-template let-node pTemplate="default">
+          <button
+            type="button"
+            class="path-node"
+            [attr.aria-expanded]="node.leaf ? null : node.expanded"
+            [class.is-collapsed]="!node.leaf && !node.expanded"
+            (click)="togglePathNode(node, $event)">
+            <span
+              *ngIf="!node.leaf && !node.expanded"
+              class="path-node-toggle pi pi-chevron-right"
+              aria-hidden="true"></span>
+            <span>{{ node.label }}</span>
+          </button>
+        </ng-template>
+
         <ng-template let-node pTemplate="operation">
           <button
             type="button"
