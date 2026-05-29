@@ -9,7 +9,7 @@ import {
   SimpleChanges,
   ViewChild
 } from '@angular/core';
-import { OpenAPIObject, OperationObject, PathItemObject } from 'openapi3-ts/oas31';
+import { ComponentsObject, OpenAPIObject, OperationObject, PathItemObject, SecurityRequirementObject } from 'openapi3-ts/oas31';
 
 @Component({
   selector: 'app-endpoint-swagger',
@@ -127,24 +127,145 @@ export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDes
   private createEndpointSpec(): OpenAPIObject {
     const pathItem = this.apiSpec.paths?.[this.path];
     const method = this.method.toLowerCase();
-    const selectedPathItem: PathItemObject = {
-      parameters: pathItem?.parameters
-    };
+    const selectedPathItem: PathItemObject = {};
 
-    selectedPathItem[method] = this.operation;
+    this.setIfDefined(selectedPathItem, 'description', pathItem?.description);
+    this.setIfDefined(selectedPathItem, 'parameters', this.clone(pathItem?.parameters));
+    this.setIfDefined(selectedPathItem, 'servers', this.clone(pathItem?.servers));
+    this.setIfDefined(selectedPathItem, 'summary', pathItem?.summary);
+
+    selectedPathItem[method] = this.clone(this.operation);
+
+    const security = this.operation.security === undefined ? this.clone(this.apiSpec.security) : undefined;
 
     return {
       openapi: this.apiSpec.openapi,
-      info: this.apiSpec.info,
-      servers: this.apiSpec.servers,
-      security: this.apiSpec.security,
-      tags: this.apiSpec.tags,
-      externalDocs: this.apiSpec.externalDocs,
-      components: this.apiSpec.components,
+      info: this.clone(this.apiSpec.info),
+      servers: this.clone(this.apiSpec.servers),
+      security,
+      tags: this.createEndpointTags(),
+      externalDocs: this.clone(this.apiSpec.externalDocs),
+      components: this.createReferencedComponents(selectedPathItem, security),
       paths: {
         [this.path]: selectedPathItem
       }
     };
+  }
+
+  private createEndpointTags() {
+    const operationTags = new Set(this.operation?.tags ?? []);
+
+    if (!this.apiSpec?.tags || operationTags.size === 0) {
+      return undefined;
+    }
+
+    return this.clone(this.apiSpec.tags.filter(tag => operationTags.has(tag.name)));
+  }
+
+  private createReferencedComponents(
+    selectedPathItem: PathItemObject,
+    globalSecurity?: SecurityRequirementObject[]
+  ): ComponentsObject | undefined {
+    if (!this.apiSpec.components) {
+      return undefined;
+    }
+
+    const sourceComponents = this.apiSpec.components as Record<string, Record<string, unknown> | undefined>;
+    const selectedComponents: Record<string, Record<string, unknown>> = {};
+    const queuedObjects: unknown[] = [selectedPathItem];
+    const visitedRefs = new Set<string>();
+
+    this.collectSecuritySchemeNames(this.operation?.security ?? globalSecurity)
+      .forEach(name => this.addComponent('securitySchemes', name, sourceComponents, selectedComponents, queuedObjects));
+
+    for (let index = 0; index < queuedObjects.length; index++) {
+      this.collectComponentRefs(queuedObjects[index]).forEach(ref => {
+        if (visitedRefs.has(ref)) {
+          return;
+        }
+
+        visitedRefs.add(ref);
+        const componentRef = this.parseComponentRef(ref);
+
+        if (componentRef) {
+          this.addComponent(componentRef.section, componentRef.name, sourceComponents, selectedComponents, queuedObjects);
+        }
+      });
+    }
+
+    return Object.keys(selectedComponents).length > 0 ? selectedComponents as ComponentsObject : undefined;
+  }
+
+  private collectSecuritySchemeNames(security?: SecurityRequirementObject[]): Set<string> {
+    return new Set((security ?? []).flatMap(requirement => Object.keys(requirement)));
+  }
+
+  private collectComponentRefs(value: unknown): string[] {
+    if (!value || typeof value !== 'object') {
+      return [];
+    }
+
+    if (Array.isArray(value)) {
+      return value.flatMap(item => this.collectComponentRefs(item));
+    }
+
+    const refs: string[] = [];
+    const record = value as Record<string, unknown>;
+
+    if (typeof record.$ref === 'string' && record.$ref.startsWith('#/components/')) {
+      refs.push(record.$ref);
+    }
+
+    Object.values(record).forEach(child => refs.push(...this.collectComponentRefs(child)));
+
+    return refs;
+  }
+
+  private parseComponentRef(ref: string): { section: string; name: string } | undefined {
+    const pointerParts = ref.slice(2).split('/').map(part => part.replace(/~1/g, '/').replace(/~0/g, '~'));
+
+    if (pointerParts.length < 3 || pointerParts[0] !== 'components') {
+      return undefined;
+    }
+
+    return {
+      section: pointerParts[1],
+      name: pointerParts.slice(2).join('/')
+    };
+  }
+
+  private addComponent(
+    section: string,
+    name: string,
+    sourceComponents: Record<string, Record<string, unknown> | undefined>,
+    selectedComponents: Record<string, Record<string, unknown>>,
+    queuedObjects: unknown[]
+  ) {
+    const component = sourceComponents[section]?.[name];
+
+    if (!component) {
+      return;
+    }
+
+    selectedComponents[section] ??= {};
+
+    if (selectedComponents[section][name]) {
+      return;
+    }
+
+    const componentClone = this.clone(component);
+    selectedComponents[section][name] = componentClone;
+    queuedObjects.push(componentClone);
+  }
+
+  private clone<T>(value: T): T {
+    return value === undefined ? value : structuredClone(value);
+  }
+
+  private setIfDefined<T extends object, K extends keyof T>(target: T, key: K, value: T[K] | undefined) {
+    if (value !== undefined) {
+      target[key] = value;
+    }
   }
 
   private createWarningMessage(spec: OpenAPIObject): string | undefined {
