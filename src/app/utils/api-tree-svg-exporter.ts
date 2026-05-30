@@ -40,6 +40,7 @@ interface SvgExportPalette {
 export interface ApiTreeSvgExportOptions {
   background?: string;
   cssVar?: (name: string, fallback: string) => string;
+  metadata?: string[];
   measureText?: (text: string, font: string) => number;
 }
 
@@ -52,6 +53,10 @@ const SVG_EXPORT_LAYOUT = {
   nodePaddingX: 16,
   nodePaddingY: 10,
   pagePadding: 24,
+  metadataGap: 18,
+  metadataLineHeight: 18,
+  metadataFontSize: 13,
+  metadataFontWeight: 700,
   rootRailGap: 32,
   siblingGap: 18
 };
@@ -60,9 +65,12 @@ export function createApiTreeSvg(nodes: TreeNode[], options: ApiTreeSvgExportOpt
   const palette = createSvgPalette(options);
   const sourceNodes = getSvgExportSourceNodes(nodes);
   const roots = sourceNodes.map(node => createSvgExportNode(node, options));
-  const layout = layoutSvgExportNodes(roots);
+  const metadata = options.metadata?.filter(line => line.trim().length > 0) ?? [];
+  const metadataHeight = getSvgMetadataHeight(metadata);
+  const layout = layoutSvgExportNodes(roots, metadataHeight, metadata, options);
   const connectors = renderSvgConnectors(roots, layout.hasVirtualRoot, palette);
   const renderedNodes = roots.map(node => renderSvgNodes(node, palette)).join('');
+  const renderedMetadata = renderSvgMetadata(metadata, palette);
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -73,6 +81,7 @@ export function createApiTreeSvg(nodes: TreeNode[], options: ApiTreeSvgExportOpt
     '</filter>',
     '</defs>',
     `<rect width="100%" height="100%" fill="${escapeSvgAttribute(palette.background)}"/>`,
+    renderedMetadata,
     connectors,
     renderedNodes,
     '</svg>'
@@ -111,10 +120,15 @@ function createSvgExportNode(treeNode: TreeNode, options: ApiTreeSvgExportOption
   };
 }
 
-function layoutSvgExportNodes(roots: SvgExportNode[]): SvgExportLayout {
+function layoutSvgExportNodes(
+  roots: SvgExportNode[],
+  topOffset = 0,
+  metadata: string[] = [],
+  options: ApiTreeSvgExportOptions = {}
+): SvgExportLayout {
   const { pagePadding, rootRailGap, siblingGap } = SVG_EXPORT_LAYOUT;
   const startX = pagePadding + (roots.length > 1 ? rootRailGap : 0);
-  let currentY = pagePadding;
+  let currentY = pagePadding + topOffset;
   let maxX = startX;
 
   roots.forEach(root => calculateSvgSubtreeHeight(root));
@@ -127,7 +141,7 @@ function layoutSvgExportNodes(roots: SvgExportNode[]): SvgExportLayout {
   return {
     hasVirtualRoot: roots.length > 1,
     height: Math.ceil(Math.max(currentY - siblingGap + pagePadding, pagePadding * 2)),
-    width: Math.ceil(maxX + pagePadding)
+    width: Math.ceil(Math.max(maxX + pagePadding, getSvgMetadataWidth(metadata, options)))
   };
 }
 
@@ -229,6 +243,45 @@ function renderSvgNodes(node: SvgExportNode, palette: SvgExportPalette): string 
     renderSvgNode(node, palette),
     ...node.children.map(child => renderSvgNodes(child, palette))
   ].join('');
+}
+
+function renderSvgMetadata(lines: string[], palette: SvgExportPalette): string {
+  if (lines.length === 0) {
+    return '';
+  }
+
+  const { metadataFontSize, metadataFontWeight, metadataLineHeight, pagePadding } = SVG_EXPORT_LAYOUT;
+
+  return [
+    '<g>',
+    ...lines.map((line, index) => {
+      const y = pagePadding + metadataFontSize + (index * metadataLineHeight);
+
+      return `<text x="${pagePadding}" y="${y}" fill="${escapeSvgAttribute(palette.path.text)}" font-family="${escapeSvgAttribute(SVG_EXPORT_LAYOUT.fontFamily)}" font-size="${metadataFontSize}" font-weight="${metadataFontWeight}">${escapeSvgText(line)}</text>`;
+    }),
+    '</g>'
+  ].join('');
+}
+
+function getSvgMetadataHeight(lines: string[]): number {
+  if (lines.length === 0) {
+    return 0;
+  }
+
+  return (lines.length * SVG_EXPORT_LAYOUT.metadataLineHeight) + SVG_EXPORT_LAYOUT.metadataGap;
+}
+
+function getSvgMetadataWidth(lines: string[], options: ApiTreeSvgExportOptions): number {
+  if (lines.length === 0) {
+    return 0;
+  }
+
+  const font = `${SVG_EXPORT_LAYOUT.metadataFontWeight} ${SVG_EXPORT_LAYOUT.metadataFontSize}px ${SVG_EXPORT_LAYOUT.fontFamily}`;
+  const textWidth = Math.max(...lines.map(line => options.measureText
+    ? options.measureText(line, font)
+    : line.length * SVG_EXPORT_LAYOUT.metadataFontSize * 0.62));
+
+  return textWidth + (SVG_EXPORT_LAYOUT.pagePadding * 2);
 }
 
 function getSvgNodePalette(node: SvgExportNode, palette: SvgExportPalette) {

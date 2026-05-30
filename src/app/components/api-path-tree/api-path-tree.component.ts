@@ -13,6 +13,9 @@ import { UserPreferenceControllerService } from '../../controllers/user-preferen
 import { createApiTreeSvg } from '../../utils/api-tree-svg-exporter';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
 
+const UNTAGGED_FILTER_VALUE = '__untagged__';
+type ApiPathSortOrder = 'default' | 'asc' | 'desc';
+
 @Component({
   selector: 'app-api-path-tree',
   imports: [
@@ -64,12 +67,25 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     {title: 'Expanded', value: false, icon: 'pi pi-window-maximize'}
   ];
 
+  readonly sortTypes: Array<{title: string; value: ApiPathSortOrder; icon: string}> = [
+    {title: 'Default', value: 'default', icon: 'pi pi-sort-alt'},
+    {title: 'A-Z', value: 'asc', icon: 'pi pi-sort-alpha-down'},
+    {title: 'Z-A', value: 'desc', icon: 'pi pi-sort-alpha-up'}
+  ];
+
+  readonly untaggedFilterValue = UNTAGGED_FILTER_VALUE;
+
+  tagFilterOptions: Array<{label: string; value: string}> = [];
+
+  selectedTagFilters: string[] = [];
+
   /**
    * The original (uncompressed) version of the tree nodes
    */
   private apiPathNodesOrig: TreeNode[] = [];
 
   private measureTimeoutId?: ReturnType<typeof setTimeout>;
+  private measureAnimationFrameId?: number;
   private resizeObserver?: ResizeObserver;
   private textMeasureContext?: CanvasRenderingContext2D;
 
@@ -103,6 +119,17 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     this.schedulePathTreeMeasurement();
   }
 
+  get sortOrder(): ApiPathSortOrder {
+    return this.preferenceService.apiPathSortOrder;
+  }
+
+  set sortOrder(value: ApiPathSortOrder) {
+    this.preferenceService.apiPathSortOrder = value;
+    this.selectedOperationNode = undefined;
+    this.endpointDialogVisible = false;
+    this.setTreeNodes();
+  }
+
   ngOnInit() {
     this.fileReaderService.apiChanged.subscribe(value => {
       /* Add this specification to our current state */
@@ -112,10 +139,14 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     this.fileReaderService.resetFiles.subscribe(v => {
       /* Reset the service which holds our current state */
       this.openApiConverterService.reset();
+      this.selectedTagFilters = [];
     });
 
     this.openApiConverterService.treeNodesChanged.subscribe(value => {
       this.apiPathNodesOrig = value;
+      this.tagFilterOptions = this.createTagFilterOptions(value);
+      this.selectedTagFilters = this.selectedTagFilters
+        .filter(tagFilter => this.tagFilterOptions.some(option => option.value === tagFilter));
       this.setTreeNodes();
     });
   }
@@ -129,6 +160,10 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
   ngOnDestroy() {
     if (this.measureTimeoutId) {
       clearTimeout(this.measureTimeoutId);
+    }
+
+    if (this.measureAnimationFrameId !== undefined) {
+      cancelAnimationFrame(this.measureAnimationFrameId);
     }
 
     this.resizeObserver?.disconnect();
@@ -176,6 +211,7 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     return createApiTreeSvg(this.apiPathNodes, {
       background: treeStyle.backgroundColor || cssVar('--app-surface-solid', '#1b1f1b'),
       cssVar,
+      metadata: this.createSvgMetadata(),
       measureText: (text, font) => this.measureSvgText(text, font)
     });
   }
@@ -209,10 +245,16 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
    * setting the field the UI is watching
    */
   private setTreeNodes() {
+    const filteredNodes = this.cloneFilteredTreeNodes(this.apiPathNodesOrig);
+
     if (this.preferenceService.joinNodesWithNoLeaves) {
-      this.apiPathNodes = this.cloneCompressedTreeNodes(this.apiPathNodesOrig);
+      this.apiPathNodes = this.cloneCompressedTreeNodes(filteredNodes);
     } else {
-      this.apiPathNodes = this.cloneTreeNodes(this.apiPathNodesOrig);
+      this.apiPathNodes = this.cloneTreeNodes(filteredNodes);
+    }
+
+    if (this.sortOrder !== 'default') {
+      this.sortTreeNodes(this.apiPathNodes);
     }
 
     this.schedulePathTreeMeasurement();
@@ -282,12 +324,146 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     };
   }
 
-  private schedulePathTreeMeasurement() {
+  isTagSelected(tagValue: string): boolean {
+    return this.selectedTagFilters.includes(tagValue);
+  }
+
+  toggleTagFilter(tagValue: string) {
+    if (this.isTagSelected(tagValue)) {
+      this.selectedTagFilters = this.selectedTagFilters.filter(value => value !== tagValue);
+    } else {
+      this.selectedTagFilters = [...this.selectedTagFilters, tagValue];
+    }
+
+    this.selectedOperationNode = undefined;
+    this.endpointDialogVisible = false;
+    this.setTreeNodes();
+  }
+
+  clearTagFilters() {
+    this.selectedTagFilters = [];
+    this.setTreeNodes();
+  }
+
+  private cloneFilteredTreeNodes(nodes: TreeNode[]): TreeNode[] {
+    if (this.selectedTagFilters.length === 0) {
+      return this.cloneTreeNodes(nodes);
+    }
+
+    return nodes
+      .map(node => this.cloneFilteredTreeNode(node))
+      .filter((node): node is TreeNode => node !== undefined);
+  }
+
+  private cloneFilteredTreeNode(node: TreeNode): TreeNode | undefined {
+    const operationNode = node as OperationTreeNode;
+
+    if (operationNode.type === 'operation') {
+      return this.operationMatchesSelectedTags(operationNode) ? this.cloneTreeNode(node) : undefined;
+    }
+
+    const filteredChildren = (node.children ?? [])
+      .map(child => this.cloneFilteredTreeNode(child))
+      .filter((child): child is TreeNode => child !== undefined);
+
+    if (filteredChildren.length === 0) {
+      return undefined;
+    }
+
+    return {
+      ...node,
+      children: filteredChildren
+    };
+  }
+
+  private operationMatchesSelectedTags(node: OperationTreeNode): boolean {
+    const operationTags = node.operation?.tags?.length ? node.operation.tags : [UNTAGGED_FILTER_VALUE];
+
+    return operationTags.some(tag => this.selectedTagFilters.includes(tag));
+  }
+
+  private sortTreeNodes(nodes: TreeNode[]) {
+    const direction = this.sortOrder === 'asc' ? 1 : -1;
+
+    nodes.sort((left, right) => {
+      return direction * String(left.label ?? '').localeCompare(String(right.label ?? ''), undefined, {
+        sensitivity: 'base'
+      });
+    });
+
+    nodes.forEach(node => {
+      if (node.children) {
+        this.sortTreeNodes(node.children);
+      }
+    });
+  }
+
+  private createTagFilterOptions(nodes: TreeNode[]): Array<{label: string; value: string}> {
+    const tagNames = new Set<string>();
+    let hasUntagged = false;
+
+    this.visitOperationNodes(nodes, operationNode => {
+      const tags = operationNode.operation?.tags ?? [];
+
+      if (tags.length === 0) {
+        hasUntagged = true;
+        return;
+      }
+
+      tags.forEach(tag => tagNames.add(tag));
+    });
+
+    const options = Array.from(tagNames)
+      .sort((left, right) => left.localeCompare(right, undefined, {sensitivity: 'base'}))
+      .map(tag => ({label: tag, value: tag}));
+
+    if (hasUntagged) {
+      options.push({label: 'Untagged', value: UNTAGGED_FILTER_VALUE});
+    }
+
+    return options;
+  }
+
+  private visitOperationNodes(nodes: TreeNode[], visitor: (node: OperationTreeNode) => void) {
+    nodes.forEach(node => {
+      const operationNode = node as OperationTreeNode;
+
+      if (operationNode.type === 'operation') {
+        visitor(operationNode);
+        return;
+      }
+
+      this.visitOperationNodes(node.children ?? [], visitor);
+    });
+  }
+
+  private createSvgMetadata(): string[] {
+    const sortLabel = this.sortTypes.find(sortType => sortType.value === this.sortOrder)?.title ?? 'Default';
+    const selectedTagLabels = this.selectedTagFilters
+      .map(value => this.tagFilterOptions.find(option => option.value === value)?.label ?? value);
+    const tagLabel = selectedTagLabels.length ? selectedTagLabels.join(', ') : 'All';
+
+    return [
+      `Sort: ${sortLabel}`,
+      `Tags: ${tagLabel}`
+    ];
+  }
+
+  schedulePathTreeMeasurement() {
     if (this.measureTimeoutId) {
       clearTimeout(this.measureTimeoutId);
     }
 
-    this.measureTimeoutId = setTimeout(() => this.updatePathTreeMinHeight(), 0);
+    if (this.measureAnimationFrameId !== undefined) {
+      cancelAnimationFrame(this.measureAnimationFrameId);
+    }
+
+    this.measureTimeoutId = setTimeout(() => {
+      this.measureAnimationFrameId = requestAnimationFrame(() => {
+        this.measureAnimationFrameId = undefined;
+        this.updatePathTreeMinHeight();
+      });
+    }, 0);
   }
 
   private updatePathTreeMinHeight() {
@@ -296,14 +472,32 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     const layoutElement = this.pathTreeLayoutElement.nativeElement;
+    this.pathTreeMinHeight = undefined;
+    layoutElement.style.removeProperty('min-height');
 
     if (this.horizontalView) {
       this.updateHorizontalConnectorBounds(layoutElement);
     }
 
-    const measuredHeight = Math.ceil(layoutElement.scrollHeight);
+    const measuredHeight = Math.ceil(Math.max(
+      layoutElement.scrollHeight,
+      this.getOpenTagFilterBottom(layoutElement)
+    ));
 
     this.pathTreeMinHeight = measuredHeight > 0 ? measuredHeight : undefined;
+  }
+
+  private getOpenTagFilterBottom(layoutElement: HTMLElement): number {
+    const openTagFilterPanel = layoutElement.querySelector('.path-tree-tag-filter[open] .path-tree-tag-filter__panel');
+
+    if (!(openTagFilterPanel instanceof HTMLElement)) {
+      return 0;
+    }
+
+    const layoutRect = layoutElement.getBoundingClientRect();
+    const panelRect = openTagFilterPanel.getBoundingClientRect();
+
+    return panelRect.bottom - layoutRect.top;
   }
 
   private updateHorizontalConnectorBounds(layoutElement: HTMLElement) {

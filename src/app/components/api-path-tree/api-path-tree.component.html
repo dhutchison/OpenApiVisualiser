@@ -14,6 +14,39 @@
       optionValue="value">
     </p-selectButton>
 
+    <p-selectButton
+      [options]="sortTypes"
+      [(ngModel)]="sortOrder"
+      optionLabel="title"
+      optionValue="value">
+    </p-selectButton>
+
+    <details class="path-tree-tag-filter" *ngIf="tagFilterOptions.length" (toggle)="schedulePathTreeMeasurement()">
+      <summary>
+        <span class="pi pi-filter" aria-hidden="true"></span>
+        <span>Tags</span>
+        <span class="count-pill" *ngIf="selectedTagFilters.length">{{ selectedTagFilters.length }}</span>
+      </summary>
+      <div class="path-tree-tag-filter__panel">
+        <label *ngFor="let tag of tagFilterOptions">
+          <input
+            type="checkbox"
+            [checked]="isTagSelected(tag.value)"
+            (change)="toggleTagFilter(tag.value)">
+          <span>{{ tag.label }}</span>
+        </label>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-filter-slash"
+          label="Clear"
+          class="p-button-secondary"
+          [disabled]="!selectedTagFilters.length"
+          (click)="clearTagFilters()">
+        </button>
+      </div>
+    </details>
+
     <button pButton type="button" icon="pi pi-download" label="Download Image"
       (click)="downloadImage($event)"
       class="download-image-button"

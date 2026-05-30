@@ -81,4 +81,22 @@ describe('createApiTreeSvg', () => {
     expect(svg).toContain('/pets');
     expect(svg).not.toContain('GET');
   });
+
+  it('renders metadata above the tree', () => {
+    const nodes: TreeNode[] = [
+      {
+        label: '/pets',
+        leaf: true
+      }
+    ];
+
+    const svg = createApiTreeSvg(nodes, {
+      measureText: text => text.length * 8,
+      metadata: ['Sort: A-Z', 'Tags: pets, Untagged']
+    });
+
+    expect(svg).toContain('Sort: A-Z');
+    expect(svg).toContain('Tags: pets, Untagged');
+    expect(svg.indexOf('Sort: A-Z')).toBeLessThan(svg.indexOf('/pets'));
+  });
 });

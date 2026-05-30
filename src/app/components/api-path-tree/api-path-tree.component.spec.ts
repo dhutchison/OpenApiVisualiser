@@ -141,6 +141,149 @@ describe('ApiPathTreeComponent', () => {
     expect(clonedOperationNode.operation).toBe(operation);
   });
 
+  it('should sort nodes within their parent alphabetically', () => {
+    (component as any).apiPathNodesOrig = [
+      {
+        label: '/',
+        leaf: false,
+        children: [
+          {
+            label: '/zebra',
+            leaf: false,
+            children: [
+              {label: 'POST', leaf: true, type: 'operation'} as TreeNode,
+              {label: 'GET', leaf: true, type: 'operation'} as TreeNode
+            ]
+          },
+          {
+            label: '/alpha',
+            leaf: false,
+            children: []
+          }
+        ]
+      }
+    ];
+    component.joinNodesWithNoLeaves = false;
+
+    component.sortOrder = 'asc';
+
+    expect(component.apiPathNodes[0].children?.map(node => node.label)).toEqual(['/alpha', '/zebra']);
+    expect(component.apiPathNodes[0].children?.[1].children?.map(node => node.label)).toEqual(['GET', 'POST']);
+
+    component.sortOrder = 'desc';
+
+    expect(component.apiPathNodes[0].children?.map(node => node.label)).toEqual(['/zebra', '/alpha']);
+    expect(component.apiPathNodes[0].children?.[0].children?.map(node => node.label)).toEqual(['POST', 'GET']);
+  });
+
+  it('should filter operations by selected tags and prune empty branches', () => {
+    (component as any).apiPathNodesOrig = [
+      {
+        label: '/',
+        leaf: false,
+        children: [
+          {
+            label: '/pets',
+            leaf: false,
+            children: [
+              {
+                label: 'GET',
+                leaf: true,
+                type: 'operation',
+                operation: {
+                  tags: ['pets']
+                }
+              } as TreeNode,
+              {
+                label: 'POST',
+                leaf: true,
+                type: 'operation',
+                operation: {
+                  tags: ['admin']
+                }
+              } as TreeNode
+            ]
+          },
+          {
+            label: '/health',
+            leaf: false,
+            children: [
+              {
+                label: 'GET',
+                leaf: true,
+                type: 'operation',
+                operation: {}
+              } as TreeNode
+            ]
+          }
+        ]
+      }
+    ];
+    component.joinNodesWithNoLeaves = false;
+    component.tagFilterOptions = (component as any).createTagFilterOptions((component as any).apiPathNodesOrig);
+
+    component.toggleTagFilter('pets');
+
+    expect(component.apiPathNodes[0].children?.map(node => node.label)).toEqual(['/pets']);
+    expect(component.apiPathNodes[0].children?.[0].children?.map(node => node.label)).toEqual(['GET']);
+
+    component.toggleTagFilter(component.untaggedFilterValue);
+
+    expect(component.apiPathNodes[0].children?.map(node => node.label)).toEqual(['/pets', '/health']);
+  });
+
+  it('should include sort and tag filter details in generated SVG metadata', () => {
+    component.tagFilterOptions = [
+      {label: 'pets', value: 'pets'},
+      {label: 'Untagged', value: component.untaggedFilterValue}
+    ];
+    component.selectedTagFilters = ['pets', component.untaggedFilterValue];
+    component.sortOrder = 'asc';
+
+    const metadata = (component as any).createSvgMetadata();
+
+    expect(metadata).toEqual(['Sort: A-Z', 'Tags: pets, Untagged']);
+  });
+
+  it('should clear the previous path tree min height before measuring', () => {
+    const layoutElement = fixture.nativeElement.querySelector('.api-path-tree-layout') as HTMLElement;
+    const removePropertySpy = spyOn(layoutElement.style, 'removeProperty').and.callThrough();
+
+    component.pathTreeMinHeight = 500;
+
+    (component as any).updatePathTreeMinHeight();
+
+    expect(removePropertySpy).toHaveBeenCalledWith('min-height');
+    expect(component.pathTreeMinHeight).not.toBe(500);
+  });
+
+  it('should include the open tag filter panel when measuring path tree min height', () => {
+    component.tagFilterOptions = [
+      {label: 'audit', value: 'audit'}
+    ];
+    fixture.detectChanges();
+
+    const layoutElement = fixture.nativeElement.querySelector('.api-path-tree-layout') as HTMLElement;
+    const tagFilter = fixture.nativeElement.querySelector('.path-tree-tag-filter') as HTMLElement;
+    const tagFilterPanel = fixture.nativeElement.querySelector('.path-tree-tag-filter__panel') as HTMLElement;
+
+    tagFilter.setAttribute('open', '');
+    Object.defineProperty(layoutElement, 'scrollHeight', {
+      configurable: true,
+      value: 100
+    });
+    spyOn(layoutElement, 'getBoundingClientRect').and.returnValue({
+      top: 10
+    } as DOMRect);
+    spyOn(tagFilterPanel, 'getBoundingClientRect').and.returnValue({
+      bottom: 260
+    } as DOMRect);
+
+    (component as any).updatePathTreeMinHeight();
+
+    expect(component.pathTreeMinHeight).toBe(250);
+  });
+
   it('should export a generated SVG blob', async () => {
     const saveAsSpy = jasmine.createSpy('saveAs');
     const createImageBlobSpy = spyOn<any>(component, 'createImageBlob').and.resolveTo(new Blob(['<svg></svg>'], {
