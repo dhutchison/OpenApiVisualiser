@@ -185,7 +185,7 @@ function renderSvgConnectors(roots: SvgExportNode[], hasVirtualRoot: boolean, pa
   if (hasVirtualRoot && roots.length > 0) {
     const railX = SVG_EXPORT_LAYOUT.pagePadding;
     const firstCenter = getSvgNodeCenterY(roots[0]);
-    const lastCenter = getSvgNodeCenterY(roots[roots.length - 1]);
+    const lastCenter = getSvgNodeCenterY(roots.at(-1));
 
     connectors.unshift(
       `<path d="M ${railX} ${firstCenter} V ${lastCenter}" fill="none" stroke="${escapeSvgAttribute(palette.line)}" stroke-width="1"/>`,
@@ -207,7 +207,7 @@ function renderSvgNodeConnectors(node: SvgExportNode, palette: SvgExportPalette)
   const startY = getSvgNodeCenterY(node);
   const elbowX = startX + (SVG_EXPORT_LAYOUT.levelGap / 2);
   const firstChildCenter = getSvgNodeCenterY(node.children[0]);
-  const lastChildCenter = getSvgNodeCenterY(node.children[node.children.length - 1]);
+  const lastChildCenter = getSvgNodeCenterY(node.children.at(-1));
   const childX = node.children[0].x;
   const line = escapeSvgAttribute(palette.line);
 
@@ -347,12 +347,12 @@ function createSvgPalette(options: ApiTreeSvgExportOptions): SvgExportPalette {
 
 function escapeSvgText(text: string): string {
   return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
 }
 
 function escapeSvgAttribute(value: string): string {
   return escapeSvgText(value)
-    .replace(/"/g, '&quot;');
+    .replaceAll('"', '&quot;');
 }

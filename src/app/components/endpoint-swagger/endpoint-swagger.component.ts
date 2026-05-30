@@ -178,8 +178,8 @@ export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDes
     this.collectSecuritySchemeNames(this.operation?.security ?? globalSecurity)
       .forEach(name => this.addComponent('securitySchemes', name, sourceComponents, selectedComponents, queuedObjects));
 
-    for (let index = 0; index < queuedObjects.length; index++) {
-      this.collectComponentRefs(queuedObjects[index]).forEach(ref => {
+    for (const queuedObject of queuedObjects) {
+      this.collectComponentRefs(queuedObject).forEach(ref => {
         if (visitedRefs.has(ref)) {
           return;
         }
@@ -193,7 +193,7 @@ export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDes
       });
     }
 
-    return Object.keys(selectedComponents).length > 0 ? selectedComponents as ComponentsObject : undefined;
+    return Object.keys(selectedComponents).length > 0 ? selectedComponents : undefined;
   }
 
   private collectSecuritySchemeNames(security?: SecurityRequirementObject[]): Set<string> {
@@ -222,7 +222,7 @@ export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDes
   }
 
   private parseComponentRef(ref: string): { section: string; name: string } | undefined {
-    const pointerParts = ref.slice(2).split('/').map(part => part.replace(/~1/g, '/').replace(/~0/g, '~'));
+    const pointerParts = ref.slice(2).split('/').map(part => part.replaceAll('~1', '/').replaceAll('~0', '~'));
 
     if (pointerParts.length < 3 || pointerParts[0] !== 'components') {
       return undefined;

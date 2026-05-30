@@ -186,7 +186,7 @@ describe('EndpointSwaggerComponent', () => {
       petstoreSpec.tags?.find(tag => tag.name === 'pet')
     ]);
 
-    expect(Object.keys(endpointSpec.components?.schemas ?? {}).sort()).toEqual([
+    expect(Object.keys(endpointSpec.components?.schemas ?? {}).sort((left, right) => left.localeCompare(right))).toEqual([
       'Category',
       'Pet',
       'Tag'

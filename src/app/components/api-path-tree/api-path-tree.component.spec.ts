@@ -272,12 +272,8 @@ describe('ApiPathTreeComponent', () => {
       configurable: true,
       value: 100
     });
-    spyOn(layoutElement, 'getBoundingClientRect').and.returnValue({
-      top: 10
-    } as DOMRect);
-    spyOn(tagFilterPanel, 'getBoundingClientRect').and.returnValue({
-      bottom: 260
-    } as DOMRect);
+    spyOn(layoutElement, 'getBoundingClientRect').and.returnValue(new DOMRect(0, 10, 0, 0));
+    spyOn(tagFilterPanel, 'getBoundingClientRect').and.returnValue(new DOMRect(0, 260, 0, 0));
 
     (component as any).updatePathTreeMinHeight();
 
