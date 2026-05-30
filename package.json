@@ -41,7 +41,6 @@
     "@types/js-yaml": "^4.0.9",
     "commonmark": "^0.31.2",
     "file-saver": "^2.0.5",
-    "html-to-image": "^1.11.13",
     "js-yaml": "^4.1.1",
     "openapi3-ts": "^4.5.0",
     "primeicons": "^7.0.0",

@@ -99,24 +99,60 @@ describe('ApiPathTreeComponent', () => {
     expect(scheduleMeasurementSpy).not.toHaveBeenCalled();
   });
 
-  it('should export using the rendered tree background colour', async () => {
-    const treeViewElement = fixture.nativeElement.querySelector('.tree-view') as HTMLElement;
+  it('should clone tree structure without duplicating operation payloads', () => {
+    const apiDefinition = {
+      openapi: '3.1.0',
+      info: {
+        title: 'Large API',
+        version: '1.0.0'
+      },
+      paths: {}
+    };
+    const operation = {
+      responses: {
+        '200': {
+          description: 'OK'
+        }
+      }
+    };
+    const originalNodes: TreeNode[] = [
+      {
+        label: '/',
+        leaf: false,
+        children: [
+          {
+            label: 'GET',
+            leaf: true,
+            type: 'operation',
+            apiDefinition,
+            operation
+          } as TreeNode
+        ]
+      }
+    ];
+
+    const clonedNodes = (component as any).cloneTreeNodes(originalNodes) as TreeNode[];
+    const clonedOperationNode = clonedNodes[0].children?.[0] as any;
+
+    expect(clonedNodes).not.toBe(originalNodes);
+    expect(clonedNodes[0]).not.toBe(originalNodes[0]);
+    expect(clonedNodes[0].children).not.toBe(originalNodes[0].children);
+    expect(clonedOperationNode.apiDefinition).toBe(apiDefinition);
+    expect(clonedOperationNode.operation).toBe(operation);
+  });
+
+  it('should export a generated SVG blob', async () => {
     const saveAsSpy = jasmine.createSpy('saveAs');
-    const createImageBlobSpy = spyOn<any>(component, 'createImageBlob').and.resolveTo(new Blob());
+    const createImageBlobSpy = spyOn<any>(component, 'createImageBlob').and.resolveTo(new Blob(['<svg></svg>'], {
+      type: 'image/svg+xml'
+    }));
 
     (globalThis as any).saveAs = saveAsSpy;
-    treeViewElement.style.backgroundColor = 'rgb(32, 33, 30)';
 
     await component.downloadImage();
 
-    expect(createImageBlobSpy).toHaveBeenCalledWith(
-      component.treeViewElement.nativeElement,
-      jasmine.objectContaining({
-        backgroundColor: 'rgb(32, 33, 30)',
-        pixelRatio: 1
-      })
-    );
-    expect(saveAsSpy).toHaveBeenCalled();
+    expect(createImageBlobSpy).toHaveBeenCalled();
+    expect(saveAsSpy).toHaveBeenCalledWith(jasmine.any(Blob), 'API.svg');
   });
 
 });

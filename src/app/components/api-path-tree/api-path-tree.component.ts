@@ -10,10 +10,8 @@ import { TreeModule } from 'primeng/tree';
 import { FileReaderService } from '../../services/file-reader.service';
 import { OpenapiTreenodeConverterService, OperationTreeNode } from '../../services/openapi-treenode-converter.service';
 import { UserPreferenceControllerService } from '../../controllers/user-preference-controller.service';
+import { createApiTreeSvg } from '../../utils/api-tree-svg-exporter';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
-
-
-import { toBlob } from 'html-to-image';
 
 @Component({
   selector: 'app-api-path-tree',
@@ -69,10 +67,11 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
   /**
    * The original (uncompressed) version of the tree nodes
    */
-  private apiPathNodesOrig: TreeNode[];
+  private apiPathNodesOrig: TreeNode[] = [];
 
   private measureTimeoutId?: ReturnType<typeof setTimeout>;
   private resizeObserver?: ResizeObserver;
+  private textMeasureContext?: CanvasRenderingContext2D;
 
   get horizontalView(): boolean {
     return this.preferenceService.horizontalView;
@@ -138,37 +137,16 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
   /**
    * Download an image of the API tree.
    *
-   * This depends on the html-to-image library to do all the heavy work.
-   * https://github.com/bubkoo/html-to-image
-   *
-   * Also uses FileSaver to handle the file download
+   * Uses FileSaver to handle the file download
    * https://github.com/eligrey/FileSaver.js
    */
   downloadImage() {
-
     /* Set marker that an image is being generated */
     this.generatingImage = true;
 
-    const backgroundColor = getComputedStyle(this.treeViewElement.nativeElement).backgroundColor;
-
-    /* Configure the export */
-    const exportOptions = {
-      backgroundColor,
-      /*
-       * Needing to set this configuration option until
-       * https://github.com/bubkoo/html-to-image/issues/74
-       * is fixed
-       */
-      pixelRatio: 1,
-      // style: styles
-    };
-
-    /* Do the work. This uses a promise to async the work */
-    console.log(this.treeViewElement.nativeElement);
-
-    return this.createImageBlob(this.treeViewElement.nativeElement, exportOptions)
+    return this.createImageBlob()
       .then(blob => {
-        globalThis.saveAs(blob, 'API.png');
+        globalThis.saveAs(blob, 'API.svg');
 
         /* Mark that the generation is complete */
         this.generatingImage = false;
@@ -181,11 +159,48 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
         /* Mark that the generation is complete */
         this.generatingImage = false;
       });
-
   }
 
-  private createImageBlob(element: HTMLElement, options: object) {
-    return toBlob(element, options);
+  private createImageBlob() {
+    return Promise.resolve(new Blob([this.createSvgMarkup()], {
+      type: 'image/svg+xml;charset=utf-8'
+    }));
+  }
+
+  private createSvgMarkup() {
+    const treeViewElement = this.treeViewElement?.nativeElement;
+    const rootStyle = getComputedStyle(document.documentElement);
+    const treeStyle = treeViewElement ? getComputedStyle(treeViewElement) : rootStyle;
+    const cssVar = (name: string, fallback: string) => rootStyle.getPropertyValue(name).trim() || fallback;
+
+    return createApiTreeSvg(this.apiPathNodes, {
+      background: treeStyle.backgroundColor || cssVar('--app-surface-solid', '#1b1f1b'),
+      cssVar,
+      measureText: (text, font) => this.measureSvgText(text, font)
+    });
+  }
+
+  private measureSvgText(text: string, font: string): number {
+    const context = this.getTextMeasureContext();
+
+    if (!context) {
+      return text.length * 14 * 0.62;
+    }
+
+    context.font = font;
+
+    return context.measureText(text).width;
+  }
+
+  private getTextMeasureContext(): CanvasRenderingContext2D | undefined {
+    if (this.textMeasureContext) {
+      return this.textMeasureContext;
+    }
+
+    const canvas = document.createElement('canvas');
+    this.textMeasureContext = canvas.getContext('2d') ?? undefined;
+
+    return this.textMeasureContext;
   }
 
   /**
@@ -194,14 +209,10 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
    * setting the field the UI is watching
    */
   private setTreeNodes() {
-    /* First, lets do a pretty dumb (deep) clone of the objects we got */
-    const nodesCopy: TreeNode[] = structuredClone(this.apiPathNodesOrig);
-
     if (this.preferenceService.joinNodesWithNoLeaves) {
-      /* Then compress */
-      this.apiPathNodes = this.compress(nodesCopy);
+      this.apiPathNodes = this.cloneCompressedTreeNodes(this.apiPathNodesOrig);
     } else {
-      this.apiPathNodes = nodesCopy;
+      this.apiPathNodes = this.cloneTreeNodes(this.apiPathNodesOrig);
     }
 
     this.schedulePathTreeMeasurement();
@@ -234,38 +245,41 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
   /**  When we compress the view, we will merge any nodes which have only a
    * single child, and the child is not a leaf.
    *
-   * @param nodes the array of nodes to compress. This array will be modified
-   *              and returned.
+   * @param nodes the array of nodes to compress.
    */
-  private compress(nodes: TreeNode[]): TreeNode[] {
+  private cloneCompressedTreeNodes(nodes: TreeNode[]): TreeNode[] {
 
-    console.debug('In Compress: %o', nodes);
+    return nodes.map(value => this.cloneCompressedTreeNode(value));
+  }
 
-    /* Iterate through the nodes at this level */
-    nodes.forEach(value => {
-      if (value.leaf) {
-        /* Node is a leaf, don't touch */
-        console.debug('Leaf node: %s', value.label);
-      } else if (value.children) {
-        /* Child nodes exist, apply compression to them */
-        console.debug('Child nodes exist, pre-compress: %o', value.children);
-        const compressedChildren = this.compress(value.children);
+  private cloneCompressedTreeNode(node: TreeNode): TreeNode {
+    const nodeCopy = this.cloneTreeNode(node);
 
-        if (compressedChildren.length === 1 && !compressedChildren[0].leaf) {
-          /* Only a single non-leaf child, merge */
-          value.label += compressedChildren[0].label;
-          value.children = compressedChildren[0].children;
+    if (nodeCopy.leaf) {
+      return nodeCopy;
+    }
 
-          /* Remove any double slashes from the path */
-          value.label = value.label.replace('//', '/');
-        }
-      }
-    });
+    const compressedChildren = this.cloneCompressedTreeNodes(node.children ?? []);
 
+    if (compressedChildren.length === 1 && !compressedChildren[0].leaf) {
+      nodeCopy.label = `${nodeCopy.label}${compressedChildren[0].label}`.replace('//', '/');
+      nodeCopy.children = compressedChildren[0].children;
+    } else {
+      nodeCopy.children = compressedChildren;
+    }
 
-    console.debug('Compress returning: %o', nodes);
+    return nodeCopy;
+  }
 
-    return nodes;
+  private cloneTreeNodes(nodes: TreeNode[]): TreeNode[] {
+    return nodes.map(node => this.cloneTreeNode(node));
+  }
+
+  private cloneTreeNode(node: TreeNode): TreeNode {
+    return {
+      ...node,
+      children: node.children ? this.cloneTreeNodes(node.children) : node.children
+    };
   }
 
   private schedulePathTreeMeasurement() {
@@ -282,15 +296,12 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     const layoutElement = this.pathTreeLayoutElement.nativeElement;
-    this.updateHorizontalConnectorBounds(layoutElement);
-    const layoutTop = layoutElement.getBoundingClientRect().top;
-    const renderedElements = Array.from(layoutElement.querySelectorAll('*')) as HTMLElement[];
-    const renderedBottom = renderedElements.reduce((bottom, element) => {
-      const rect = element.getBoundingClientRect();
 
-      return Math.max(bottom, rect.bottom);
-    }, layoutElement.getBoundingClientRect().bottom);
-    const measuredHeight = Math.ceil(renderedBottom - layoutTop);
+    if (this.horizontalView) {
+      this.updateHorizontalConnectorBounds(layoutElement);
+    }
+
+    const measuredHeight = Math.ceil(layoutElement.scrollHeight);
 
     this.pathTreeMinHeight = measuredHeight > 0 ? measuredHeight : undefined;
   }
