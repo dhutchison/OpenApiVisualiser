@@ -170,7 +170,7 @@ describe('EndpointSwaggerComponent', () => {
   it('generates a cut down Swagger UI spec from the sample Petstore specification', () => {
     const path = '/pet';
     const method = 'PUT';
-    const operation = petstoreSpec.paths?.[path]?.put as OperationObject;
+    const operation = petstoreSpec.paths?.[path]?.put;
 
     component.apiSpec = petstoreSpec;
     component.path = path;
