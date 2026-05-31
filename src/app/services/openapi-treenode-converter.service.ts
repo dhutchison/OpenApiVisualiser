@@ -84,7 +84,6 @@ export class OpenapiTreenodeConverterService {
   addApiSpecification(openApiSpec: OpenAPIObject) {
 
     /* Convert the specification paths into nodes */
-    console.log(openApiSpec);
     this.convertPathsToTree(openApiSpec.paths, openApiSpec);
 
 
@@ -153,15 +152,11 @@ export class OpenapiTreenodeConverterService {
 
     /* Iterate through each API path key building up the tree nodes */
     Object.keys(paths).forEach(key => {
-      console.log('Key: %s', key);
       const apiPath: PathItemObject = getPath(paths, key);
-      console.log(apiPath);
 
       /* Need to work back up the path structure. */
       key.split('/')
         .forEach((value, index, pathSegments) => {
-
-          console.debug('Loop values: Value "%s", Index %d, PathSegments: %o', value, index, pathSegments);
 
           /* Work out the path for the node we are trying to work on.
            * Note that slice does not include the end indexed element, so need to add 1 here.
@@ -170,7 +165,6 @@ export class OpenapiTreenodeConverterService {
               pathSegments.slice(0, (index + 1))
               .filter(pathSegment => pathSegment.length > 0)
               .join('/'));
-          console.log('Path so far: %s', pathSoFar);
 
           /* Work out the path for the parent */
           const parentPath = '/'.concat(
@@ -180,14 +174,12 @@ export class OpenapiTreenodeConverterService {
 
           /* Get the parent node. This should always exist as we are working from back to front for the path */
           const parentNode = this.treeNodes.get(parentPath);
-          console.debug('Parent node: %s, %o', parentPath, parentNode);
 
           /* Get the node definition if it already exists (for instance we are adding a HTTP method to an existng path definition) */
           let pathNode = this.treeNodes.get(pathSoFar);
           if (pathNode === undefined) {
 
             /* Did not already exist, create it */
-            console.log('Creating node for path %s', pathSoFar);
             pathNode = this.createPathNode('/'.concat(value), getPath(paths, pathSoFar));
             this.treeNodes.set(pathSoFar, pathNode);
 
@@ -200,7 +192,6 @@ export class OpenapiTreenodeConverterService {
           if (key === pathSoFar) {
             /* If the path matches the original key then we are at
              * the level we need to add the HTTP methods */
-            console.log('Path %s matches the key %s', pathSoFar, key);
 
             /* Iterate through the possible http methods, adding nodes as required */
             this.httpMethods.forEach(method => {
@@ -210,8 +201,6 @@ export class OpenapiTreenodeConverterService {
                   this.createHttpMethodNode(key, method.toUpperCase(), apiPath[method], apiDefinition));
               }
             });
-          } else {
-            console.log('No match between %s and %s', key, pathSoFar);
           }
       });
     });
@@ -243,8 +232,6 @@ export class OpenapiTreenodeConverterService {
    * @param operation the details of the Operation
    */
   private createHttpMethodNode(path: string, method: string, operation: OperationObject, apiDefinition: OpenAPIObject): TreeNode {
-
-    console.debug('Creating HTTP method node for %s (%s)', operation.operationId, method);
 
     const node: OperationTreeNode = {
       label: method,
@@ -298,7 +285,6 @@ export class OpenapiTreenodeConverterService {
       totalComplexity += this.calculateObjectComplexity(operation.responses[201], apiDefinition);
     }
 
-    console.log('Complexity: %s', totalComplexity);
     return totalComplexity;
   }
 
@@ -313,12 +299,8 @@ export class OpenapiTreenodeConverterService {
       complexity = 0;
 
     } else if (this.isRequestBodyObject(object) || this.isResponseObject(object)) {
-      console.log('Request or Response body object: %s', object.content);
-
       /* Process each media type */
       Object.keys(object).forEach(key => {
-        console.log('key: %s, value: %s', key, object[key]);
-
         /* Keep recursing down to calculate the complexity */
         complexity += this.calculateObjectComplexity(object[key], apiDefinition);
       });
@@ -326,13 +308,10 @@ export class OpenapiTreenodeConverterService {
       /* Keep recursing down to calculate the complexity */
       complexity += this.calculateObjectComplexity(object.schema, apiDefinition);
     } else if (this.isReferenceObject(object)) {
-      console.log('Reference needs resolved: %s', object.$ref);
       const resolvedReference = this.resolveReference(object.$ref, apiDefinition);
-      console.log('Resolved Reference: ', resolvedReference);
       complexity += this.calculateObjectComplexity(resolvedReference, apiDefinition);
     } else if (this.isSchemaObject(object)) {
       /* Quite a few fields in this we could consider, most of these will not be set */
-      console.log('Schema object needs processed: %s', object);
 
       complexity += this.calculateObjectComplexity(object.items, apiDefinition);
       complexity += this.calculateObjectComplexity(object.allOf, apiDefinition);
@@ -348,9 +327,6 @@ export class OpenapiTreenodeConverterService {
         complexity += Object.keys(object.properties).length;
       }
 
-    } else {
-      console.log('Did not process object: %s', object);
-      console.log(object);
     }
 
     return complexity;
@@ -361,9 +337,6 @@ export class OpenapiTreenodeConverterService {
     const nameParts = name.split('/');
     /* remove the first element, this will always be a '#' */
     nameParts.shift();
-
-    console.log('Name parts: %s', nameParts);
-    console.log(nameParts);
 
     /* Only interested in index 1 onwards */
     let object = apiDefinition;
@@ -460,7 +433,6 @@ export class OpenapiTreenodeConverterService {
   private getSchemaObjectFromReference(object: SchemaObject | ReferenceObject, apiDefinition: OpenAPIObject): SchemaObject {
     let schemaObject: SchemaObject;
     if (this.isReferenceObject(object)) {
-      console.log('Reference needs resolved: %s', object.$ref);
       return this.resolveReference(object.$ref, apiDefinition);
     } else if (this.isSchemaObject(object)) {
       return object

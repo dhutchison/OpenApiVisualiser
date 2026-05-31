@@ -9,5 +9,7 @@ export class UserPreferenceControllerService {
 
   joinNodesWithNoLeaves = true;
 
+  apiPathSortOrder: 'default' | 'asc' | 'desc' = 'default';
+
   constructor() { }
 }

@@ -10,10 +10,11 @@ import { TreeModule } from 'primeng/tree';
 import { FileReaderService } from '../../services/file-reader.service';
 import { OpenapiTreenodeConverterService, OperationTreeNode } from '../../services/openapi-treenode-converter.service';
 import { UserPreferenceControllerService } from '../../controllers/user-preference-controller.service';
+import { createApiTreeSvg } from '../../utils/api-tree-svg-exporter';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
 
-
-import { toBlob } from 'html-to-image';
+const UNTAGGED_FILTER_VALUE = '__untagged__';
+type ApiPathSortOrder = 'default' | 'asc' | 'desc';
 
 @Component({
   selector: 'app-api-path-tree',
@@ -66,13 +67,27 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     {title: 'Expanded', value: false, icon: 'pi pi-window-maximize'}
   ];
 
+  readonly sortTypes: Array<{title: string; value: ApiPathSortOrder; icon: string}> = [
+    {title: 'Default', value: 'default', icon: 'pi pi-sort-alt'},
+    {title: 'A-Z', value: 'asc', icon: 'pi pi-sort-alpha-down'},
+    {title: 'Z-A', value: 'desc', icon: 'pi pi-sort-alpha-up'}
+  ];
+
+  readonly untaggedFilterValue = UNTAGGED_FILTER_VALUE;
+
+  tagFilterOptions: Array<{label: string; value: string}> = [];
+
+  selectedTagFilters: string[] = [];
+
   /**
    * The original (uncompressed) version of the tree nodes
    */
-  private apiPathNodesOrig: TreeNode[];
+  private apiPathNodesOrig: TreeNode[] = [];
 
   private measureTimeoutId?: ReturnType<typeof setTimeout>;
+  private measureAnimationFrameId?: number;
   private resizeObserver?: ResizeObserver;
+  private textMeasureContext?: CanvasRenderingContext2D;
 
   get horizontalView(): boolean {
     return this.preferenceService.horizontalView;
@@ -104,6 +119,17 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     this.schedulePathTreeMeasurement();
   }
 
+  get sortOrder(): ApiPathSortOrder {
+    return this.preferenceService.apiPathSortOrder;
+  }
+
+  set sortOrder(value: ApiPathSortOrder) {
+    this.preferenceService.apiPathSortOrder = value;
+    this.selectedOperationNode = undefined;
+    this.endpointDialogVisible = false;
+    this.setTreeNodes();
+  }
+
   ngOnInit() {
     this.fileReaderService.apiChanged.subscribe(value => {
       /* Add this specification to our current state */
@@ -113,10 +139,14 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     this.fileReaderService.resetFiles.subscribe(v => {
       /* Reset the service which holds our current state */
       this.openApiConverterService.reset();
+      this.selectedTagFilters = [];
     });
 
     this.openApiConverterService.treeNodesChanged.subscribe(value => {
       this.apiPathNodesOrig = value;
+      this.tagFilterOptions = this.createTagFilterOptions(value);
+      this.selectedTagFilters = this.selectedTagFilters
+        .filter(tagFilter => this.tagFilterOptions.some(option => option.value === tagFilter));
       this.setTreeNodes();
     });
   }
@@ -132,43 +162,26 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
       clearTimeout(this.measureTimeoutId);
     }
 
+    if (this.measureAnimationFrameId !== undefined) {
+      cancelAnimationFrame(this.measureAnimationFrameId);
+    }
+
     this.resizeObserver?.disconnect();
   }
 
   /**
    * Download an image of the API tree.
    *
-   * This depends on the html-to-image library to do all the heavy work.
-   * https://github.com/bubkoo/html-to-image
-   *
-   * Also uses FileSaver to handle the file download
+   * Uses FileSaver to handle the file download
    * https://github.com/eligrey/FileSaver.js
    */
   downloadImage() {
-
     /* Set marker that an image is being generated */
     this.generatingImage = true;
 
-    const backgroundColor = getComputedStyle(this.treeViewElement.nativeElement).backgroundColor;
-
-    /* Configure the export */
-    const exportOptions = {
-      backgroundColor,
-      /*
-       * Needing to set this configuration option until
-       * https://github.com/bubkoo/html-to-image/issues/74
-       * is fixed
-       */
-      pixelRatio: 1,
-      // style: styles
-    };
-
-    /* Do the work. This uses a promise to async the work */
-    console.log(this.treeViewElement.nativeElement);
-
-    return this.createImageBlob(this.treeViewElement.nativeElement, exportOptions)
+    return this.createImageBlob()
       .then(blob => {
-        globalThis.saveAs(blob, 'API.png');
+        globalThis.saveAs(blob, 'API.svg');
 
         /* Mark that the generation is complete */
         this.generatingImage = false;
@@ -181,11 +194,49 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
         /* Mark that the generation is complete */
         this.generatingImage = false;
       });
-
   }
 
-  private createImageBlob(element: HTMLElement, options: object) {
-    return toBlob(element, options);
+  private createImageBlob() {
+    return Promise.resolve(new Blob([this.createSvgMarkup()], {
+      type: 'image/svg+xml;charset=utf-8'
+    }));
+  }
+
+  private createSvgMarkup() {
+    const treeViewElement = this.treeViewElement?.nativeElement;
+    const rootStyle = getComputedStyle(document.documentElement);
+    const treeStyle = treeViewElement ? getComputedStyle(treeViewElement) : rootStyle;
+    const cssVar = (name: string, fallback: string) => rootStyle.getPropertyValue(name).trim() || fallback;
+
+    return createApiTreeSvg(this.apiPathNodes, {
+      background: treeStyle.backgroundColor || cssVar('--app-surface-solid', '#1b1f1b'),
+      cssVar,
+      metadata: this.createSvgMetadata(),
+      measureText: (text, font) => this.measureSvgText(text, font)
+    });
+  }
+
+  private measureSvgText(text: string, font: string): number {
+    const context = this.getTextMeasureContext();
+
+    if (!context) {
+      return text.length * 14 * 0.62;
+    }
+
+    context.font = font;
+
+    return context.measureText(text).width;
+  }
+
+  private getTextMeasureContext(): CanvasRenderingContext2D | undefined {
+    if (this.textMeasureContext) {
+      return this.textMeasureContext;
+    }
+
+    const canvas = document.createElement('canvas');
+    this.textMeasureContext = canvas.getContext('2d') ?? undefined;
+
+    return this.textMeasureContext;
   }
 
   /**
@@ -194,14 +245,16 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
    * setting the field the UI is watching
    */
   private setTreeNodes() {
-    /* First, lets do a pretty dumb (deep) clone of the objects we got */
-    const nodesCopy: TreeNode[] = structuredClone(this.apiPathNodesOrig);
+    const filteredNodes = this.cloneFilteredTreeNodes(this.apiPathNodesOrig);
 
     if (this.preferenceService.joinNodesWithNoLeaves) {
-      /* Then compress */
-      this.apiPathNodes = this.compress(nodesCopy);
+      this.apiPathNodes = this.cloneCompressedTreeNodes(filteredNodes);
     } else {
-      this.apiPathNodes = nodesCopy;
+      this.apiPathNodes = this.cloneTreeNodes(filteredNodes);
+    }
+
+    if (this.sortOrder !== 'default') {
+      this.sortTreeNodes(this.apiPathNodes);
     }
 
     this.schedulePathTreeMeasurement();
@@ -219,49 +272,198 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     this.endpointDialogVisible = true;
   }
 
+  togglePathNode(treeNode: TreeNode, event?: Event) {
+    event?.stopPropagation();
+
+    const node = treeNode as OperationTreeNode;
+    if (treeNode.leaf || node.type === 'operation') {
+      return;
+    }
+
+    treeNode.expanded = !treeNode.expanded;
+    this.schedulePathTreeMeasurement();
+  }
+
   /**  When we compress the view, we will merge any nodes which have only a
    * single child, and the child is not a leaf.
    *
-   * @param nodes the array of nodes to compress. This array will be modified
-   *              and returned.
+   * @param nodes the array of nodes to compress.
    */
-  private compress(nodes: TreeNode[]): TreeNode[] {
+  private cloneCompressedTreeNodes(nodes: TreeNode[]): TreeNode[] {
 
-    console.debug('In Compress: %o', nodes);
-
-    /* Iterate through the nodes at this level */
-    nodes.forEach(value => {
-      if (value.leaf) {
-        /* Node is a leaf, don't touch */
-        console.debug('Leaf node: %s', value.label);
-      } else if (value.children) {
-        /* Child nodes exist, apply compression to them */
-        console.debug('Child nodes exist, pre-compress: %o', value.children);
-        const compressedChildren = this.compress(value.children);
-
-        if (compressedChildren.length === 1 && !compressedChildren[0].leaf) {
-          /* Only a single non-leaf child, merge */
-          value.label += compressedChildren[0].label;
-          value.children = compressedChildren[0].children;
-
-          /* Remove any double slashes from the path */
-          value.label = value.label.replace('//', '/');
-        }
-      }
-    });
-
-
-    console.debug('Compress returning: %o', nodes);
-
-    return nodes;
+    return nodes.map(value => this.cloneCompressedTreeNode(value));
   }
 
-  private schedulePathTreeMeasurement() {
+  private cloneCompressedTreeNode(node: TreeNode): TreeNode {
+    const nodeCopy = this.cloneTreeNode(node);
+
+    if (nodeCopy.leaf) {
+      return nodeCopy;
+    }
+
+    const compressedChildren = this.cloneCompressedTreeNodes(node.children ?? []);
+
+    if (compressedChildren.length === 1 && !compressedChildren[0].leaf) {
+      nodeCopy.label = `${nodeCopy.label}${compressedChildren[0].label}`.replace('//', '/');
+      nodeCopy.children = compressedChildren[0].children;
+    } else {
+      nodeCopy.children = compressedChildren;
+    }
+
+    return nodeCopy;
+  }
+
+  private cloneTreeNodes(nodes: TreeNode[]): TreeNode[] {
+    return nodes.map(node => this.cloneTreeNode(node));
+  }
+
+  private cloneTreeNode(node: TreeNode): TreeNode {
+    return {
+      ...node,
+      children: node.children ? this.cloneTreeNodes(node.children) : node.children
+    };
+  }
+
+  isTagSelected(tagValue: string): boolean {
+    return this.selectedTagFilters.includes(tagValue);
+  }
+
+  toggleTagFilter(tagValue: string) {
+    if (this.isTagSelected(tagValue)) {
+      this.selectedTagFilters = this.selectedTagFilters.filter(value => value !== tagValue);
+    } else {
+      this.selectedTagFilters = [...this.selectedTagFilters, tagValue];
+    }
+
+    this.selectedOperationNode = undefined;
+    this.endpointDialogVisible = false;
+    this.setTreeNodes();
+  }
+
+  clearTagFilters() {
+    this.selectedTagFilters = [];
+    this.setTreeNodes();
+  }
+
+  private cloneFilteredTreeNodes(nodes: TreeNode[]): TreeNode[] {
+    if (this.selectedTagFilters.length === 0) {
+      return this.cloneTreeNodes(nodes);
+    }
+
+    return nodes
+      .map(node => this.cloneFilteredTreeNode(node))
+      .filter((node): node is TreeNode => node !== undefined);
+  }
+
+  private cloneFilteredTreeNode(node: TreeNode): TreeNode | undefined {
+    const operationNode = node as OperationTreeNode;
+
+    if (operationNode.type === 'operation') {
+      return this.operationMatchesSelectedTags(operationNode) ? this.cloneTreeNode(node) : undefined;
+    }
+
+    const filteredChildren = (node.children ?? [])
+      .map(child => this.cloneFilteredTreeNode(child))
+      .filter((child): child is TreeNode => child !== undefined);
+
+    if (filteredChildren.length === 0) {
+      return undefined;
+    }
+
+    return {
+      ...node,
+      children: filteredChildren
+    };
+  }
+
+  private operationMatchesSelectedTags(node: OperationTreeNode): boolean {
+    const operationTags = node.operation?.tags?.length ? node.operation.tags : [UNTAGGED_FILTER_VALUE];
+
+    return operationTags.some(tag => this.selectedTagFilters.includes(tag));
+  }
+
+  private sortTreeNodes(nodes: TreeNode[]) {
+    const direction = this.sortOrder === 'asc' ? 1 : -1;
+
+    nodes.sort((left, right) => {
+      return direction * String(left.label ?? '').localeCompare(String(right.label ?? ''), undefined, {
+        sensitivity: 'base'
+      });
+    });
+
+    nodes.forEach(node => {
+      if (node.children) {
+        this.sortTreeNodes(node.children);
+      }
+    });
+  }
+
+  private createTagFilterOptions(nodes: TreeNode[]): Array<{label: string; value: string}> {
+    const tagNames = new Set<string>();
+    let hasUntagged = false;
+
+    this.visitOperationNodes(nodes, operationNode => {
+      const tags = operationNode.operation?.tags ?? [];
+
+      if (tags.length === 0) {
+        hasUntagged = true;
+        return;
+      }
+
+      tags.forEach(tag => tagNames.add(tag));
+    });
+
+    const options = Array.from(tagNames)
+      .sort((left, right) => left.localeCompare(right, undefined, {sensitivity: 'base'}))
+      .map(tag => ({label: tag, value: tag}));
+
+    if (hasUntagged) {
+      options.push({label: 'Untagged', value: UNTAGGED_FILTER_VALUE});
+    }
+
+    return options;
+  }
+
+  private visitOperationNodes(nodes: TreeNode[], visitor: (node: OperationTreeNode) => void) {
+    nodes.forEach(node => {
+      const operationNode = node as OperationTreeNode;
+
+      if (operationNode.type === 'operation') {
+        visitor(operationNode);
+        return;
+      }
+
+      this.visitOperationNodes(node.children ?? [], visitor);
+    });
+  }
+
+  private createSvgMetadata(): string[] {
+    const sortLabel = this.sortTypes.find(sortType => sortType.value === this.sortOrder)?.title ?? 'Default';
+    const selectedTagLabels = this.selectedTagFilters
+      .map(value => this.tagFilterOptions.find(option => option.value === value)?.label ?? value);
+    const tagLabel = selectedTagLabels.length ? selectedTagLabels.join(', ') : 'All';
+
+    return [
+      `Sort: ${sortLabel}`,
+      `Tags: ${tagLabel}`
+    ];
+  }
+
+  schedulePathTreeMeasurement() {
     if (this.measureTimeoutId) {
       clearTimeout(this.measureTimeoutId);
     }
 
-    this.measureTimeoutId = setTimeout(() => this.updatePathTreeMinHeight(), 0);
+    if (this.measureAnimationFrameId !== undefined) {
+      cancelAnimationFrame(this.measureAnimationFrameId);
+    }
+
+    this.measureTimeoutId = setTimeout(() => {
+      this.measureAnimationFrameId = requestAnimationFrame(() => {
+        this.measureAnimationFrameId = undefined;
+        this.updatePathTreeMinHeight();
+      });
+    }, 0);
   }
 
   private updatePathTreeMinHeight() {
@@ -270,17 +472,32 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     const layoutElement = this.pathTreeLayoutElement.nativeElement;
-    this.updateHorizontalConnectorBounds(layoutElement);
-    const layoutTop = layoutElement.getBoundingClientRect().top;
-    const renderedElements = Array.from(layoutElement.querySelectorAll('*')) as HTMLElement[];
-    const renderedBottom = renderedElements.reduce((bottom, element) => {
-      const rect = element.getBoundingClientRect();
+    this.pathTreeMinHeight = undefined;
+    layoutElement.style.removeProperty('min-height');
 
-      return Math.max(bottom, rect.bottom);
-    }, layoutElement.getBoundingClientRect().bottom);
-    const measuredHeight = Math.ceil(renderedBottom - layoutTop);
+    if (this.horizontalView) {
+      this.updateHorizontalConnectorBounds(layoutElement);
+    }
+
+    const measuredHeight = Math.ceil(Math.max(
+      layoutElement.scrollHeight,
+      this.getOpenTagFilterBottom(layoutElement)
+    ));
 
     this.pathTreeMinHeight = measuredHeight > 0 ? measuredHeight : undefined;
+  }
+
+  private getOpenTagFilterBottom(layoutElement: HTMLElement): number {
+    const openTagFilterPanel = layoutElement.querySelector('.path-tree-tag-filter[open] .path-tree-tag-filter__panel');
+
+    if (!(openTagFilterPanel instanceof HTMLElement)) {
+      return 0;
+    }
+
+    const layoutRect = layoutElement.getBoundingClientRect();
+    const panelRect = openTagFilterPanel.getBoundingClientRect();
+
+    return panelRect.bottom - layoutRect.top;
   }
 
   private updateHorizontalConnectorBounds(layoutElement: HTMLElement) {
