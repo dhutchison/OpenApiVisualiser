@@ -30,7 +30,7 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         # Shallow clones should be disabled for a better relevancy of sonar analysis
         fetch-depth: 0
