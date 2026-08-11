@@ -148,6 +148,15 @@ describe('The Home Page', () => {
 
         cy.contains('Import from URL').click();
 
+        /* The footer projection and button content must survive the PrimeNG 22 migration. */
+        cy.get('.url-import-dialog .p-dialog-footer').should('be.visible')
+        cy.get('.url-import-dialog .p-dialog-footer button[type=submit]')
+            .find('.p-button-label')
+            .should('have.text', 'Import')
+        cy.get('.url-import-dialog .p-dialog-footer button[type=submit]')
+            .find('.p-button-icon')
+            .should('have.class', 'pi-check')
+
         /* Submit button should be initially disabled */
         cy.get('button[type=submit]').should('be.disabled')
 
@@ -175,6 +184,7 @@ describe('The Home Page', () => {
       cy.contains('Import from URL').click()
 
       cy.get('.url-import-dialog').should('be.visible')
+      cy.get('.url-import-dialog').should('have.class', 'p-dialog')
       cy.get('.url-import-dialog__field-row').should('be.visible')
       cy.get('.url-import-dialog__input-wrap').should('be.visible')
       cy.get('#url-input').should('be.visible')
@@ -453,6 +463,11 @@ describe('The Home Page', () => {
 
         accordionHeader('Pet').click();
         cy.get('#components_schemas_Pet p-treetable').should('be.visible');
+        cy.get('#components_schemas_Pet p-treetable').within(() => {
+          /* The TreeTable header/body templates must continue to render through the migration. */
+          cy.contains('th', 'Name').should('be.visible')
+          cy.contains('td', 'id').should('be.visible')
+        })
 
         accordionHeader('Pet')
             .closest('.p-accordionpanel, .p-accordion-panel')
