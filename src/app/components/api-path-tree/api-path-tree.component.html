@@ -1,25 +1,25 @@
 <div class="api-path-tree-layout" #pathTreeLayout [style.min-height.px]="pathTreeMinHeight">
   <div class="path-tree-buttons">
-    <p-selectButton
+    <p-selectbutton
       [options]="viewTypes"
       [(ngModel)]="horizontalView"
       optionLabel="title"
       optionValue="value">
-    </p-selectButton>
+    </p-selectbutton>
 
-    <p-selectButton
+    <p-selectbutton
       [options]="expansionTypes"
       [(ngModel)]="joinNodesWithNoLeaves"
       optionLabel="title"
       optionValue="value">
-    </p-selectButton>
+    </p-selectbutton>
 
-    <p-selectButton
+    <p-selectbutton
       [options]="sortTypes"
       [(ngModel)]="sortOrder"
       optionLabel="title"
       optionValue="value">
-    </p-selectButton>
+    </p-selectbutton>
 
     @if (tagFilterOptions.length) {
       <details class="path-tree-tag-filter" (toggle)="schedulePathTreeMeasurement()">
@@ -43,21 +43,23 @@
           <button
             pButton
             type="button"
-            icon="pi pi-filter-slash"
-            label="Clear"
             class="p-button-secondary"
             [disabled]="!selectedTagFilters.length"
             (click)="clearTagFilters()">
+            <i pButtonIcon class="pi pi-filter-slash"></i>
+            <span pButtonLabel>Clear</span>
           </button>
         </div>
       </details>
     }
 
     @if (horizontalView) {
-      <button pButton type="button" icon="pi pi-download" label="Download Image"
-        (click)="downloadImage($event)"
+      <button pButton type="button"
+        (click)="downloadImage()"
         class="download-image-button"
         [disabled]="generatingImage">
+        <i pButtonIcon class="pi pi-download"></i>
+        <span pButtonLabel>Download Image</span>
       </button>
     }
   </div>
@@ -65,33 +67,33 @@
   <div>
     <div class="tree-view" #treeView>
       <p-tree [value]="apiPathNodes"
-        (onNodeSelect)="openEndpointDetail($event)"
-        [styleClass]="horizontalView? 'tree-horizontal': 'tree-vertical'">
+        (onNodeSelect)="openEndpointDetail($event.node)"
+        [class]="horizontalView? 'tree-horizontal': 'tree-vertical'">
 
-        <ng-template let-node pTemplate="default">
-          <button
-            type="button"
-            class="path-node"
-            [attr.aria-expanded]="node.leaf ? null : node.expanded"
-            [class.is-collapsed]="!node.leaf && !node.expanded"
-            (click)="togglePathNode(node, $event)">
-            @if (!node.leaf && !node.expanded) {
-              <span
-                class="path-node-toggle pi pi-chevron-right"
-              aria-hidden="true"></span>
-            }
-            <span>{{ node.label }}</span>
-          </button>
-        </ng-template>
-
-        <ng-template let-node pTemplate="operation">
-          <button
-            type="button"
-            class="operation-node"
-            pTooltip="{{ node.tooltip }}"
-            [escape]=false
-            id="{{ node.id }}-node"
-          (click)="openEndpointDetail(node)">{{ node.label }}</button>
+        <ng-template #node let-node>
+          @if (node.type === 'operation') {
+            <button
+              type="button"
+              class="operation-node"
+              pTooltip="{{ node.tooltip }}"
+              [escape]=false
+              id="{{ node.id }}-node"
+              (click)="openEndpointDetail(node)">{{ node.label }}</button>
+          } @else {
+            <button
+              type="button"
+              class="path-node"
+              [attr.aria-expanded]="node.leaf ? null : node.expanded"
+              [class.is-collapsed]="!node.leaf && !node.expanded"
+              (click)="togglePathNode(node, $event)">
+              @if (!node.leaf && !node.expanded) {
+                <span
+                  class="path-node-toggle pi pi-chevron-right"
+                  aria-hidden="true"></span>
+              }
+              <span>{{ node.label }}</span>
+            </button>
+          }
         </ng-template>
       </p-tree>
     </div>
@@ -107,7 +109,7 @@
     [resizable]="true"
     [style]="{width: '90vw'}"
     [contentStyle]="{'max-height': '80vh', overflow: 'auto'}">
-    <ng-template pTemplate="content">
+    <ng-template #content>
       <app-endpoint-swagger
         [apiSpec]="selectedOperationNode.apiDefinition"
         [path]="selectedOperationNode.path"

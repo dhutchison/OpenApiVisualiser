@@ -7,7 +7,7 @@ import { ApiInformationComponent } from './components/api-information/api-inform
 import { ApiPathTreeComponent } from './components/api-path-tree/api-path-tree.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'; // NOSONAR - PrimeNG components still require Angular's legacy animation renderer.
 import { ExportComponent } from './components/export/export.component';
@@ -64,7 +64,7 @@ describe('AppComponent', () => {
         TreeTableModule
       ],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting(),
         provideRouter([])
       ]

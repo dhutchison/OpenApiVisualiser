@@ -7,7 +7,8 @@ import {
   OnChanges,
   OnDestroy,
   SimpleChanges,
-  ViewChild
+  ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { ComponentsObject, OpenAPIObject, OperationObject, PathItemObject, SecurityRequirementObject } from 'openapi3-ts/oas31';
 
@@ -15,6 +16,7 @@ import { ComponentsObject, OpenAPIObject, OperationObject, PathItemObject, Secur
   selector: 'app-endpoint-swagger',
   imports: [],
   templateUrl: './endpoint-swagger.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./endpoint-swagger.component.scss']
 })
 export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDestroy {

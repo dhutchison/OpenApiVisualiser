@@ -53,11 +53,15 @@
                         </ul>
                       }
                     </div>
+                    @if (!isReference(schema)) {
+                      <app-schema-detail
+                        id="components_schemas_{{item}}"
+                        [apiSpec]="apiSpec"
+                        [schema]="schema"></app-schema-detail>
+                    } @else {
+                      <p class="schema-reference">Reference: {{ schema.$ref }}</p>
+                    }
                   }
-                  <app-schema-detail
-                    id="components_schemas_{{item}}"
-                    [apiSpec]="apiSpec"
-                  [schema]="schemas[item]"></app-schema-detail>
                 </div>
               </section>
             }

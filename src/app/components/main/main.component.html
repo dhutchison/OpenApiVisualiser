@@ -5,13 +5,14 @@
     [modal]="true"
     [style]="{width: 'min(34rem, 92vw)'}">
     <p>{{ loadFailureMessage }}</p>
-    <ng-template pTemplate="footer">
+    <ng-template #footer>
       <button
         type="button"
         pButton
-        icon="pi pi-times"
-        label="Close"
-      (click)="displayLoadFailureDialog = false"></button>
+      (click)="displayLoadFailureDialog = false">
+        <i pButtonIcon class="pi pi-times"></i>
+        <span pButtonLabel>Close</span>
+      </button>
     </ng-template>
   </p-dialog>
 

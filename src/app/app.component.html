@@ -13,10 +13,10 @@
       type="button"
       pButton
       class="theme-toggle p-button-secondary"
-      [icon]="darkMode ? 'pi pi-sun' : 'pi pi-moon'"
-      [label]="darkMode ? 'Light' : 'Dark'"
       [attr.aria-pressed]="darkMode"
       (click)="toggleDarkMode()">
+      <i pButtonIcon [class]="darkMode ? 'pi pi-sun' : 'pi pi-moon'"></i>
+      <span pButtonLabel>{{ darkMode ? 'Light' : 'Dark' }}</span>
     </button>
   </header>
 

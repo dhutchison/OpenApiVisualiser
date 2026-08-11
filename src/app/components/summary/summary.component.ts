@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
 import { TreeNode } from 'primeng/api';
 
@@ -9,6 +9,7 @@ import { TreeNode } from 'primeng/api';
     CommonModule
   ],
   templateUrl: './summary.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./summary.component.sass']
 })
 export class SummaryComponent implements OnInit {

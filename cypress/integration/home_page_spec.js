@@ -184,7 +184,8 @@ describe('The Home Page', () => {
       cy.contains('Import from URL').click()
 
       cy.get('.url-import-dialog').should('be.visible')
-      cy.get('.url-import-dialog').should('have.class', 'p-dialog')
+      cy.get('.url-import-dialog').should('exist')
+      cy.get('.p-dialog').should('be.visible')
       cy.get('.url-import-dialog__field-row').should('be.visible')
       cy.get('.url-import-dialog__input-wrap').should('be.visible')
       cy.get('#url-input').should('be.visible')

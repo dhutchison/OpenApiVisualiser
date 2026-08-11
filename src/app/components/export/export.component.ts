@@ -1,5 +1,5 @@
 
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
 import { ButtonModule } from 'primeng/button';
@@ -16,6 +16,7 @@ import * as jsyaml from 'js-yaml';
     DialogModule,
     FormsModule
 ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './export.component.html'
 })
 export class ExportComponent implements OnInit {

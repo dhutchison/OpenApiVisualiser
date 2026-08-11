@@ -1,8 +1,10 @@
 {
-  "compileOnSave": false,
+    "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
     "downlevelIteration": true,
+    "ignoreDeprecations": "6.0",
+    "strict": false,
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,

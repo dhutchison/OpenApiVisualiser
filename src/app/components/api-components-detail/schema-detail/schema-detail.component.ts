@@ -1,5 +1,5 @@
 
-import { Component, Input, OnChanges, inject } from '@angular/core';
+import { Component, Input, OnChanges, inject, ChangeDetectionStrategy } from '@angular/core';
 import { OpenAPIObject, SchemaObject } from 'openapi3-ts/oas31';
 import { TreeNode } from 'primeng/api';
 import { TreeTableModule } from 'primeng/treetable';
@@ -15,6 +15,7 @@ import { StringReplacePipe } from '../../../pipes/stringreplacepipe.pipe';
     TreeTableModule
 ],
   templateUrl: './schema-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./schema-detail.component.scss']
 })
 export class SchemaDetailComponent implements OnChanges {

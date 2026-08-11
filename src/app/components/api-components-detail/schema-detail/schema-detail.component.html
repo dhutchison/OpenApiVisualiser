@@ -7,8 +7,8 @@
 </ul>
 -->
 
-<p-treeTable [value]="treeModel">
-  <ng-template pTemplate="header">
+<p-treetable [value]="treeModel">
+  <ng-template #header>
     <tr>
       <th class="ui-p-1">Name</th>
       <th class="ui-p-1">Type</th>
@@ -19,12 +19,12 @@
       -->
     </tr>
   </ng-template>
-  <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+  <ng-template #body let-rowNode let-rowData="rowData">
 
     <tr [ttRow]="rowNode">
       <td>
         @if (!rowNode.node.leaf) {
-          <p-treeTableToggler [rowNode]="rowNode"></p-treeTableToggler>
+          <p-treetable-toggler [rowNode]="rowNode"></p-treetable-toggler>
         }
         {{rowNode.node.label}}
         @if (schema.required && schema.required.includes(rowNode.node.label)) {
@@ -61,4 +61,4 @@
       -->
     </tr>
   </ng-template>
-</p-treeTable>
+</p-treetable>
