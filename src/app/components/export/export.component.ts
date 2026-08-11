@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
@@ -13,10 +13,9 @@ import * as jsyaml from 'js-yaml';
   selector: 'app-export',
   imports: [
     ButtonModule,
-    CommonModule,
     DialogModule,
     FormsModule
-  ],
+],
   templateUrl: './export.component.html'
 })
 export class ExportComponent implements OnInit {

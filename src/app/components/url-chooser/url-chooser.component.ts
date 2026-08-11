@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -9,10 +9,9 @@ import { FileReaderService } from '../../services/file-reader.service';
   selector: 'app-url-chooser',
   imports: [
     ButtonModule,
-    CommonModule,
     DialogModule,
     FormsModule
-  ],
+],
   templateUrl: './url-chooser.component.html'
 })
 export class UrlChooserComponent {

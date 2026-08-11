@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   AfterViewInit,
   Component,
@@ -13,9 +13,7 @@ import { ComponentsObject, OpenAPIObject, OperationObject, PathItemObject, Secur
 
 @Component({
   selector: 'app-endpoint-swagger',
-  imports: [
-    CommonModule
-  ],
+  imports: [],
   templateUrl: './endpoint-swagger.component.html',
   styleUrls: ['./endpoint-swagger.component.scss']
 })

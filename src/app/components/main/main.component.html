@@ -11,7 +11,7 @@
         pButton
         icon="pi pi-times"
         label="Close"
-        (click)="displayLoadFailureDialog = false"></button>
+      (click)="displayLoadFailureDialog = false"></button>
     </ng-template>
   </p-dialog>
 
@@ -21,34 +21,45 @@
     <app-export></app-export>
   </div>
   <div class="p-accordion">
-    <section class="p-accordionpanel" *ngFor="let section of sections" [attr.data-p-active]="isSectionExpanded(section.id)">
-      <button
-        type="button"
-        class="p-accordionheader"
-        [id]="section.headerId"
-        [attr.aria-expanded]="isSectionExpanded(section.id)"
-        [attr.aria-controls]="'main-panel-' + section.id"
-        (click)="toggleSection(section.id)">
-        <span>{{ section.title }}</span>
-        <span
-          class="accordion-toggle-icon pi pi-chevron-down"
-          [class.is-expanded]="isSectionExpanded(section.id)"
+    @for (section of sections; track section) {
+      <section class="p-accordionpanel" [attr.data-p-active]="isSectionExpanded(section.id)">
+        <button
+          type="button"
+          class="p-accordionheader"
+          [id]="section.headerId"
+          [attr.aria-expanded]="isSectionExpanded(section.id)"
+          [attr.aria-controls]="'main-panel-' + section.id"
+          (click)="toggleSection(section.id)">
+          <span>{{ section.title }}</span>
+          <span
+            class="accordion-toggle-icon pi pi-chevron-down"
+            [class.is-expanded]="isSectionExpanded(section.id)"
           aria-hidden="true"></span>
-      </button>
-
-      <section
-        class="p-accordioncontent"
-        [id]="'main-panel-' + section.id"
-        [hidden]="!isSectionExpanded(section.id)"
-        [attr.aria-labelledby]="section.headerId">
-        <div class="p-accordioncontent-content">
-          <app-api-information *ngIf="section.id === '0'"></app-api-information>
-          <app-summary *ngIf="section.id === '1'"></app-summary>
-          <app-api-path-tree *ngIf="section.id === '2'"></app-api-path-tree>
-          <app-api-tags *ngIf="section.id === '3'"></app-api-tags>
-          <app-api-components-detail *ngIf="section.id === '4'"></app-api-components-detail>
-        </div>
+        </button>
+        <section
+          class="p-accordioncontent"
+          [id]="'main-panel-' + section.id"
+          [hidden]="!isSectionExpanded(section.id)"
+          [attr.aria-labelledby]="section.headerId">
+          <div class="p-accordioncontent-content">
+            @if (section.id === '0') {
+              <app-api-information></app-api-information>
+            }
+            @if (section.id === '1') {
+              <app-summary></app-summary>
+            }
+            @if (section.id === '2') {
+              <app-api-path-tree></app-api-path-tree>
+            }
+            @if (section.id === '3') {
+              <app-api-tags></app-api-tags>
+            }
+            @if (section.id === '4') {
+              <app-api-components-detail></app-api-components-detail>
+            }
+          </div>
+        </section>
       </section>
-    </section>
+    }
   </div>
 </div>

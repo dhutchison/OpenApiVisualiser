@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations'; // NOSONAR - PrimeNG components still require Angular's legacy animation renderer.
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 
@@ -56,7 +56,6 @@ describe('MainComponent', () => {
         UrlChooserComponent,
         PipesModule,
 
-        BrowserAnimationsModule, // NOSONAR - Keep until PrimeNG no longer depends on legacy animation triggers.
         ButtonModule,
         DialogModule,
         FieldsetModule,
@@ -71,7 +70,8 @@ describe('MainComponent', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        provideRouter([])
+        provideRouter([]),
+        provideNoopAnimations()
       ]
 
     })
@@ -119,7 +119,7 @@ describe('MainComponent', () => {
     const message = 'Could not load the API definition from http://localhost/missing.yaml (404 Not Found).';
 
     fileReaderService.loadFailed.next(message);
-    fixture.detectChanges();
+    fixture.detectChanges(false);
 
     expect(component.displayLoadFailureDialog).toBeTrue();
     expect(component.loadFailureMessage).toBe(message);

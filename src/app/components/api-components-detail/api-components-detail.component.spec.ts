@@ -42,7 +42,7 @@ describe('ApiComponentsDetailComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render schema and component section headers as buttons', () => {
+  it('should render schema and component section headers as buttons', async () => {
     const apiSpec: OpenAPIObject = {
       openapi: '3.1.0',
       info: {
@@ -70,7 +70,10 @@ describe('ApiComponentsDetailComponent', () => {
     };
 
     fileReaderService.apiChanged.next(apiSpec);
-    fixture.detectChanges();
+    fixture.componentRef.changeDetectorRef.markForCheck();
+    fixture.detectChanges(false);
+    await fixture.whenStable();
+    fixture.detectChanges(false);
 
     const headers = fixture.debugElement.queryAll(By.css('.p-accordionheader'));
 
@@ -79,7 +82,7 @@ describe('ApiComponentsDetailComponent', () => {
     expect(headers[1].nativeElement.textContent).toContain('Responses');
   });
 
-  it('should toggle schema details open and closed', () => {
+  it('should toggle schema details open and closed', async () => {
     fileReaderService.apiChanged.next({
       openapi: '3.1.0',
       info: {
@@ -96,20 +99,27 @@ describe('ApiComponentsDetailComponent', () => {
         }
       }
     });
-    fixture.detectChanges();
+    fixture.componentRef.changeDetectorRef.markForCheck();
+    fixture.detectChanges(false);
+    await fixture.whenStable();
+    fixture.detectChanges(false);
 
     const schemaHeader = fixture.debugElement.query(By.css('.p-accordionheader'));
 
     expect(fixture.debugElement.query(By.css('#components-schemas-panel-Pet'))).toBeNull();
 
     schemaHeader.nativeElement.click();
-    fixture.detectChanges();
+    fixture.detectChanges(false);
+    await fixture.whenStable();
+    fixture.detectChanges(false);
 
     expect(component.expandedSchemas).toEqual(['Pet']);
     expect(fixture.debugElement.query(By.css('#components-schemas-panel-Pet'))).not.toBeNull();
 
     schemaHeader.nativeElement.click();
-    fixture.detectChanges();
+    fixture.detectChanges(false);
+    await fixture.whenStable();
+    fixture.detectChanges(false);
 
     expect(component.expandedSchemas).toEqual([]);
     expect(fixture.debugElement.query(By.css('#components-schemas-panel-Pet'))).toBeNull();

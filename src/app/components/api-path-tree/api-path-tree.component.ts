@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, AfterViewInit, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TreeNode } from 'primeng/api';
@@ -20,14 +20,13 @@ type ApiPathSortOrder = 'default' | 'asc' | 'desc';
   selector: 'app-api-path-tree',
   imports: [
     ButtonModule,
-    CommonModule,
     DialogModule,
     EndpointSwaggerComponent,
     FormsModule,
     SelectButtonModule,
     TooltipModule,
     TreeModule
-  ],
+],
   templateUrl: './api-path-tree.component.html'
 })
 export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {

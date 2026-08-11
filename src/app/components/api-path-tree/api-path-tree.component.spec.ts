@@ -257,11 +257,13 @@ describe('ApiPathTreeComponent', () => {
     expect(component.pathTreeMinHeight).not.toBe(500);
   });
 
-  it('should include the open tag filter panel when measuring path tree min height', () => {
+  it('should include the open tag filter panel when measuring path tree min height', async () => {
     component.tagFilterOptions = [
       {label: 'audit', value: 'audit'}
     ];
-    fixture.detectChanges();
+    fixture.detectChanges(false);
+    await fixture.whenStable();
+    fixture.detectChanges(false);
 
     const layoutElement = fixture.nativeElement.querySelector('.api-path-tree-layout') as HTMLElement;
     const tagFilter = fixture.nativeElement.querySelector('.path-tree-tag-filter') as HTMLElement;

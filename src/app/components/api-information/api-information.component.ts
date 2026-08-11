@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject } from '@angular/core';
 import { FieldsetModule } from 'primeng/fieldset';
 import { PanelModule } from 'primeng/panel';
@@ -15,12 +15,11 @@ interface ComponentSummary {
 @Component({
   selector: 'app-api-information',
   imports: [
-    CommonModule,
     ExternalDocsComponent,
     FieldsetModule,
     MarkdownifyPipe,
     PanelModule
-  ],
+],
   templateUrl: './api-information.component.html'
 })
 export class ApiInformationComponent implements OnInit {

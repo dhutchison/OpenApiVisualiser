@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, AfterViewInit, inject } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 import { ActivatedRoute } from '@angular/router';
@@ -27,13 +27,12 @@ interface MainSection {
     ApiPathTreeComponent,
     ApiTagsComponent,
     ButtonModule,
-    CommonModule,
     DialogModule,
     ExportComponent,
     FileChooserComponent,
     SummaryComponent,
     UrlChooserComponent
-  ],
+],
   templateUrl: './main.component.html'
 })
 export class MainComponent implements AfterViewInit {

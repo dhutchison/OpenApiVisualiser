@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, Input, OnChanges, inject } from '@angular/core';
 import { OpenAPIObject, SchemaObject } from 'openapi3-ts/oas31';
 import { TreeNode } from 'primeng/api';
@@ -10,11 +10,10 @@ import { StringReplacePipe } from '../../../pipes/stringreplacepipe.pipe';
 @Component({
   selector: 'app-schema-detail',
   imports: [
-    CommonModule,
     MarkdownifyPipe,
     StringReplacePipe,
     TreeTableModule
-  ],
+],
   templateUrl: './schema-detail.component.html',
   styleUrls: ['./schema-detail.component.scss']
 })
