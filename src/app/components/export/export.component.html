@@ -1,21 +1,27 @@
 <p-dialog header="Export" [(visible)]="display" [modal]="true"
   [style]="{width: '350px', minWidth: '200px'}" [minY]="70">
-      <select [(ngModel)]="exportFormat">
-          <option *ngFor="let format of exportFormats" [value]="format.id">
-            {{ format.description }}
-          </option>
-      </select>
-      <ng-template pTemplate="footer">
-          <button type="submit" pButton icon="pi pi-check"
-            label="Export"
-            (click)="export()"></button>
-          <button type="button" pButton icon="pi pi-times"
-            (click)="display=false" label="Cancel"
-            class="p-button-secondary"></button>
-      </ng-template>
+  <select [(ngModel)]="exportFormat">
+    @for (format of exportFormats; track format) {
+      <option [value]="format.id">
+        {{ format.description }}
+      </option>
+    }
+  </select>
+  <ng-template #footer>
+    <button type="submit" pButton (click)="export()">
+      <i pButtonIcon class="pi pi-check"></i>
+      <span pButtonLabel>Export</span>
+    </button>
+    <button type="button" pButton (click)="display=false" class="p-button-secondary">
+      <i pButtonIcon class="pi pi-times"></i>
+      <span pButtonLabel>Cancel</span>
+    </button>
+  </ng-template>
 </p-dialog>
 
 <button type="button" pButton
   (click)="showDialog()"
-  [disabled]="!buttonEnabled"
-  icon="pi pi-download" label="Export"></button>
+  [disabled]="!buttonEnabled">
+  <i pButtonIcon class="pi pi-download"></i>
+  <span pButtonLabel>Export</span>
+</button>

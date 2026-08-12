@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, AfterViewInit, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+
+import { Component, AfterViewInit, ElementRef, OnDestroy, OnInit, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TreeNode } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -20,14 +20,14 @@ type ApiPathSortOrder = 'default' | 'asc' | 'desc';
   selector: 'app-api-path-tree',
   imports: [
     ButtonModule,
-    CommonModule,
     DialogModule,
     EndpointSwaggerComponent,
     FormsModule,
     SelectButtonModule,
     TooltipModule,
     TreeModule
-  ],
+],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './api-path-tree.component.html'
 })
 export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {

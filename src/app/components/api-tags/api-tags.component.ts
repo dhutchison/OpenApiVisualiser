@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 import { OpenAPIObject, TagObject } from 'openapi3-ts/oas31';
 import { MarkdownifyPipe } from '../../pipes/markdownify.pipe';
@@ -22,6 +22,7 @@ interface TagSummary {
     ExternalDocsComponent,
     MarkdownifyPipe
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './api-tags.component.html'
 })
 export class ApiTagsComponent implements OnInit {

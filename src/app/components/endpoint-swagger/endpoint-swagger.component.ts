@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   AfterViewInit,
   Component,
@@ -7,16 +7,16 @@ import {
   OnChanges,
   OnDestroy,
   SimpleChanges,
-  ViewChild
+  ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { ComponentsObject, OpenAPIObject, OperationObject, PathItemObject, SecurityRequirementObject } from 'openapi3-ts/oas31';
 
 @Component({
   selector: 'app-endpoint-swagger',
-  imports: [
-    CommonModule
-  ],
+  imports: [],
   templateUrl: './endpoint-swagger.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./endpoint-swagger.component.scss']
 })
 export class EndpointSwaggerComponent implements AfterViewInit, OnChanges, OnDestroy {

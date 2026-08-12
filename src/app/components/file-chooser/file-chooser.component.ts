@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FileUploadModule } from 'primeng/fileupload';
 import { FileReaderService } from '../../services/file-reader.service';
 
@@ -7,6 +7,7 @@ import { FileReaderService } from '../../services/file-reader.service';
   imports: [
     FileUploadModule
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './file-chooser.component.html'
 })
 export class FileChooserComponent {
