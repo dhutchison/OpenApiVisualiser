@@ -10,7 +10,7 @@
     "start": "ng serve",
     "start-container": "ng serve --host 0.0.0.0",
     "build": "ng build",
-    "build-deployment": "ng build --configuration production --output-path dist --base-href /OpenApiVisualiser/ && cp dist/index.html dist/404.html",
+    "build-deployment": "ng build --configuration production --output-path dist --base-href /OpenApiVisualiser/ && cp dist/browser/index.html dist/browser/404.html",
     "lint": "ng lint",
     "test": "ng test --code-coverage",
     "test-headless": "NODE_OPTIONS=--max_old_space_size=4096 nyc --silent ng test --watch=false --browsers=ChromeHeadless",
@@ -52,12 +52,12 @@
     "zone.js": "^0.15.1"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^22.1.3",
     "@angular-eslint/builder": "^22.1.0",
     "@angular-eslint/eslint-plugin": "^22.1.0",
     "@angular-eslint/eslint-plugin-template": "^22.1.0",
     "@angular-eslint/schematics": "^22.1.0",
     "@angular-eslint/template-parser": "^22.1.0",
+    "@angular/build": "^22.1.3",
     "@angular/cli": "^22.1.3",
     "@angular/compiler-cli": "^22.1.1",
     "@angular/language-service": "^22.1.1",
