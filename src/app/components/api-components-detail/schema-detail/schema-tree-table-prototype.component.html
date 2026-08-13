@@ -1,0 +1,109 @@
+<section class="prototype-shell" aria-labelledby="prototype-title">
+  <header class="prototype-header">
+    <div>
+      <p class="prototype-kicker">Wayfinder prototype · schema renderer</p>
+      <h2 id="prototype-title">Order schema</h2>
+      <p>Compare hierarchy, column scanning, keyboard affordances, references, and narrow-screen behaviour.</p>
+    </div>
+    <span class="prototype-badge">Throwaway</span>
+  </header>
+
+  @if (variant === 'A') {
+    <section aria-labelledby="variant-a-title">
+      <div class="variant-intro">
+        <div><h3 id="variant-a-title">A — Disclosure table</h3><p>A native table remains primary. Expandable properties use ordinary buttons and indentation communicates hierarchy.</p></div>
+        <span>Tab between togglers</span>
+      </div>
+      <div class="table-scroll">
+        <table class="schema-table">
+          <caption>Properties of the Order schema</caption>
+          <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            @for (row of visibleRows; track row.node.key) {
+              <tr>
+                <th scope="row">
+                  <span class="property-cell" [style.--depth]="row.level - 1">
+                    @if (isExpandable(row.node)) {
+                      <button type="button" class="disclosure" [attr.aria-expanded]="isExpanded(row.node)" [attr.aria-label]="(isExpanded(row.node) ? 'Collapse ' : 'Expand ') + row.node.name" (click)="toggle(row.node)"><span aria-hidden="true">›</span></button>
+                    } @else {<span class="disclosure-spacer"></span>}
+                    <code>{{ row.node.name }}</code>
+                    @if (row.node.required) {<span class="required" title="Required property">required</span>}
+                  </span>
+                </th>
+                <td><span class="type-chip">{{ row.node.type }}</span> @if (row.node.format) {<small>{{ row.node.format }}</small>}</td>
+                <td><p>{{ row.node.description }}</p> @if (row.node.reference) {<a [href]="referenceTarget(row.node.reference)">{{ row.node.reference }}</a>}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  @if (variant === 'B') {
+    <section aria-labelledby="variant-b-title">
+      <div class="variant-intro">
+        <div><h3 id="variant-b-title">B — CDK tree with grid rows</h3><p>The hierarchy and roving focus come from CDK Tree; CSS grid keeps values aligned like columns.</p></div>
+        <span>Arrow-key tree navigation</span>
+      </div>
+      <div class="table-scroll">
+        <div class="tree-grid-header" aria-hidden="true"><span>Name</span><span>Type</span><span>Description</span></div>
+        <cdk-tree class="schema-tree" aria-label="Properties of the Order schema" [dataSource]="nodes" [childrenAccessor]="childrenAccessor" [expansionKey]="expansionKey">
+          <cdk-nested-tree-node *cdkTreeNodeDef="let node" [cdkTreeNodeTypeaheadLabel]="node.name" [isExpandable]="isExpandable(node)" [isExpanded]="isExpanded(node)" (expandedChange)="setExpanded(node, $event)">
+            <div class="tree-grid-row">
+              <div class="property-cell">
+                @if (isExpandable(node)) {
+                  <button type="button" class="disclosure" cdkTreeNodeToggle [attr.aria-label]="(isExpanded(node) ? 'Collapse ' : 'Expand ') + node.name"><span aria-hidden="true">›</span></button>
+                } @else {<span class="disclosure-spacer"></span>}
+                <code>{{ node.name }}</code>
+                @if (node.required) {<span class="required" title="Required property">required</span>}
+              </div>
+              <div><span class="type-chip">{{ node.type }}</span> @if (node.format) {<small>{{ node.format }}</small>}</div>
+              <div><p>{{ node.description }}</p> @if (node.reference) {<a [href]="referenceTarget(node.reference)">{{ node.reference }}</a>}</div>
+            </div>
+            <div role="group" class="tree-children" [class.is-hidden]="!isExpanded(node)"><ng-container cdkTreeNodeOutlet></ng-container></div>
+          </cdk-nested-tree-node>
+        </cdk-tree>
+      </div>
+    </section>
+  }
+
+  @if (variant === 'C') {
+    <section aria-labelledby="variant-c-title">
+      <div class="variant-intro">
+        <div><h3 id="variant-c-title">C — Nested property list</h3><p>Hierarchy is primary and each property owns its metadata. Rows become cards naturally instead of forcing a narrow table.</p></div>
+        <span>Disclosure-list semantics</span>
+      </div>
+      <ul class="property-list" aria-label="Properties of the Order schema">
+        <ng-template #propertyList let-items>
+          @for (node of items; track node.key) {
+            <li>
+              <article class="property-card">
+                <header>
+                  @if (isExpandable(node)) {
+                    <button type="button" class="disclosure" [attr.aria-expanded]="isExpanded(node)" [attr.aria-label]="(isExpanded(node) ? 'Collapse ' : 'Expand ') + node.name" (click)="toggle(node)"><span aria-hidden="true">›</span></button>
+                  } @else {<span class="disclosure-spacer"></span>}
+                  <code>{{ node.name }}</code><span class="type-chip">{{ node.type }}</span>
+                  @if (node.required) {<span class="required" title="Required property">required</span>}
+                </header>
+                <p>{{ node.description }}</p>
+                @if (node.format) {<dl><dt>Format</dt><dd>{{ node.format }}</dd></dl>}
+                @if (node.reference) {<a [href]="referenceTarget(node.reference)">{{ node.reference }}</a>}
+              </article>
+              @if (isExpanded(node) && node.children?.length) {
+                <ul><ng-container *ngTemplateOutlet="propertyList; context: {$implicit: node.children}"></ng-container></ul>
+              }
+            </li>
+          }
+        </ng-template>
+        <ng-container *ngTemplateOutlet="propertyList; context: {$implicit: nodes}"></ng-container>
+      </ul>
+    </section>
+  }
+</section>
+
+<nav class="prototype-switcher" aria-label="Prototype variants">
+  <button type="button" aria-label="Previous variant" (click)="setVariant(-1)">←</button>
+  <span><strong>{{ variant }}</strong> — {{ variantNames[variant] }}</span>
+  <button type="button" aria-label="Next variant" (click)="setVariant(1)">→</button>
+</nav>

@@ -1,4 +1,7 @@
 <div>
+  @if (showSchemaTreePrototype) {
+    <app-schema-tree-table-prototype></app-schema-tree-table-prototype>
+  }
   <p-dialog
     header="API definition could not be loaded"
     [(visible)]="displayLoadFailureDialog"

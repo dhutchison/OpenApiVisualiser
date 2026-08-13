@@ -9,6 +9,7 @@
     "ng": "ng",
     "start": "ng serve",
     "start-container": "ng serve --host 0.0.0.0",
+    "prototype:schema-tree": "ng serve --host 0.0.0.0 --port 4204",
     "build": "ng build",
     "build-deployment": "ng build --configuration production --output-path dist --base-href /OpenApiVisualiser/ && cp dist/browser/index.html dist/browser/404.html",
     "lint": "ng lint",

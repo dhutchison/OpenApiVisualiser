@@ -1,5 +1,5 @@
 
-import { Component, AfterViewInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, AfterViewInit, inject, ChangeDetectionStrategy, isDevMode } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -12,6 +12,7 @@ import { ExportComponent } from '../export/export.component';
 import { FileChooserComponent } from '../file-chooser/file-chooser.component';
 import { SummaryComponent } from '../summary/summary.component';
 import { UrlChooserComponent } from '../url-chooser/url-chooser.component';
+import { SchemaTreeTablePrototypeComponent } from '../api-components-detail/schema-detail/schema-tree-table-prototype.component';
 
 interface MainSection {
   id: string;
@@ -31,7 +32,8 @@ interface MainSection {
     ExportComponent,
     FileChooserComponent,
     SummaryComponent,
-    UrlChooserComponent
+    UrlChooserComponent,
+    SchemaTreeTablePrototypeComponent
 ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './main.component.html'
@@ -52,6 +54,7 @@ export class MainComponent implements AfterViewInit {
     {id: '3', headerId: 'tags-tab', title: 'Tags'},
     {id: '4', headerId: 'components-tab', title: 'Components'}
   ];
+  readonly showSchemaTreePrototype = isDevMode();
 
   ngAfterViewInit() {
     this.fileReaderService.loadFailed.subscribe((message) => {

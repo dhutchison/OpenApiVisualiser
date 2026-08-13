@@ -7,7 +7,8 @@
 	},
 	"runArgs": [
 		// Change the seccomp profile slightly for Codex to function.
-		"--security-opt=seccomp=.devcontainer/seccomp-userns.json"
+		"--security-opt=seccomp=.devcontainer/seccomp-userns.json",
+		"--publish=4204:4204"
 	],
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
