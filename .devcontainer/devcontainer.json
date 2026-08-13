@@ -7,7 +7,9 @@
 	},
 	"runArgs": [
 		// Change the seccomp profile slightly for Codex to function.
-		"--security-opt=seccomp=.devcontainer/seccomp-userns.json"
+		"--security-opt=seccomp=.devcontainer/seccomp-userns.json",
+		// PROTOTYPE — isolate the preview from other Angular dev servers.
+		"--publish=127.0.0.1:4203:4203"
 	],
 
 	// Features to add to the dev container. More info: https://containers.dev/features.

@@ -12,6 +12,7 @@ import { OpenapiTreenodeConverterService, OperationTreeNode } from '../../servic
 import { UserPreferenceControllerService } from '../../controllers/user-preference-controller.service';
 import { createApiTreeSvg } from '../../utils/api-tree-svg-exporter';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
+import { ApiPathTreePrototypeComponent } from './api-path-tree-prototype.component';
 
 const UNTAGGED_FILTER_VALUE = '__untagged__';
 type ApiPathSortOrder = 'default' | 'asc' | 'desc';
@@ -19,6 +20,7 @@ type ApiPathSortOrder = 'default' | 'asc' | 'desc';
 @Component({
   selector: 'app-api-path-tree',
   imports: [
+    ApiPathTreePrototypeComponent,
     ButtonModule,
     DialogModule,
     EndpointSwaggerComponent,

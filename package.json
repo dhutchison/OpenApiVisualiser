@@ -8,6 +8,7 @@
     "prepare": "husky",
     "ng": "ng",
     "start": "ng serve",
+    "prototype:api-tree": "ng serve --host 0.0.0.0 --port 4203",
     "start-container": "ng serve --host 0.0.0.0",
     "build": "ng build",
     "build-deployment": "ng build --configuration production --output-path dist --base-href /OpenApiVisualiser/ && cp dist/browser/index.html dist/browser/404.html",
@@ -30,6 +31,7 @@
   "private": true,
   "dependencies": {
     "@angular/animations": "^22.1.1",
+    "@angular/aria": "22.1.1",
     "@angular/cdk": "^22.1.1",
     "@angular/common": "^22.1.1",
     "@angular/compiler": "^22.1.1",

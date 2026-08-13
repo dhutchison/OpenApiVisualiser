@@ -66,36 +66,10 @@
 
   <div>
     <div class="tree-view" #treeView>
-      <p-tree [value]="apiPathNodes"
-        (onNodeSelect)="openEndpointDetail($event.node)"
-        [class]="horizontalView? 'tree-horizontal': 'tree-vertical'">
-
-        <ng-template #node let-node>
-          @if (node.type === 'operation') {
-            <button
-              type="button"
-              class="operation-node"
-              pTooltip="{{ node.tooltip }}"
-              [escape]=false
-              id="{{ node.id }}-node"
-              (click)="openEndpointDetail(node)">{{ node.label }}</button>
-          } @else {
-            <button
-              type="button"
-              class="path-node"
-              [attr.aria-expanded]="node.leaf ? null : node.expanded"
-              [class.is-collapsed]="!node.leaf && !node.expanded"
-              (click)="togglePathNode(node, $event)">
-              @if (!node.leaf && !node.expanded) {
-                <span
-                  class="path-node-toggle pi pi-chevron-right"
-                  aria-hidden="true"></span>
-              }
-              <span>{{ node.label }}</span>
-            </button>
-          }
-        </ng-template>
-      </p-tree>
+      <app-api-path-tree-prototype
+        [nodes]="apiPathNodes"
+        [horizontal]="horizontalView"
+        (operationSelect)="openEndpointDetail($event)" />
     </div>
   </div>
 </div>
