@@ -66,8 +66,8 @@
 
   <div>
     <div class="tree-view" #treeView>
-      <p-tree [value]="apiPathNodes"
-        (onNodeSelect)="openEndpointDetail($event.node)"
+      <p-tree [value]="apiPathRenderNodes"
+        (onNodeSelect)="openEndpointDetail($event.node?.data)"
         [class]="horizontalView? 'tree-horizontal': 'tree-vertical'">
 
         <ng-template #node let-node>
@@ -78,14 +78,14 @@
               pTooltip="{{ node.tooltip }}"
               [escape]=false
               id="{{ node.id }}-node"
-              (click)="openEndpointDetail(node)">{{ node.label }}</button>
+              (click)="openEndpointDetail(node.data)">{{ node.label }}</button>
           } @else {
             <button
               type="button"
               class="path-node"
               [attr.aria-expanded]="node.leaf ? null : node.expanded"
               [class.is-collapsed]="!node.leaf && !node.expanded"
-              (click)="togglePathNode(node, $event)">
+              (click)="togglePathNode(node.data, $event)">
               @if (!node.leaf && !node.expanded) {
                 <span
                   class="path-node-toggle pi pi-chevron-right"

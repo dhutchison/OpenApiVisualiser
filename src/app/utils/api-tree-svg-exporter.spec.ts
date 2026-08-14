@@ -1,26 +1,37 @@
-import { TreeNode } from 'primeng/api';
-
+import { ApiPathTreeNode } from '../models/hierarchy.models';
 import { createApiTreeSvg } from './api-tree-svg-exporter';
 
 describe('createApiTreeSvg', () => {
   it('renders SVG primitives without foreignObject DOM capture', () => {
-    const nodes: TreeNode[] = [
+    const nodes: ApiPathTreeNode[] = [
       {
+        kind: 'path',
         label: '/',
         leaf: false,
         expanded: true,
         children: [
           {
+            kind: 'path',
             label: '/pets',
             leaf: false,
             expanded: true,
             children: [
               {
+                kind: 'operation',
                 label: 'GET',
                 leaf: true,
-                type: 'operation',
-                method: 'GET'
-              } as TreeNode
+                children: [],
+                tooltip: '',
+                method: 'GET',
+                path: '/pets',
+                operation: {responses: {}},
+                apiDefinition: {
+                  openapi: '3.1.0',
+                  info: {title: 'Pets', version: '1.0.0'},
+                  paths: {}
+                },
+                complexity: 0
+              }
             ]
           }
         ]
@@ -42,10 +53,13 @@ describe('createApiTreeSvg', () => {
   });
 
   it('escapes labels before writing SVG text', () => {
-    const nodes: TreeNode[] = [
+    const nodes: ApiPathTreeNode[] = [
       {
+        kind: 'path',
         label: '/pets & <cats>',
-        leaf: true
+        leaf: false,
+        expanded: true,
+        children: []
       }
     ];
 
@@ -58,18 +72,29 @@ describe('createApiTreeSvg', () => {
   });
 
   it('does not render collapsed child nodes', () => {
-    const nodes: TreeNode[] = [
+    const nodes: ApiPathTreeNode[] = [
       {
+        kind: 'path',
         label: '/pets',
         leaf: false,
         expanded: false,
         children: [
           {
+            kind: 'operation',
             label: 'GET',
             leaf: true,
-            type: 'operation',
-            method: 'GET'
-          } as TreeNode
+            children: [],
+            tooltip: '',
+            method: 'GET',
+            path: '/pets',
+            operation: {responses: {}},
+            apiDefinition: {
+              openapi: '3.1.0',
+              info: {title: 'Pets', version: '1.0.0'},
+              paths: {}
+            },
+            complexity: 0
+          }
         ]
       }
     ];
@@ -83,10 +108,13 @@ describe('createApiTreeSvg', () => {
   });
 
   it('renders metadata above the tree', () => {
-    const nodes: TreeNode[] = [
+    const nodes: ApiPathTreeNode[] = [
       {
+        kind: 'path',
         label: '/pets',
-        leaf: true
+        leaf: false,
+        expanded: true,
+        children: []
       }
     ];
 
