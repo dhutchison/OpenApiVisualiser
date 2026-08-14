@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, AfterViewInit, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TreeNode } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
 import { FileReaderService } from '../../services/file-reader.service';
-import { OpenapiTreenodeConverterService, OperationTreeNode } from '../../services/openapi-treenode-converter.service';
+import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
 import { UserPreferenceControllerService } from '../../controllers/user-preference-controller.service';
 import { createApiTreeSvg } from '../../utils/api-tree-svg-exporter';
+import { ApiOperationNode, ApiPathTreeNode, isApiOperationNode } from '../../models/hierarchy.models';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
 
 const UNTAGGED_FILTER_VALUE = '__untagged__';
@@ -44,9 +44,9 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
   /**
    * Object hoilding the tree nodes to display
    */
-  apiPathNodes: TreeNode[] = [];
+  apiPathNodes: ApiPathTreeNode[] = [];
 
-  selectedOperationNode?: OperationTreeNode;
+  selectedOperationNode?: ApiOperationNode;
 
   endpointDialogVisible = false;
 
@@ -82,7 +82,7 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
   /**
    * The original (uncompressed) version of the tree nodes
    */
-  private apiPathNodesOrig: TreeNode[] = [];
+  private apiPathNodesOrig: ApiPathTreeNode[] = [];
 
   private measureTimeoutId?: ReturnType<typeof setTimeout>;
   private measureAnimationFrameId?: number;
@@ -260,23 +260,25 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     this.schedulePathTreeMeasurement();
   }
 
-  openEndpointDetail(treeNode: TreeNode) {
-    const node = treeNode as OperationTreeNode;
-    if (node.type !== 'operation') {
+  openEndpointDetail(treeNode: ApiPathTreeNode) {
+    if (!isApiOperationNode(treeNode)) {
       this.endpointDialogVisible = false;
       this.selectedOperationNode = undefined;
       return;
     }
 
-    this.selectedOperationNode = node;
+    this.selectedOperationNode = treeNode;
     this.endpointDialogVisible = true;
   }
 
-  togglePathNode(treeNode: TreeNode, event?: Event) {
+  isOperationNode(node: ApiPathTreeNode): node is ApiOperationNode {
+    return isApiOperationNode(node);
+  }
+
+  togglePathNode(treeNode: ApiPathTreeNode, event?: Event) {
     event?.stopPropagation();
 
-    const node = treeNode as OperationTreeNode;
-    if (treeNode.leaf || node.type === 'operation') {
+    if (treeNode.leaf || isApiOperationNode(treeNode)) {
       return;
     }
 
@@ -289,12 +291,12 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
    *
    * @param nodes the array of nodes to compress.
    */
-  private cloneCompressedTreeNodes(nodes: TreeNode[]): TreeNode[] {
+  private cloneCompressedTreeNodes(nodes: ApiPathTreeNode[]): ApiPathTreeNode[] {
 
     return nodes.map(value => this.cloneCompressedTreeNode(value));
   }
 
-  private cloneCompressedTreeNode(node: TreeNode): TreeNode {
+  private cloneCompressedTreeNode(node: ApiPathTreeNode): ApiPathTreeNode {
     const nodeCopy = this.cloneTreeNode(node);
 
     if (nodeCopy.leaf) {
@@ -313,14 +315,21 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     return nodeCopy;
   }
 
-  private cloneTreeNodes(nodes: TreeNode[]): TreeNode[] {
+  private cloneTreeNodes(nodes: ApiPathTreeNode[]): ApiPathTreeNode[] {
     return nodes.map(node => this.cloneTreeNode(node));
   }
 
-  private cloneTreeNode(node: TreeNode): TreeNode {
+  private cloneTreeNode(node: ApiPathTreeNode): ApiPathTreeNode {
+    if (isApiOperationNode(node)) {
+      return {
+        ...node,
+        children: []
+      };
+    }
+
     return {
       ...node,
-      children: node.children ? this.cloneTreeNodes(node.children) : node.children
+      children: this.cloneTreeNodes(node.children)
     };
   }
 
@@ -345,26 +354,24 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     this.setTreeNodes();
   }
 
-  private cloneFilteredTreeNodes(nodes: TreeNode[]): TreeNode[] {
+  private cloneFilteredTreeNodes(nodes: ApiPathTreeNode[]): ApiPathTreeNode[] {
     if (this.selectedTagFilters.length === 0) {
       return this.cloneTreeNodes(nodes);
     }
 
     return nodes
       .map(node => this.cloneFilteredTreeNode(node))
-      .filter((node): node is TreeNode => node !== undefined);
+      .filter((node): node is ApiPathTreeNode => node !== undefined);
   }
 
-  private cloneFilteredTreeNode(node: TreeNode): TreeNode | undefined {
-    const operationNode = node as OperationTreeNode;
-
-    if (operationNode.type === 'operation') {
-      return this.operationMatchesSelectedTags(operationNode) ? this.cloneTreeNode(node) : undefined;
+  private cloneFilteredTreeNode(node: ApiPathTreeNode): ApiPathTreeNode | undefined {
+    if (isApiOperationNode(node)) {
+      return this.operationMatchesSelectedTags(node) ? this.cloneTreeNode(node) : undefined;
     }
 
     const filteredChildren = (node.children ?? [])
       .map(child => this.cloneFilteredTreeNode(child))
-      .filter((child): child is TreeNode => child !== undefined);
+      .filter((child): child is ApiPathTreeNode => child !== undefined);
 
     if (filteredChildren.length === 0) {
       return undefined;
@@ -376,13 +383,13 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     };
   }
 
-  private operationMatchesSelectedTags(node: OperationTreeNode): boolean {
+  private operationMatchesSelectedTags(node: ApiOperationNode): boolean {
     const operationTags = node.operation?.tags?.length ? node.operation.tags : [UNTAGGED_FILTER_VALUE];
 
     return operationTags.some(tag => this.selectedTagFilters.includes(tag));
   }
 
-  private sortTreeNodes(nodes: TreeNode[]) {
+  private sortTreeNodes(nodes: ApiPathTreeNode[]) {
     const direction = this.sortOrder === 'asc' ? 1 : -1;
 
     nodes.sort((left, right) => {
@@ -398,7 +405,7 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     });
   }
 
-  private createTagFilterOptions(nodes: TreeNode[]): Array<{label: string; value: string}> {
+  private createTagFilterOptions(nodes: ApiPathTreeNode[]): Array<{label: string; value: string}> {
     const tagNames = new Set<string>();
     let hasUntagged = false;
 
@@ -424,12 +431,10 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     return options;
   }
 
-  private visitOperationNodes(nodes: TreeNode[], visitor: (node: OperationTreeNode) => void) {
+  private visitOperationNodes(nodes: ApiPathTreeNode[], visitor: (node: ApiOperationNode) => void) {
     nodes.forEach(node => {
-      const operationNode = node as OperationTreeNode;
-
-      if (operationNode.type === 'operation') {
-        visitor(operationNode);
+      if (isApiOperationNode(node)) {
+        visitor(node);
         return;
       }
 

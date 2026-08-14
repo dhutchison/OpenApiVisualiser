@@ -1,18 +1,18 @@
 import { Injectable } from '@angular/core';
-import { TreeNode } from 'primeng/api';
 import { Subject } from 'rxjs';
 import {
           getPath, OpenAPIObject, OperationObject,
           PathItemObject, PathsObject, SchemaObject,
           RequestBodyObject, ReferenceObject, MediaTypeObject, ResponseObject
         } from 'openapi3-ts/oas31';
+import { ApiOperationNode, ApiPathNode, ApiPathTreeNode, SchemaPropertyNode } from '../models/hierarchy.models';
 
 @Injectable({
   providedIn: 'root'
 })
 /**
  * Service which specialises in conversions between OpenAPI Specification
- * objects and the TreeNode structures used for the visualisation.
+ * objects and the application-owned hierarchy structures used for the visualisation.
  *
  * This object will hold state and requires to be "reset" if the
  * visualisation should throw away items rendered to date.
@@ -24,7 +24,7 @@ export class OpenapiTreenodeConverterService {
    * in order to be informed when the nodes for display
    * change.
    */
-  readonly treeNodesChanged = new Subject<TreeNode[]>();
+  readonly treeNodesChanged = new Subject<ApiPathTreeNode[]>();
 
   /**
    * Array containing the possible HTTP methods which can have operations for a path.
@@ -43,10 +43,10 @@ export class OpenapiTreenodeConverterService {
   /**
    * Object hoilding the tree nodes to display
    */
-  private apiPathNodes: TreeNode[] = [];
+  private apiPathNodes: ApiPathTreeNode[] = [];
 
   /* Map of the absolute path to the node definition */
-  private treeNodes = new Map<string, TreeNode>();
+  private treeNodes = new Map<string, ApiPathNode>();
 
   constructor() {
     this.reset();
@@ -58,10 +58,11 @@ export class OpenapiTreenodeConverterService {
    */
   reset() {
     this.apiPathNodes = [];
-    this.treeNodes = new Map<string, TreeNode>();
+    this.treeNodes = new Map<string, ApiPathNode>();
 
     /* Setup the initial root node */
-    const rootNode: TreeNode = {
+    const rootNode: ApiPathNode = {
+      kind: 'path',
       label: '/',
       leaf: false,
       children: [],
@@ -110,16 +111,16 @@ export class OpenapiTreenodeConverterService {
    *
    * @param schema the schema object
    */
-  public createComponentSchemaPropertiesToTreeNodes(schema: SchemaObject | ReferenceObject, apiDefinition: OpenAPIObject): TreeNode[] {
+  public createComponentSchemaPropertiesToTreeNodes(schema: SchemaObject | ReferenceObject, apiDefinition: OpenAPIObject): SchemaPropertyNode[] {
     
     let schemaObject = this.getSchemaObjectFromReference(schema, apiDefinition);
     
-    const nodes: TreeNode[] = [];
+    const nodes: SchemaPropertyNode[] = [];
     if (schemaObject.type && schemaObject.type === 'array') {
-      const node = this.createSchemaPropertyToTreeNode(schemaObject.title, schemaObject.items, apiDefinition);
+      const node = this.createSchemaPropertyToTreeNode(schemaObject.title ?? '', schemaObject.items, apiDefinition);
       if (node) {
-        const root: TreeNode = {
-          label: schemaObject.title,
+        const root: SchemaPropertyNode = {
+          label: schemaObject.title ?? '',
           leaf: false,
           expanded: true,
           children: [node],
@@ -180,7 +181,7 @@ export class OpenapiTreenodeConverterService {
           if (pathNode === undefined) {
 
             /* Did not already exist, create it */
-            pathNode = this.createPathNode('/'.concat(value), getPath(paths, pathSoFar));
+            pathNode = this.createPathNode('/'.concat(value));
             this.treeNodes.set(pathSoFar, pathNode);
 
             /* Add it to the parent, if we are not dealing with the root node */
@@ -211,11 +212,11 @@ export class OpenapiTreenodeConverterService {
    * Create a non-leaf node for a path.
    *
    * @param path the path segment to have as the label for the node
-   * @param definition the path section definition
    */
-  private createPathNode(path: string, definition: PathItemObject): TreeNode {
+  private createPathNode(path: string): ApiPathNode {
 
-    const node: TreeNode = {
+    const node: ApiPathNode = {
+      kind: 'path',
       label: path,
       leaf: false,
       expanded: true,
@@ -231,17 +232,19 @@ export class OpenapiTreenodeConverterService {
    * @param method the HTTP method
    * @param operation the details of the Operation
    */
-  private createHttpMethodNode(path: string, method: string, operation: OperationObject, apiDefinition: OpenAPIObject): TreeNode {
+  private createHttpMethodNode(path: string, method: string, operation: OperationObject, apiDefinition: OpenAPIObject): ApiOperationNode {
 
-    const node: OperationTreeNode = {
+    const node: ApiOperationNode = {
+      kind: 'operation',
       label: method,
       leaf: true,
-      type: 'operation',
-      styleClass: 'p-treenode-http-method-' + method.toLowerCase(),
+      tooltip: '',
+      children: [],
       operation,
       method,
       path,
-      apiDefinition
+      apiDefinition,
+      complexity: 0
     };
 
     /* Work out the object complexity */
@@ -353,11 +356,11 @@ export class OpenapiTreenodeConverterService {
    *
    * @param schema the schema object
    */
-  private createSchemaPropertyToTreeNode(title: string, property: SchemaObject | ReferenceObject, apiDefinition: OpenAPIObject): TreeNode {
+  private createSchemaPropertyToTreeNode(title: string, property: SchemaObject | ReferenceObject, apiDefinition: OpenAPIObject): SchemaPropertyNode {
 
     let schemaObject = this.getSchemaObjectFromReference(property, apiDefinition);
     
-    const node: TreeNode = {
+    const node: SchemaPropertyNode = {
       label: title,
       leaf: true,
       expanded: false,
@@ -439,19 +442,4 @@ export class OpenapiTreenodeConverterService {
     }
   }
 
-}
-
-
-
-
-export interface OperationTreeNode extends TreeNode {
-  tooltip?: string;
-  id?: string;
-
-  // Additional fields to supply details to Node Detail Rendering
-  method?: string;
-  path?: string;
-  operation?: OperationObject;
-  apiDefinition?: OpenAPIObject;
-  complexity?: number;
 }

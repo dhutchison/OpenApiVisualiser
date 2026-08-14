@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
-import { TreeNode } from 'primeng/api';
+import { ApiOperationNode, ApiPathTreeNode, isApiOperationNode } from '../../models/hierarchy.models';
 
 @Component({
   selector: 'app-summary',
@@ -18,11 +18,12 @@ export class SummaryComponent implements OnInit {
   /**
    * Object hoilding the tree nodes to display
    */
-  apiPathNodes: TreeNode[] = [];
+  apiPathNodes: ApiOperationNode[] = [];
   methodSummary =  new Map<string, number>();
 
     ngOnInit() {
       this.openApiConverterService.treeNodesChanged.subscribe(value => {
+        this.methodSummary.clear();
         this.apiPathNodes = this.flatten(value);
         for (const node of this.apiPathNodes) {
           let n = this.methodSummary.get(node.label);
@@ -43,12 +44,12 @@ export class SummaryComponent implements OnInit {
      *
      * @param parent nodes to be flattened
      */
-    flatten(parent: TreeNode[]): TreeNode[] {
-      let paths = [];
+    flatten(parent: ApiPathTreeNode[]): ApiOperationNode[] {
+      let paths: ApiOperationNode[] = [];
 
       for (const child of parent) {
-        let children = [];
-        if (child.leaf) {
+        let children: ApiOperationNode[] = [];
+        if (isApiOperationNode(child)) {
           children.push(child);
         } else {
           children = children.concat(this.flatten(child.children));

@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { TreeNode } from 'primeng/api';
+import { ApiOperationNode, ApiPathTreeNode } from '../../models/hierarchy.models';
 
 import { ApiPathTreeComponent } from './api-path-tree.component';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
@@ -66,7 +66,8 @@ describe('ApiPathTreeComponent', () => {
   });
 
   it('should toggle path nodes', () => {
-    const pathNode: TreeNode = {
+    const pathNode: ApiPathTreeNode = {
+      kind: 'path',
       label: '/pets',
       leaf: false,
       expanded: true,
@@ -84,11 +85,22 @@ describe('ApiPathTreeComponent', () => {
 
   it('should not toggle operation leaf nodes', () => {
     const operationNode = {
+      kind: 'operation',
       label: 'GET',
       leaf: true,
       expanded: false,
-      type: 'operation'
-    } as TreeNode;
+      children: [],
+      tooltip: '',
+      method: 'GET',
+      path: '/pets',
+      operation: {responses: {}},
+      apiDefinition: {
+        openapi: '3.1.0',
+        info: {title: 'Pets', version: '1.0.0'},
+        paths: {}
+      },
+      complexity: 0
+    } as ApiOperationNode;
     const event = jasmine.createSpyObj<Event>('event', ['stopPropagation']);
     const scheduleMeasurementSpy = spyOn<any>(component, 'schedulePathTreeMeasurement');
 
@@ -115,23 +127,27 @@ describe('ApiPathTreeComponent', () => {
         }
       }
     };
-    const originalNodes: TreeNode[] = [
+    const originalNodes: ApiPathTreeNode[] = [
       {
+        kind: 'path',
         label: '/',
         leaf: false,
+        expanded: true,
         children: [
           {
+            kind: 'operation',
             label: 'GET',
             leaf: true,
-            type: 'operation',
+            children: [],
+            tooltip: '',
             apiDefinition,
             operation
-          } as TreeNode
+          } as unknown as ApiOperationNode
         ]
       }
     ];
 
-    const clonedNodes = (component as any).cloneTreeNodes(originalNodes) as TreeNode[];
+    const clonedNodes = (component as any).cloneTreeNodes(originalNodes) as ApiPathTreeNode[];
     const clonedOperationNode = clonedNodes[0].children?.[0] as any;
 
     expect(clonedNodes).not.toBe(originalNodes);
@@ -144,18 +160,21 @@ describe('ApiPathTreeComponent', () => {
   it('should sort nodes within their parent alphabetically', () => {
     (component as any).apiPathNodesOrig = [
       {
+        kind: 'path',
         label: '/',
         leaf: false,
         children: [
           {
+            kind: 'path',
             label: '/zebra',
             leaf: false,
             children: [
-              {label: 'POST', leaf: true, type: 'operation'} as TreeNode,
-              {label: 'GET', leaf: true, type: 'operation'} as TreeNode
+              {kind: 'operation', label: 'POST', leaf: true, children: []} as unknown as ApiOperationNode,
+              {kind: 'operation', label: 'GET', leaf: true, children: []} as unknown as ApiOperationNode
             ]
           },
           {
+            kind: 'path',
             label: '/alpha',
             leaf: false,
             children: []
@@ -179,41 +198,47 @@ describe('ApiPathTreeComponent', () => {
   it('should filter operations by selected tags and prune empty branches', () => {
     (component as any).apiPathNodesOrig = [
       {
+        kind: 'path',
         label: '/',
         leaf: false,
         children: [
           {
+            kind: 'path',
             label: '/pets',
             leaf: false,
             children: [
               {
+                kind: 'operation',
                 label: 'GET',
                 leaf: true,
-                type: 'operation',
+                children: [],
                 operation: {
                   tags: ['pets']
                 }
-              } as TreeNode,
+              } as unknown as ApiOperationNode,
               {
+                kind: 'operation',
                 label: 'POST',
                 leaf: true,
-                type: 'operation',
+                children: [],
                 operation: {
                   tags: ['admin']
                 }
-              } as TreeNode
+              } as unknown as ApiOperationNode
             ]
           },
           {
+            kind: 'path',
             label: '/health',
             leaf: false,
             children: [
               {
+                kind: 'operation',
                 label: 'GET',
                 leaf: true,
-                type: 'operation',
+                children: [],
                 operation: {}
-              } as TreeNode
+              } as unknown as ApiOperationNode
             ]
           }
         ]

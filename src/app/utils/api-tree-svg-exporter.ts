@@ -1,9 +1,4 @@
-import { TreeNode } from 'primeng/api';
-
-interface OperationExportTreeNode extends TreeNode {
-  method?: string;
-  type?: string;
-}
+import { ApiPathTreeNode, isApiOperationNode } from '../models/hierarchy.models';
 
 interface SvgExportNode {
   children: SvgExportNode[];
@@ -61,7 +56,7 @@ const SVG_EXPORT_LAYOUT = {
   siblingGap: 18
 };
 
-export function createApiTreeSvg(nodes: TreeNode[], options: ApiTreeSvgExportOptions = {}): string {
+export function createApiTreeSvg(nodes: ApiPathTreeNode[], options: ApiTreeSvgExportOptions = {}): string {
   const palette = createSvgPalette(options);
   const sourceNodes = getSvgExportSourceNodes(nodes);
   const roots = sourceNodes.map(node => createSvgExportNode(node, options));
@@ -88,7 +83,7 @@ export function createApiTreeSvg(nodes: TreeNode[], options: ApiTreeSvgExportOpt
   ].join('');
 }
 
-function getSvgExportSourceNodes(nodes: TreeNode[]): TreeNode[] {
+function getSvgExportSourceNodes(nodes: ApiPathTreeNode[]): ApiPathTreeNode[] {
   if (nodes.length === 1 && nodes[0].label === '/' && nodes[0].children) {
     return nodes[0].children;
   }
@@ -96,23 +91,22 @@ function getSvgExportSourceNodes(nodes: TreeNode[]): TreeNode[] {
   return nodes;
 }
 
-function createSvgExportNode(treeNode: TreeNode, options: ApiTreeSvgExportOptions): SvgExportNode {
-  const operationNode = treeNode as OperationExportTreeNode;
-  const isOperation = operationNode.type === 'operation';
-  const label = String(treeNode.label ?? '');
+function createSvgExportNode(treeNode: ApiPathTreeNode, options: ApiTreeSvgExportOptions): SvgExportNode {
+  const isOperation = isApiOperationNode(treeNode);
+  const label = treeNode.label;
   const measuredWidth = measureSvgText(label, options) + (SVG_EXPORT_LAYOUT.nodePaddingX * 2);
   const width = Math.max(Math.ceil(measuredWidth), isOperation ? 86 : 96);
   const height = Math.ceil(SVG_EXPORT_LAYOUT.lineHeight + (SVG_EXPORT_LAYOUT.nodePaddingY * 2));
   const children = treeNode.expanded === false
     ? []
-    : (treeNode.children ?? []).map(child => createSvgExportNode(child, options));
+    : treeNode.children.map(child => createSvgExportNode(child, options));
 
   return {
     children,
     height,
     isOperation,
     label,
-    method: operationNode.method?.toLowerCase() ?? label.toLowerCase(),
+    method: isOperation ? treeNode.method.toLowerCase() : label.toLowerCase(),
     subtreeHeight: height,
     width,
     x: 0,

@@ -62,6 +62,16 @@
 
         <ng-template let-node pTemplate="default">
           <button
+            *ngIf="isOperationNode(node); else pathNode"
+            type="button"
+            [class]="'operation-node p-treenode-http-method-' + node.method.toLowerCase()"
+            [pTooltip]="node.tooltip"
+            [escape]=false
+            id="{{ node.id }}-node"
+            (click)="openEndpointDetail(node)">{{ node.label }}</button>
+
+          <ng-template #pathNode>
+            <button
             type="button"
             class="path-node"
             [attr.aria-expanded]="node.leaf ? null : node.expanded"
@@ -71,18 +81,9 @@
               *ngIf="!node.leaf && !node.expanded"
               class="path-node-toggle pi pi-chevron-right"
               aria-hidden="true"></span>
-            <span>{{ node.label }}</span>
-          </button>
-        </ng-template>
-
-        <ng-template let-node pTemplate="operation">
-          <button
-            type="button"
-            class="operation-node"
-            pTooltip="{{ node.tooltip }}"
-            [escape]=false
-            id="{{ node.id }}-node"
-            (click)="openEndpointDetail(node)">{{ node.label }}</button>
+              <span>{{ node.label }}</span>
+            </button>
+          </ng-template>
         </ng-template>
       </p-tree>
     </div>
