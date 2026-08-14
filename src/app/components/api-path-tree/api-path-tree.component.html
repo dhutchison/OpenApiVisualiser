@@ -56,34 +56,33 @@
 
   <div>
     <div class="tree-view" #treeView>
-      <p-tree [value]="apiPathNodes"
-          (onNodeSelect)="openEndpointDetail($event)"
+      <p-tree [value]="apiPathRenderNodes"
+          (onNodeSelect)="openEndpointDetail($event.node?.data)"
           [styleClass]="horizontalView? 'tree-horizontal': 'tree-vertical'">
 
         <ng-template let-node pTemplate="default">
           <button
-            *ngIf="isOperationNode(node); else pathNode"
-            type="button"
-            [class]="'operation-node p-treenode-http-method-' + node.method.toLowerCase()"
-            [pTooltip]="node.tooltip"
-            [escape]=false
-            id="{{ node.id }}-node"
-            (click)="openEndpointDetail(node)">{{ node.label }}</button>
-
-          <ng-template #pathNode>
-            <button
             type="button"
             class="path-node"
             [attr.aria-expanded]="node.leaf ? null : node.expanded"
             [class.is-collapsed]="!node.leaf && !node.expanded"
-            (click)="togglePathNode(node, $event)">
+            (click)="togglePathNode(node.data, $event)">
             <span
               *ngIf="!node.leaf && !node.expanded"
               class="path-node-toggle pi pi-chevron-right"
               aria-hidden="true"></span>
-              <span>{{ node.label }}</span>
-            </button>
-          </ng-template>
+            <span>{{ node.label }}</span>
+          </button>
+        </ng-template>
+
+        <ng-template let-node pTemplate="operation">
+          <button
+            type="button"
+            class="operation-node"
+            pTooltip="{{ node.tooltip }}"
+            [escape]=false
+            id="{{ node.id }}-node"
+            (click)="openEndpointDetail(node.data)">{{ node.label }}</button>
         </ng-template>
       </p-tree>
     </div>

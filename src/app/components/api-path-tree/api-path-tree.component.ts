@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, AfterViewInit, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TreeNode } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -15,6 +16,11 @@ import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.c
 
 const UNTAGGED_FILTER_VALUE = '__untagged__';
 type ApiPathSortOrder = 'default' | 'asc' | 'desc';
+
+interface PrimeNgApiPathNode extends TreeNode {
+  tooltip?: string;
+  id?: string;
+}
 
 @Component({
   selector: 'app-api-path-tree',
@@ -45,6 +51,9 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
    * Object hoilding the tree nodes to display
    */
   apiPathNodes: ApiPathTreeNode[] = [];
+
+  /** PrimeNG-specific view model used only by the tree renderer. */
+  apiPathRenderNodes: PrimeNgApiPathNode[] = [];
 
   selectedOperationNode?: ApiOperationNode;
 
@@ -257,10 +266,18 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
       this.sortTreeNodes(this.apiPathNodes);
     }
 
+    this.apiPathRenderNodes = this.createPrimeNgTreeNodes(this.apiPathNodes);
+
     this.schedulePathTreeMeasurement();
   }
 
-  openEndpointDetail(treeNode: ApiPathTreeNode) {
+  openEndpointDetail(treeNode?: ApiPathTreeNode) {
+    if (!treeNode) {
+      this.endpointDialogVisible = false;
+      this.selectedOperationNode = undefined;
+      return;
+    }
+
     if (!isApiOperationNode(treeNode)) {
       this.endpointDialogVisible = false;
       this.selectedOperationNode = undefined;
@@ -271,10 +288,6 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     this.endpointDialogVisible = true;
   }
 
-  isOperationNode(node: ApiPathTreeNode): node is ApiOperationNode {
-    return isApiOperationNode(node);
-  }
-
   togglePathNode(treeNode: ApiPathTreeNode, event?: Event) {
     event?.stopPropagation();
 
@@ -283,7 +296,29 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     treeNode.expanded = !treeNode.expanded;
+    this.apiPathRenderNodes = this.createPrimeNgTreeNodes(this.apiPathNodes);
     this.schedulePathTreeMeasurement();
+  }
+
+  private createPrimeNgTreeNodes(nodes: ApiPathTreeNode[]): PrimeNgApiPathNode[] {
+    return nodes.map(node => {
+      const renderedNode: PrimeNgApiPathNode = {
+        label: node.label,
+        leaf: node.leaf,
+        expanded: node.expanded,
+        children: this.createPrimeNgTreeNodes(node.children),
+        data: node
+      };
+
+      if (isApiOperationNode(node)) {
+        renderedNode.type = 'operation';
+        renderedNode.styleClass = 'p-treenode-http-method-' + (node.method ?? node.label).toLowerCase();
+        renderedNode.tooltip = node.tooltip;
+        renderedNode.id = node.id;
+      }
+
+      return renderedNode;
+    });
   }
 
   /**  When we compress the view, we will merge any nodes which have only a
