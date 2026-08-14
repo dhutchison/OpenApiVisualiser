@@ -1,85 +1,115 @@
-<div *ngIf="apiSpec?.components">
-  <div class="empty-state" *ngIf="!items.length && !componentSections.length">No reusable components are defined by this API.</div>
-
-  <h3 *ngIf="items.length">Schemas</h3>
-  <div class="p-accordion" *ngIf="items.length">
-      <section
-      class="p-accordionpanel"
-      *ngFor="let item of items"
-      [attr.data-p-active]="isSchemaExpanded(item)">
-        <button
-          type="button"
-          class="p-accordionheader"
-          [attr.aria-expanded]="isSchemaExpanded(item)"
-          [attr.aria-controls]="'components-schemas-panel-' + item"
-          (click)="toggleSchema(item)">
-          <span>{{item}}</span>
-          <span class="component-header-meta">
-            <span class="count-pill" *ngIf="schemas?.[item]">{{ getSchemaType(schemas[item]) }}</span>
-            <span class="count-pill" *ngIf="schemas?.[item] && getSchemaPropertyCount(schemas[item])">{{ getSchemaPropertyCount(schemas[item]) }} properties</span>
-            <span
-              class="accordion-toggle-icon pi pi-chevron-down"
-              [class.is-expanded]="isSchemaExpanded(item)"
-              aria-hidden="true"></span>
-          </span>
-        </button>
-        <section
-          class="p-accordioncontent"
-          *ngIf="isSchemaExpanded(item)"
-          [id]="'components-schemas-panel-' + item">
-          <div class="p-accordioncontent-content">
-            <div class="schema-overview" *ngIf="schemas?.[item] as schema">
-              <div *ngIf="!isReference(schema) && schema.description" [innerHTML]="(schema.description | markdownify)"></div>
-              <app-external-docs *ngIf="!isReference(schema) && schema.externalDocs" [document]="schema.externalDocs"></app-external-docs>
-              <ul class="pill-list" *ngIf="getSchemaBadges(schema).length">
-                <li *ngFor="let badge of getSchemaBadges(schema)">{{ badge }}</li>
-              </ul>
-            </div>
-            <app-schema-detail 
-              id="components_schemas_{{item}}"
-              [apiSpec]="apiSpec"
-              [schema]="schemas[item]"></app-schema-detail>
-          </div>
-        </section>
+@if (apiSpec?.components) {
+  <div>
+    @if (!items.length && !componentSections.length) {
+      <div class="empty-state">No reusable components are defined by this API.</div>
+    }
+    @if (items.length) {
+      <h3>Schemas</h3>
+    }
+    @if (items.length) {
+      <div class="p-accordion">
+        @for (item of items; track item) {
+          <section
+            class="p-accordionpanel"
+            [attr.data-p-active]="isSchemaExpanded(item)">
+            <button
+              type="button"
+              class="p-accordionheader"
+              [attr.aria-expanded]="isSchemaExpanded(item)"
+              [attr.aria-controls]="'components-schemas-panel-' + item"
+              (click)="toggleSchema(item)">
+              <span>{{item}}</span>
+              <span class="component-header-meta">
+                @if (schemas?.[item]) {
+                  <span class="count-pill">{{ getSchemaType(schemas[item]) }}</span>
+                }
+                @if (schemas?.[item] && getSchemaPropertyCount(schemas[item])) {
+                  <span class="count-pill">{{ getSchemaPropertyCount(schemas[item]) }} properties</span>
+                }
+                <span
+                  class="accordion-toggle-icon pi pi-chevron-down"
+                  [class.is-expanded]="isSchemaExpanded(item)"
+                aria-hidden="true"></span>
+              </span>
+            </button>
+            @if (isSchemaExpanded(item)) {
+              <section
+                class="p-accordioncontent"
+                [id]="'components-schemas-panel-' + item">
+                <div class="p-accordioncontent-content">
+                  @if (schemas?.[item]; as schema) {
+                    <div class="schema-overview">
+                      @if (!isReference(schema) && schema.description) {
+                        <div [innerHTML]="(schema.description | markdownify)"></div>
+                      }
+                      @if (!isReference(schema) && schema.externalDocs) {
+                        <app-external-docs [document]="schema.externalDocs"></app-external-docs>
+                      }
+                      @if (getSchemaBadges(schema).length) {
+                        <ul class="pill-list">
+                          @for (badge of getSchemaBadges(schema); track badge) {
+                            <li>{{ badge }}</li>
+                          }
+                        </ul>
+                      }
+                    </div>
+                    @if (!isReference(schema)) {
+                      <app-schema-detail
+                        id="components_schemas_{{item}}"
+                        [apiSpec]="apiSpec"
+                        [schema]="schema"></app-schema-detail>
+                    } @else {
+                      <p class="schema-reference">Reference: {{ schema.$ref }}</p>
+                    }
+                  }
+                </div>
+              </section>
+            }
+          </section>
+        }
+      </div>
+    }
+    @if (componentSections.length) {
+      <section class="detail-section">
+        <h3>Other Components</h3>
+        <div class="p-accordion">
+          @for (section of componentSections; track section) {
+            <section
+              class="p-accordionpanel"
+              [attr.data-p-active]="isComponentSectionExpanded(section.key)">
+              <button
+                type="button"
+                class="p-accordionheader"
+                [attr.aria-expanded]="isComponentSectionExpanded(section.key)"
+                [attr.aria-controls]="'components-section-panel-' + section.key"
+                (click)="toggleComponentSection(section.key)">
+                <span>{{ section.label }}</span>
+                <span class="component-header-meta">
+                  <span class="count-pill">{{ section.items.length }}</span>
+                  <span
+                    class="accordion-toggle-icon pi pi-chevron-down"
+                    [class.is-expanded]="isComponentSectionExpanded(section.key)"
+                  aria-hidden="true"></span>
+                </span>
+              </button>
+              @if (isComponentSectionExpanded(section.key)) {
+                <section
+                  class="p-accordioncontent"
+                  [id]="'components-section-panel-' + section.key">
+                  <div class="p-accordioncontent-content">
+                    <dl class="component-list">
+                      @for (entry of getComponentEntries(section); track entry) {
+                        <dt>{{ entry.name }}</dt>
+                        <dd>{{ describeComponent(entry.value) }}</dd>
+                      }
+                    </dl>
+                  </div>
+                </section>
+              }
+            </section>
+          }
+        </div>
       </section>
+    }
   </div>
-
-  <section class="detail-section" *ngIf="componentSections.length">
-    <h3>Other Components</h3>
-    <div class="p-accordion">
-      <section
-        class="p-accordionpanel"
-        *ngFor="let section of componentSections"
-        [attr.data-p-active]="isComponentSectionExpanded(section.key)">
-        <button
-          type="button"
-          class="p-accordionheader"
-          [attr.aria-expanded]="isComponentSectionExpanded(section.key)"
-          [attr.aria-controls]="'components-section-panel-' + section.key"
-          (click)="toggleComponentSection(section.key)">
-          <span>{{ section.label }}</span>
-          <span class="component-header-meta">
-            <span class="count-pill">{{ section.items.length }}</span>
-            <span
-              class="accordion-toggle-icon pi pi-chevron-down"
-              [class.is-expanded]="isComponentSectionExpanded(section.key)"
-              aria-hidden="true"></span>
-          </span>
-        </button>
-        <section
-          class="p-accordioncontent"
-          *ngIf="isComponentSectionExpanded(section.key)"
-          [id]="'components-section-panel-' + section.key">
-          <div class="p-accordioncontent-content">
-            <dl class="component-list">
-              <ng-container *ngFor="let entry of getComponentEntries(section)">
-                <dt>{{ entry.name }}</dt>
-                <dd>{{ describeComponent(entry.value) }}</dd>
-              </ng-container>
-            </dl>
-          </div>
-        </section>
-      </section>
-    </div>
-  </section>
-</div>
+}

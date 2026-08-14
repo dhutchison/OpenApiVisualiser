@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { SchemaObject, ReferenceObject, OpenAPIObject, ComponentsObject } from 'openapi3-ts/oas31';
 import { FileReaderService } from '../../services/file-reader.service';
 import { MarkdownifyPipe } from '../../pipes/markdownify.pipe';
@@ -19,11 +19,11 @@ interface ComponentSection {
 @Component({
   selector: 'app-api-components-detail',
   imports: [
-    CommonModule,
     ExternalDocsComponent,
     MarkdownifyPipe,
     SchemaDetailComponent
-  ],
+],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './api-components-detail.component.html'
 })
 export class ApiComponentsDetailComponent implements OnInit {

@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FieldsetModule } from 'primeng/fieldset';
 import { PanelModule } from 'primeng/panel';
 import { FileReaderService } from '../../services/file-reader.service';
@@ -15,12 +15,12 @@ interface ComponentSummary {
 @Component({
   selector: 'app-api-information',
   imports: [
-    CommonModule,
     ExternalDocsComponent,
     FieldsetModule,
     MarkdownifyPipe,
     PanelModule
-  ],
+],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './api-information.component.html'
 })
 export class ApiInformationComponent implements OnInit {

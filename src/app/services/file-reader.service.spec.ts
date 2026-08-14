@@ -1,5 +1,5 @@
 import { TestBed, getTestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { FileReaderService } from './file-reader.service';
@@ -302,7 +302,7 @@ describe('FileReaderService', () => {
       TestBed.configureTestingModule({
         providers: [
           FileReaderService,
-          provideHttpClient(),
+          provideHttpClient(withXhr()),
           provideHttpClientTesting()
         ]
       });
