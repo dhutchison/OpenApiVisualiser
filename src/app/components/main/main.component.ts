@@ -1,8 +1,8 @@
 
 import { Component, AfterViewInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { LucideChevronDown, LucideX } from '@lucide/angular';
 import { FileReaderService } from '../../services/file-reader.service';
 import { ActivatedRoute } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { ApiComponentsDetailComponent } from '../api-components-detail/api-components-detail.component';
 import { ApiInformationComponent } from '../api-information/api-information.component';
@@ -26,12 +26,13 @@ interface MainSection {
     ApiInformationComponent,
     ApiPathTreeComponent,
     ApiTagsComponent,
-    ButtonModule,
     DialogModule,
     ExportComponent,
     FileChooserComponent,
     SummaryComponent,
-    UrlChooserComponent
+    UrlChooserComponent,
+    LucideChevronDown,
+    LucideX
 ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './main.component.html'

@@ -1,30 +1,67 @@
 <div class="api-path-tree-layout" #pathTreeLayout [style.min-height.px]="pathTreeMinHeight">
   <div class="path-tree-buttons">
-    <p-selectbutton
-      [options]="viewTypes"
-      [(ngModel)]="horizontalView"
-      optionLabel="title"
-      optionValue="value">
-    </p-selectbutton>
+    <div class="segmented-control" role="group" aria-label="View orientation">
+      <button type="button" class="segmented-control__option"
+        [class.is-selected]="horizontalView"
+        [attr.aria-pressed]="horizontalView"
+        (click)="horizontalView = true">
+        <svg lucideNetwork class="app-icon" aria-hidden="true" focusable="false"></svg>
+        <span>Tree</span>
+      </button>
+      <button type="button" class="segmented-control__option"
+        [class.is-selected]="!horizontalView"
+        [attr.aria-pressed]="!horizontalView"
+        (click)="horizontalView = false">
+        <svg lucideList class="app-icon" aria-hidden="true" focusable="false"></svg>
+        <span>List</span>
+      </button>
+    </div>
 
-    <p-selectbutton
-      [options]="expansionTypes"
-      [(ngModel)]="joinNodesWithNoLeaves"
-      optionLabel="title"
-      optionValue="value">
-    </p-selectbutton>
+    <div class="segmented-control" role="group" aria-label="Path expansion">
+      <button type="button" class="segmented-control__option"
+        [class.is-selected]="joinNodesWithNoLeaves"
+        [attr.aria-pressed]="joinNodesWithNoLeaves"
+        (click)="joinNodesWithNoLeaves = true">
+        <svg lucideMinimize2 class="app-icon" aria-hidden="true" focusable="false"></svg>
+        <span>Compressed</span>
+      </button>
+      <button type="button" class="segmented-control__option"
+        [class.is-selected]="!joinNodesWithNoLeaves"
+        [attr.aria-pressed]="!joinNodesWithNoLeaves"
+        (click)="joinNodesWithNoLeaves = false">
+        <svg lucideMaximize2 class="app-icon" aria-hidden="true" focusable="false"></svg>
+        <span>Expanded</span>
+      </button>
+    </div>
 
-    <p-selectbutton
-      [options]="sortTypes"
-      [(ngModel)]="sortOrder"
-      optionLabel="title"
-      optionValue="value">
-    </p-selectbutton>
+    <div class="segmented-control" role="group" aria-label="Path sorting">
+      <button type="button" class="segmented-control__option"
+        [class.is-selected]="sortOrder === 'default'"
+        [attr.aria-pressed]="sortOrder === 'default'"
+        (click)="sortOrder = 'default'">
+        <svg lucideArrowDownUp class="app-icon" aria-hidden="true" focusable="false"></svg>
+        <span>Default</span>
+      </button>
+      <button type="button" class="segmented-control__option"
+        [class.is-selected]="sortOrder === 'asc'"
+        [attr.aria-pressed]="sortOrder === 'asc'"
+        (click)="sortOrder = 'asc'">
+        <svg lucideArrowDownAZ class="app-icon" aria-hidden="true" focusable="false"></svg>
+        <span>A-Z</span>
+      </button>
+      <button type="button" class="segmented-control__option"
+        [class.is-selected]="sortOrder === 'desc'"
+        [attr.aria-pressed]="sortOrder === 'desc'"
+        (click)="sortOrder = 'desc'">
+        <svg lucideArrowUpAZ class="app-icon" aria-hidden="true" focusable="false"></svg>
+        <span>Z-A</span>
+      </button>
+    </div>
 
     @if (tagFilterOptions.length) {
       <details class="path-tree-tag-filter" (toggle)="schedulePathTreeMeasurement()">
         <summary>
-          <span class="pi pi-filter" aria-hidden="true"></span>
+          <svg lucideFunnel class="app-icon" aria-hidden="true" focusable="false"></svg>
           <span>Tags</span>
           @if (selectedTagFilters.length) {
             <span class="count-pill">{{ selectedTagFilters.length }}</span>
@@ -41,25 +78,23 @@
             </label>
           }
           <button
-            pButton
             type="button"
-            class="p-button-secondary"
+            class="app-button app-button--secondary"
             [disabled]="!selectedTagFilters.length"
             (click)="clearTagFilters()">
-            <i pButtonIcon class="pi pi-filter-slash"></i>
-            <span pButtonLabel>Clear</span>
+            <svg lucideFilterX class="app-icon" aria-hidden="true" focusable="false"></svg>
+            <span>Clear</span>
           </button>
         </div>
       </details>
     }
 
     @if (horizontalView) {
-      <button pButton type="button"
+      <button class="app-button app-button--primary download-image-button" type="button"
         (click)="downloadImage()"
-        class="download-image-button"
         [disabled]="generatingImage">
-        <i pButtonIcon class="pi pi-download"></i>
-        <span pButtonLabel>Download Image</span>
+        <svg lucideDownload class="app-icon" aria-hidden="true" focusable="false"></svg>
+        <span>Download Image</span>
       </button>
     }
   </div>
@@ -87,9 +122,9 @@
               [class.is-collapsed]="!node.leaf && !node.expanded"
               (click)="togglePathNode(node.data, $event)">
               @if (!node.leaf && !node.expanded) {
-                <span
-                  class="path-node-toggle pi pi-chevron-right"
-                  aria-hidden="true"></span>
+                <span class="path-node-toggle" aria-hidden="true">
+                  <svg lucideChevronRight class="app-icon" aria-hidden="true" focusable="false"></svg>
+                </span>
               }
               <span>{{ node.label }}</span>
             </button>

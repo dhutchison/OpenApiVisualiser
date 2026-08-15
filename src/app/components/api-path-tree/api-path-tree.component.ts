@@ -1,10 +1,20 @@
 
 import { Component, AfterViewInit, ElementRef, OnDestroy, OnInit, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import {
+  LucideArrowDownAZ,
+  LucideArrowDownUp,
+  LucideArrowUpAZ,
+  LucideChevronRight,
+  LucideDownload,
+  LucideFilterX,
+  LucideFunnel,
+  LucideList,
+  LucideMaximize2,
+  LucideMinimize2,
+  LucideNetwork
+} from '@lucide/angular';
 import { TreeNode } from 'primeng/api';
-import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
 import { FileReaderService } from '../../services/file-reader.service';
@@ -25,13 +35,21 @@ interface PrimeNgApiPathNode extends TreeNode {
 @Component({
   selector: 'app-api-path-tree',
   imports: [
-    ButtonModule,
     DialogModule,
     EndpointSwaggerComponent,
-    FormsModule,
-    SelectButtonModule,
     TooltipModule,
-    TreeModule
+    TreeModule,
+    LucideArrowDownAZ,
+    LucideArrowDownUp,
+    LucideArrowUpAZ,
+    LucideChevronRight,
+    LucideDownload,
+    LucideFilterX,
+    LucideFunnel,
+    LucideList,
+    LucideMaximize2,
+    LucideMinimize2,
+    LucideNetwork
 ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './api-path-tree.component.html'
@@ -64,22 +82,10 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
   /* Boolean holding the state on if an image generation is in progress */
   generatingImage = false;
 
-  /* Possible display orientation types */
-  readonly viewTypes: any[] = [
-    {title: 'Tree', value: true, icon: 'pi pi-sitemap icon-rotate-ccw-90'},
-    {title: 'List', value: false, icon: 'pi pi-list'}
-  ];
-
-  /* Possible display expansion modes */
-  readonly expansionTypes: any[] = [
-    {title: 'Compressed', value: true, icon: 'pi pi-window-minimize'},
-    {title: 'Expanded', value: false, icon: 'pi pi-window-maximize'}
-  ];
-
-  readonly sortTypes: Array<{title: string; value: ApiPathSortOrder; icon: string}> = [
-    {title: 'Default', value: 'default', icon: 'pi pi-sort-alt'},
-    {title: 'A-Z', value: 'asc', icon: 'pi pi-sort-alpha-down'},
-    {title: 'Z-A', value: 'desc', icon: 'pi pi-sort-alpha-up'}
+  readonly sortTypes: Array<{title: string; value: ApiPathSortOrder}> = [
+    {title: 'Default', value: 'default'},
+    {title: 'A-Z', value: 'asc'},
+    {title: 'Z-A', value: 'desc'}
   ];
 
   readonly untaggedFilterValue = UNTAGGED_FILTER_VALUE;

@@ -8,12 +8,9 @@ import { provideRouter } from '@angular/router';
 
 import { MainComponent } from './main.component';
 
-import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { FieldsetModule } from 'primeng/fieldset';
-import { FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
 import { TreeTableModule } from 'primeng/treetable';
@@ -56,13 +53,10 @@ describe('MainComponent', () => {
         UrlChooserComponent,
         PipesModule,
 
-        ButtonModule,
         DialogModule,
         FieldsetModule,
-        FileUploadModule,
         FormsModule,
         PanelModule,
-        SelectButtonModule,
         TooltipModule,
         TreeModule,
         TreeTableModule

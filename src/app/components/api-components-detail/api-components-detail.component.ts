@@ -1,5 +1,6 @@
 
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { LucideChevronDown } from '@lucide/angular';
 import { SchemaObject, ReferenceObject, OpenAPIObject, ComponentsObject } from 'openapi3-ts/oas31';
 import { FileReaderService } from '../../services/file-reader.service';
 import { MarkdownifyPipe } from '../../pipes/markdownify.pipe';
@@ -21,7 +22,8 @@ interface ComponentSection {
   imports: [
     ExternalDocsComponent,
     MarkdownifyPipe,
-    SchemaDetailComponent
+    SchemaDetailComponent,
+    LucideChevronDown
 ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './api-components-detail.component.html'

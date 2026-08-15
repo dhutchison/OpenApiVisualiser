@@ -11,8 +11,6 @@ describe('FileChooserComponent', () => {
 
   let fileReaderService: FileReaderService;
   let loadFileSpy: jasmine.Spy;
-  let fileUploadComponent;
-  let clearSpy: jasmine.Spy;
 
   beforeEach(waitForAsync(() => {
 
@@ -31,11 +29,6 @@ describe('FileChooserComponent', () => {
     fileReaderService = TestBed.inject(FileReaderService);
     loadFileSpy = spyOn(fileReaderService, 'loadFile');
 
-    fileUploadComponent = {
-      clear: () => {}
-    };
-    clearSpy = spyOn(fileUploadComponent, 'clear');
-
   }));
 
   beforeEach(() => {
@@ -46,6 +39,15 @@ describe('FileChooserComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should render a native multi-file picker', () => {
+    const input = fixture.nativeElement.querySelector('#file-input') as HTMLInputElement;
+    const label = fixture.nativeElement.querySelector('label[for="file-input"]') as HTMLLabelElement;
+
+    expect(input.type).toBe('file');
+    expect(input.multiple).toBeTrue();
+    expect(label.textContent).toContain('Import File(s)');
   });
 
   describe('Valid Inputs', () => {
@@ -89,14 +91,9 @@ describe('FileChooserComponent', () => {
         new File([], 'input.json'),
         new File([], 'input.yaml')
       ];
-      component.loadFile(
-        {
-          files: testFiles
-        }, fileUploadComponent);
+      component.loadFile({files: testFiles});
 
       expect(loadFileSpy.calls.count()).toBe(2, 'spy method was called twice');
-
-      expect(clearSpy.calls.count()).toBe(1, 'clear method on file upload component was called');
     });
   });
 

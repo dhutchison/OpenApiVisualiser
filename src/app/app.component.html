@@ -11,12 +11,16 @@
     </div>
     <button
       type="button"
-      pButton
-      class="theme-toggle p-button-secondary"
+      class="app-button app-button--secondary theme-toggle"
       [attr.aria-pressed]="darkMode"
       (click)="toggleDarkMode()">
-      <i pButtonIcon [class]="darkMode ? 'pi pi-sun' : 'pi pi-moon'"></i>
-      <span pButtonLabel>{{ darkMode ? 'Light' : 'Dark' }}</span>
+      @if (darkMode) {
+        <svg lucideSun class="app-icon" aria-hidden="true" focusable="false"></svg>
+        <span>Light</span>
+      } @else {
+        <svg lucideMoon class="app-icon" aria-hidden="true" focusable="false"></svg>
+        <span>Dark</span>
+      }
     </button>
   </header>
 
