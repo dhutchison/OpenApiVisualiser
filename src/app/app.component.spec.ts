@@ -20,12 +20,9 @@ import { UrlChooserComponent } from './components/url-chooser/url-chooser.compon
 import { SummaryComponent } from './components/summary/summary.component';
 import { EndpointSwaggerComponent } from './components/endpoint-swagger/endpoint-swagger.component';
 
-import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { FieldsetModule } from 'primeng/fieldset';
-import { FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { TreeModule } from 'primeng/tree';
 import { TreeTableModule } from 'primeng/treetable';
 import { TooltipModule } from 'primeng/tooltip';
@@ -52,13 +49,10 @@ describe('AppComponent', () => {
         PipesModule,
 
         BrowserAnimationsModule, // NOSONAR - Keep until PrimeNG no longer depends on legacy animation triggers.
-        ButtonModule,
         DialogModule,
         FieldsetModule,
-        FileUploadModule,
         FormsModule,
         PanelModule,
-        SelectButtonModule,
         TooltipModule,
         TreeModule,
         TreeTableModule

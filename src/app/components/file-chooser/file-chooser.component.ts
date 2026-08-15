@@ -1,11 +1,16 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { FileUploadModule } from 'primeng/fileupload';
+import { LucideFileUp } from '@lucide/angular';
 import { FileReaderService } from '../../services/file-reader.service';
+
+type FileSelectionEvent = {
+  files?: File[];
+  target?: { files?: Iterable<File> | ArrayLike<File> | null };
+};
 
 @Component({
   selector: 'app-file-chooser',
   imports: [
-    FileUploadModule
+    LucideFileUp
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './file-chooser.component.html'
@@ -17,24 +22,26 @@ export class FileChooserComponent {
   readonly yamlFilenamePattern = /\.y(a)?ml/;
   readonly jsonFilenamePattern = /\.json/;
 
-  loadFile(
-    event: { files?: File[]; target?: { files: Iterable<File> | ArrayLike<File> } },
-    fileUploadComponent?: { clear: () => void }) {
+  loadFile(event: Event | FileSelectionEvent) {
 
     console.log(event);
+
+    const nativeInput = event.target instanceof HTMLInputElement ? event.target : undefined;
 
     /* Reset back to having no files loaded */
     this.fileReaderService.resetFiles.next();
 
     let fileArray: File[];
-    if (event.files) {
-      /* Most likely coming from a PrimeNG Upload component - just use this array */
-      fileArray = event.files;
+    const selectionEvent = event as FileSelectionEvent;
+    if (selectionEvent.files) {
+      /* Use the provided file array when called by a file-picker adapter. */
+      fileArray = selectionEvent.files;
     } else {
       /* Assume event from a regular HTML file input
        * Note that a FileList isn't an array
       * so we need to make it one first */
-      fileArray = Array.from(event.target.files);
+      const target = event.target as HTMLInputElement | FileSelectionEvent['target'] | null | undefined;
+      fileArray = Array.from(target?.files ?? []);
     }
 
 
@@ -51,10 +58,9 @@ export class FileChooserComponent {
       this.fileReaderService.loadFile(file);
     });
 
-    if (fileUploadComponent) {
-      /* Clear the selection */
-      console.log(fileUploadComponent);
-      fileUploadComponent.clear();
+    /* Allow choosing the same file again after it has been processed. */
+    if (nativeInput) {
+      nativeInput.value = '';
     }
 
   }

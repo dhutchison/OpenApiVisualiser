@@ -8,10 +8,10 @@
     <ng-template #footer>
       <button
         type="button"
-        pButton
+        class="app-button app-button--secondary"
       (click)="displayLoadFailureDialog = false">
-        <i pButtonIcon class="pi pi-times"></i>
-        <span pButtonLabel>Close</span>
+        <svg lucideX class="app-icon" aria-hidden="true" focusable="false"></svg>
+        <span>Close</span>
       </button>
     </ng-template>
   </p-dialog>
@@ -32,10 +32,12 @@
           [attr.aria-controls]="'main-panel-' + section.id"
           (click)="toggleSection(section.id)">
           <span>{{ section.title }}</span>
-          <span
-            class="accordion-toggle-icon pi pi-chevron-down"
+          <svg
+            lucideChevronDown
+            class="accordion-toggle-icon"
             [class.is-expanded]="isSectionExpanded(section.id)"
-          aria-hidden="true"></span>
+            aria-hidden="true"
+            focusable="false"></svg>
         </button>
         <section
           class="p-accordioncontent"

@@ -2,7 +2,6 @@
 // @import "@angular/material/prebuilt-themes/indigo-pink.css";
 
 /* PrimeNG */
-@import "primeicons/primeicons.css";
 @import "swagger-ui/dist/swagger-ui.css";
 
 /* Fonts */
@@ -25,6 +24,7 @@
     --app-brand: #0f766e;
     --app-brand-strong: #0d9488;
     --app-brand-soft: #d8f3ee;
+    --app-brand-contrast: #ffffff;
     --app-focus: rgba(13, 148, 136, 0.28);
     --app-shadow: 0 18px 45px rgba(31, 41, 55, 0.12);
     --app-node-shadow: 0 10px 25px rgba(20, 32, 47, 0.12);
@@ -47,6 +47,7 @@
     --app-brand: #5eead4;
     --app-brand-strong: #2dd4bf;
     --app-brand-soft: rgba(45, 212, 191, 0.16);
+    --app-brand-contrast: #0f2a26;
     --app-focus: rgba(94, 234, 212, 0.28);
     --app-shadow: 0 20px 55px rgba(0, 0, 0, 0.36);
     --app-node-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
@@ -144,46 +145,27 @@ header.header p:not(.eyebrow) {
     line-height: 1.6;
 }
 
-.theme-toggle.p-button {
+.theme-toggle {
     flex: 0 0 auto;
     border-color: var(--app-border);
     background: var(--app-surface);
-    color: var(--app-text) !important;
+    color: var(--app-text);
     box-shadow: var(--app-shadow);
 }
 
-.theme-toggle.p-button .p-button-label,
-.theme-toggle.p-button .p-button-icon {
-    color: var(--app-text) !important;
-}
-
-.theme-toggle.p-button:hover {
+.theme-toggle:hover {
     border-color: var(--app-brand);
     background: var(--app-surface-muted);
-    color: var(--app-text) !important;
+    color: var(--app-text);
 }
 
-.theme-toggle.p-button:hover .p-button-label,
-.theme-toggle.p-button:hover .p-button-icon {
-    color: var(--app-text) !important;
-}
-
-.theme-toggle.p-button:enabled:active,
-.theme-toggle.p-button:enabled:focus,
-.theme-toggle.p-button:enabled:focus-visible {
+.theme-toggle:active,
+.theme-toggle:focus,
+.theme-toggle:focus-visible {
     border-color: var(--app-brand);
     background: var(--app-surface-muted);
-    color: var(--app-text) !important;
+    color: var(--app-text);
     box-shadow: 0 0 0 3px var(--app-focus);
-}
-
-.theme-toggle.p-button:enabled:active .p-button-label,
-.theme-toggle.p-button:enabled:active .p-button-icon,
-.theme-toggle.p-button:enabled:focus .p-button-label,
-.theme-toggle.p-button:enabled:focus .p-button-icon,
-.theme-toggle.p-button:enabled:focus-visible .p-button-label,
-.theme-toggle.p-button:enabled:focus-visible .p-button-icon {
-    color: var(--app-text) !important;
 }
 
 /********** Colours *****************/
@@ -208,30 +190,80 @@ $putHighlightColour: #fca130;
     box-shadow: var(--app-shadow);
 }
 
-/* Icon manipulation */
-.icon-rotate-ccw-90 {
-    transform: rotate(-90deg);
-}
-
-.p-button {
+/* Application-owned controls */
+.app-button {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.55rem;
+    padding: 0.55rem 0.85rem;
+    border: 1px solid transparent;
     border-radius: 8px;
+    color: inherit;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.86rem;
     font-weight: 700;
+    line-height: 1.2;
+    transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
 }
 
-.p-button:not(.p-button-secondary) {
+.app-button:focus-visible,
+.segmented-control__option:focus-visible,
+.path-tree-tag-filter summary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--app-focus);
+}
+
+.app-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.app-button--primary {
     border-color: var(--app-brand);
     background: var(--app-brand);
+    color: var(--app-brand-contrast);
 }
 
-.p-button:not(.p-button-secondary):hover {
+.app-button--primary:hover:not(:disabled) {
     border-color: var(--app-brand-strong);
     background: var(--app-brand-strong);
 }
 
-.p-button-secondary {
+.app-button--secondary {
     border-color: var(--app-border);
     background: var(--app-surface-muted);
     color: var(--app-text);
+}
+
+.app-button--secondary:hover:not(:disabled) {
+    border-color: var(--app-brand);
+    background: var(--app-surface-solid);
+}
+
+.app-icon {
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 auto;
+    color: currentColor;
+    stroke: currentColor;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.file-chooser-input:focus-visible + .file-chooser-button {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--app-focus);
 }
 
 .p-dialog,
@@ -325,7 +357,7 @@ $putHighlightColour: #fca130;
         flex-direction: column;
     }
 
-    .url-import-dialog__footer .p-button {
+    .url-import-dialog__footer .app-button {
         width: 100%;
     }
 }
@@ -429,6 +461,40 @@ $putHighlightColour: #fca130;
     .download-image-button {
         margin-left: auto;
     }
+}
+
+.segmented-control {
+    display: inline-flex;
+    overflow: hidden;
+    border: 1px solid var(--app-border);
+    border-radius: 8px;
+    background: var(--app-surface-solid);
+}
+
+.segmented-control__option {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.4rem;
+    min-height: 2.55rem;
+    padding: 0.45rem 0.7rem;
+    border: 0;
+    border-right: 1px solid var(--app-border);
+    background: transparent;
+    color: var(--app-text-muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.segmented-control__option:last-child {
+    border-right: 0;
+}
+
+.segmented-control__option:hover,
+.segmented-control__option.is-selected {
+    background: var(--app-brand-soft);
+    color: var(--app-text);
 }
 
 .path-tree-tag-filter {
@@ -925,7 +991,7 @@ select {
         border-color:$putHighlightColour;
         background: color-mix(in srgb, #fca130 12%, var(--app-surface-solid));
     }
-    .p-component-header .p-button {
+    .p-component-header button {
         border-color:$putHighlightColour;
         background: $putHighlightColour;
         padding: 0 0.5em
@@ -937,7 +1003,7 @@ select {
         border-color: $getHighlightColour;
         background: color-mix(in srgb, #61affe 12%, var(--app-surface-solid));
     }
-    .p-component-header .p-button {
+    .p-component-header button {
         border-color: $getHighlightColour;
         background: $getHighlightColour;
         padding: 0 0.5em
@@ -949,7 +1015,7 @@ select {
         border-color:$deleteHighlightColour;
         background: color-mix(in srgb, #f93e3e 12%, var(--app-surface-solid));
     }
-    .p-component-header .p-button {
+    .p-component-header button {
         border-color:$deleteHighlightColour;
         background: $deleteHighlightColour;
         padding: 0 0.5em
@@ -1041,7 +1107,7 @@ select {
         padding-top: 1.5rem;
     }
 
-    .theme-toggle.p-button {
+    .theme-toggle {
         align-self: flex-start;
     }
 

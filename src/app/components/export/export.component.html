@@ -8,20 +8,20 @@
     }
   </select>
   <ng-template #footer>
-    <button type="submit" pButton (click)="export()">
-      <i pButtonIcon class="pi pi-check"></i>
-      <span pButtonLabel>Export</span>
+    <button type="submit" class="app-button app-button--primary" (click)="export()">
+      <svg lucideCheck class="app-icon" aria-hidden="true" focusable="false"></svg>
+      <span>Export</span>
     </button>
-    <button type="button" pButton (click)="display=false" class="p-button-secondary">
-      <i pButtonIcon class="pi pi-times"></i>
-      <span pButtonLabel>Cancel</span>
+    <button type="button" class="app-button app-button--secondary" (click)="display=false">
+      <svg lucideX class="app-icon" aria-hidden="true" focusable="false"></svg>
+      <span>Cancel</span>
     </button>
   </ng-template>
 </p-dialog>
 
-<button type="button" pButton
+<button type="button" class="app-button app-button--primary"
   (click)="showDialog()"
   [disabled]="!buttonEnabled">
-  <i pButtonIcon class="pi pi-download"></i>
-  <span pButtonLabel>Export</span>
+  <svg lucideDownload class="app-icon" aria-hidden="true" focusable="false"></svg>
+  <span>Export</span>
 </button>

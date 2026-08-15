@@ -13,6 +13,12 @@ describe('The Home Page', () => {
     it('successfully loads', () => {
       /* Open the application */
       cy.visit('/')
+
+      cy.get('.button-bar .app-button').then(($buttons) => {
+        const fontSizes = [...$buttons].map((button) => getComputedStyle(button).fontSize)
+
+        expect(new Set(fontSizes).size).to.equal(1)
+      })
     })
 
     it('Toggles dark mode', () => {
@@ -51,10 +57,11 @@ describe('The Home Page', () => {
       })
 
       cy.get('html').should('not.have.class', 'dark-mode')
-      cy.get('.theme-toggle .p-button-label')
+      cy.get('.theme-toggle')
           .should('have.css', 'color', 'rgb(23, 32, 51)')
-      cy.get('.theme-toggle .p-button-icon')
+      cy.get('.theme-toggle .app-icon')
           .should('have.css', 'color', 'rgb(23, 32, 51)')
+          .and('have.attr', 'aria-hidden', 'true')
 
       accordionHeader('Summary').click()
       cy.get('#method-summary caption')
@@ -96,10 +103,10 @@ describe('The Home Page', () => {
       cy.contains('button', 'Dark').click()
       cy.get('html').should('have.class', 'dark-mode')
       cy.contains('button', 'Light')
-          .find('.p-button-label')
+          .find('span')
           .should('have.css', 'color', 'rgb(243, 241, 232)')
       cy.contains('button', 'Light')
-          .find('.p-button-icon')
+          .find('.app-icon')
           .should('have.css', 'color', 'rgb(243, 241, 232)')
     })
 
@@ -148,14 +155,14 @@ describe('The Home Page', () => {
 
         cy.contains('Import from URL').click();
 
-        /* The footer projection and button content must survive the PrimeNG 22 migration. */
+        /* The footer projection and native button content must remain available. */
         cy.get('.url-import-dialog .p-dialog-footer').should('be.visible')
         cy.get('.url-import-dialog .p-dialog-footer button[type=submit]')
-            .find('.p-button-label')
+            .find('span')
             .should('have.text', 'Import')
         cy.get('.url-import-dialog .p-dialog-footer button[type=submit]')
-            .find('.p-button-icon')
-            .should('have.class', 'pi-check')
+            .find('.app-icon')
+            .should('have.attr', 'aria-hidden', 'true')
 
         /* Submit button should be initially disabled */
         cy.get('button[type=submit]').should('be.disabled')
@@ -206,7 +213,13 @@ describe('The Home Page', () => {
     it('Loads from a single file', () => {
         cy.visit('/')
 
-        cy.contains('Import File(s)')//.click();
+        cy.get('#file-input').selectFile({
+          contents: Cypress.Buffer.from('openapi: 3.0.0\ninfo:\n  title: Imported API\n  version: 1.0.0\npaths: {}'),
+          fileName: 'input.yaml',
+          mimeType: 'text/yaml'
+        }, {force: true})
+        accordionHeader('API Information').click()
+        cy.get('.api-info-title').should('be.visible').and('contain.text', 'Imported API')
     })
 
     /*

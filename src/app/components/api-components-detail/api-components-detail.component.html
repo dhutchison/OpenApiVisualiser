@@ -26,10 +26,12 @@
                 @if (schemas?.[item] && getSchemaPropertyCount(schemas[item])) {
                   <span class="count-pill">{{ getSchemaPropertyCount(schemas[item]) }} properties</span>
                 }
-                <span
-                  class="accordion-toggle-icon pi pi-chevron-down"
+                <svg
+                  lucideChevronDown
+                  class="accordion-toggle-icon"
                   [class.is-expanded]="isSchemaExpanded(item)"
-                aria-hidden="true"></span>
+                  aria-hidden="true"
+                  focusable="false"></svg>
               </span>
             </button>
             @if (isSchemaExpanded(item)) {
@@ -86,10 +88,12 @@
                 <span>{{ section.label }}</span>
                 <span class="component-header-meta">
                   <span class="count-pill">{{ section.items.length }}</span>
-                  <span
-                    class="accordion-toggle-icon pi pi-chevron-down"
+                  <svg
+                    lucideChevronDown
+                    class="accordion-toggle-icon"
                     [class.is-expanded]="isComponentSectionExpanded(section.key)"
-                  aria-hidden="true"></span>
+                    aria-hidden="true"
+                    focusable="false"></svg>
                 </span>
               </button>
               @if (isComponentSectionExpanded(section.key)) {

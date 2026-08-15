@@ -1,12 +1,13 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
+import { LucideMoon, LucideSun } from '@lucide/angular';
 
 @Component({
   selector: 'app-root',
   imports: [
-    ButtonModule,
+    LucideMoon,
+    LucideSun,
     RouterOutlet
   ],
   changeDetection: ChangeDetectionStrategy.Eager,

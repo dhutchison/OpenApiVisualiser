@@ -9,11 +9,9 @@ import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.c
 
 import { PipesModule } from '../../pipes/pipes.module';
 
-import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { FieldsetModule } from 'primeng/fieldset';
 import { PanelModule } from 'primeng/panel';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
 
@@ -25,14 +23,12 @@ describe('ApiPathTreeComponent', () => {
     TestBed.configureTestingModule({
       imports: [
         ApiPathTreeComponent,
-        ButtonModule,
         DialogModule,
         EndpointSwaggerComponent,
         FieldsetModule,
         FormsModule,
         PanelModule,
         PipesModule,
-        SelectButtonModule,
         TooltipModule,
         TreeModule
       ],
@@ -52,6 +48,16 @@ describe('ApiPathTreeComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should render native segmented controls with decorative icons', () => {
+    const options = fixture.nativeElement.querySelectorAll('.segmented-control__option') as NodeListOf<HTMLButtonElement>;
+    const icons = fixture.nativeElement.querySelectorAll('.segmented-control__option svg') as NodeListOf<SVGElement>;
+
+    expect(options.length).toBe(7);
+    expect(fixture.nativeElement.querySelector('p-selectbutton')).toBeNull();
+    expect(icons.length).toBe(7);
+    icons.forEach(icon => expect(icon.getAttribute('aria-hidden')).toBe('true'));
   });
 
   it('should allow view orientation to be set', () => {
@@ -286,9 +292,9 @@ describe('ApiPathTreeComponent', () => {
     component.tagFilterOptions = [
       {label: 'audit', value: 'audit'}
     ];
-    fixture.detectChanges(false);
+    fixture.componentRef.changeDetectorRef.detectChanges();
     await fixture.whenStable();
-    fixture.detectChanges(false);
+    fixture.componentRef.changeDetectorRef.detectChanges();
 
     const layoutElement = fixture.nativeElement.querySelector('.api-path-tree-layout') as HTMLElement;
     const tagFilter = fixture.nativeElement.querySelector('.path-tree-tag-filter') as HTMLElement;

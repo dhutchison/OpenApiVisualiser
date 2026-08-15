@@ -1,8 +1,8 @@
 
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { LucideCheck, LucideDownload, LucideX } from '@lucide/angular';
 import { FormsModule } from '@angular/forms';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
-import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { FileReaderService } from '../../services/file-reader.service';
 
@@ -12,9 +12,11 @@ import * as jsyaml from 'js-yaml';
 @Component({
   selector: 'app-export',
   imports: [
-    ButtonModule,
     DialogModule,
-    FormsModule
+    FormsModule,
+    LucideCheck,
+    LucideDownload,
+    LucideX
 ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './export.component.html'
