@@ -13,6 +13,12 @@ describe('The Home Page', () => {
     it('successfully loads', () => {
       /* Open the application */
       cy.visit('/')
+
+      cy.get('.button-bar .app-button').then(($buttons) => {
+        const fontSizes = [...$buttons].map((button) => getComputedStyle(button).fontSize)
+
+        expect(new Set(fontSizes).size).to.equal(1)
+      })
     })
 
     it('Toggles dark mode', () => {
