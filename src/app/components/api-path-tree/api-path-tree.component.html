@@ -1,62 +1,22 @@
 <div class="api-path-tree-layout" #pathTreeLayout [style.min-height.px]="pathTreeMinHeight">
   <div class="path-tree-buttons">
-    <div class="segmented-control" role="group" aria-label="View orientation">
-      <button type="button" class="segmented-control__option"
-        [class.is-selected]="horizontalView"
-        [attr.aria-pressed]="horizontalView"
-        (click)="horizontalView = true">
-        <svg lucideNetwork class="app-icon" aria-hidden="true" focusable="false"></svg>
-        <span>Tree</span>
-      </button>
-      <button type="button" class="segmented-control__option"
-        [class.is-selected]="!horizontalView"
-        [attr.aria-pressed]="!horizontalView"
-        (click)="horizontalView = false">
-        <svg lucideList class="app-icon" aria-hidden="true" focusable="false"></svg>
-        <span>List</span>
-      </button>
-    </div>
+    <app-segmented-control
+      label="View orientation"
+      [options]="viewOptions"
+      [value]="horizontalView ? 'tree' : 'list'"
+      (valueChange)="setView($event)"></app-segmented-control>
 
-    <div class="segmented-control" role="group" aria-label="Path expansion">
-      <button type="button" class="segmented-control__option"
-        [class.is-selected]="joinNodesWithNoLeaves"
-        [attr.aria-pressed]="joinNodesWithNoLeaves"
-        (click)="joinNodesWithNoLeaves = true">
-        <svg lucideMinimize2 class="app-icon" aria-hidden="true" focusable="false"></svg>
-        <span>Compressed</span>
-      </button>
-      <button type="button" class="segmented-control__option"
-        [class.is-selected]="!joinNodesWithNoLeaves"
-        [attr.aria-pressed]="!joinNodesWithNoLeaves"
-        (click)="joinNodesWithNoLeaves = false">
-        <svg lucideMaximize2 class="app-icon" aria-hidden="true" focusable="false"></svg>
-        <span>Expanded</span>
-      </button>
-    </div>
+    <app-segmented-control
+      label="Path expansion"
+      [options]="compressionOptions"
+      [value]="joinNodesWithNoLeaves ? 'compressed' : 'expanded'"
+      (valueChange)="setCompression($event)"></app-segmented-control>
 
-    <div class="segmented-control" role="group" aria-label="Path sorting">
-      <button type="button" class="segmented-control__option"
-        [class.is-selected]="sortOrder === 'default'"
-        [attr.aria-pressed]="sortOrder === 'default'"
-        (click)="sortOrder = 'default'">
-        <svg lucideArrowDownUp class="app-icon" aria-hidden="true" focusable="false"></svg>
-        <span>Default</span>
-      </button>
-      <button type="button" class="segmented-control__option"
-        [class.is-selected]="sortOrder === 'asc'"
-        [attr.aria-pressed]="sortOrder === 'asc'"
-        (click)="sortOrder = 'asc'">
-        <svg lucideArrowDownAZ class="app-icon" aria-hidden="true" focusable="false"></svg>
-        <span>A-Z</span>
-      </button>
-      <button type="button" class="segmented-control__option"
-        [class.is-selected]="sortOrder === 'desc'"
-        [attr.aria-pressed]="sortOrder === 'desc'"
-        (click)="sortOrder = 'desc'">
-        <svg lucideArrowUpAZ class="app-icon" aria-hidden="true" focusable="false"></svg>
-        <span>Z-A</span>
-      </button>
-    </div>
+    <app-segmented-control
+      label="Path sorting"
+      [options]="sortOptions"
+      [value]="sortOrder"
+      (valueChange)="setSortOrder($event)"></app-segmented-control>
 
     @if (tagFilterOptions.length) {
       <details class="path-tree-tag-filter" (toggle)="schedulePathTreeMeasurement()">
@@ -110,8 +70,7 @@
             <button
               type="button"
               class="operation-node"
-              pTooltip="{{ node.tooltip }}"
-              [escape]=false
+              [appTooltip]="node.tooltip"
               id="{{ node.id }}-node"
               (click)="openEndpointDetail(node.data)">{{ node.label }}</button>
           } @else {

@@ -47,6 +47,7 @@ describe('FileChooserComponent', () => {
 
     expect(input.type).toBe('file');
     expect(input.multiple).toBeTrue();
+    expect(input.accept).toBe('.yaml,.yml,.json');
     expect(label.textContent).toContain('Import File(s)');
   });
 
@@ -99,6 +100,7 @@ describe('FileChooserComponent', () => {
 
   describe('Invalid Inputs', () => {
     it('txt file extension rejected', () => {
+      spyOn(globalThis, 'alert');
       const testFiles: File[] = [new File([], 'input.txt')];
       component.loadFile(
         {
@@ -106,6 +108,31 @@ describe('FileChooserComponent', () => {
         });
 
       expect(loadFileSpy.calls.count()).toBe(0, 'spy method was not called');
+      expect(globalThis.alert).toHaveBeenCalled();
+    });
+
+    it('processes supported files when a selection also contains an unsupported file', () => {
+      spyOn(globalThis, 'alert');
+      const testFiles: File[] = [
+        new File([], 'input.txt'),
+        new File([], 'input.json')
+      ];
+
+      component.loadFile({files: testFiles});
+
+      expect(loadFileSpy.calls.count()).toBe(1);
+      expect(globalThis.alert).toHaveBeenCalledWith(
+        'You are trying to upload an unsupported file extension (input.txt). Please choose either a .yaml, .yml, or .json file.'
+      );
+    });
+
+    it('clears the native input after every selection', () => {
+      const input = fixture.nativeElement.querySelector('#file-input') as HTMLInputElement;
+      const testFiles: File[] = [new File([], 'input.json')];
+
+      component.loadFile({target: input, files: testFiles});
+
+      expect(input.value).toBe('');
     });
   });
 });
