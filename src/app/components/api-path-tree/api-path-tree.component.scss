@@ -179,7 +179,7 @@
         top: var(--tree-connector-top, 1.35rem);
     }
 
-    .path-tree-children > .path-tree-node::before {
+    .path-tree-children > .path-tree-node > .path-tree-node-content::before {
         border-top: 1px solid var(--app-line);
         content: "";
         height: 0;

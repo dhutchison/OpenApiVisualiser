@@ -436,7 +436,8 @@ describe('The Home Page', () => {
         const getRect = $getNode[0].getBoundingClientRect();
         const operationGroup = $getNode.closest('.path-tree-children')[0];
         const operationGroupBranch = getComputedStyle(operationGroup, '::after');
-        const getNodeConnector = getComputedStyle($getNode.closest('.path-tree-node')[0], '::before');
+        const getNodeContent = $getNode.closest('.path-tree-node')[0].querySelector(':scope > .path-tree-node-content');
+        const getNodeConnector = getComputedStyle(getNodeContent, '::before');
 
         expect(getComputedStyle(operationGroup).flexDirection).to.eq('column');
         expect(operationGroupBranch.display).to.eq('block');
@@ -445,12 +446,24 @@ describe('The Home Page', () => {
 
         cy.get('#createPets-node').should(($postNode) => {
           const postRect = $postNode[0].getBoundingClientRect();
-          const postNodeConnector = getComputedStyle($postNode.closest('.path-tree-node')[0], '::before');
+          const postNodeContent = $postNode.closest('.path-tree-node')[0].querySelector(':scope > .path-tree-node-content');
+          const postNodeConnector = getComputedStyle(postNodeContent, '::before');
 
           expect(Math.abs(postRect.left - getRect.left)).to.be.lessThan(2);
           expect(postRect.top).to.be.greaterThan(getRect.top);
           expect(postNodeConnector.borderTopStyle).to.eq('solid');
         });
+      });
+
+      cy.contains('.path-node', '/{petId}').closest('.path-tree-node').then(($pathNode) => {
+        const pathNode = $pathNode[0];
+        const pathContent = pathNode.querySelector(':scope > .path-tree-node-content');
+        const pathRect = pathContent.getBoundingClientRect();
+        const incomingConnector = getComputedStyle(pathContent, '::before');
+        const connectorCenter = pathRect.top + parseFloat(incomingConnector.top) + 0.5;
+        const contentCenter = pathRect.top + pathRect.height / 2;
+
+        expect(Math.abs(connectorCenter - contentCenter)).to.be.lessThan(1);
       });
     })
 
