@@ -458,12 +458,20 @@ describe('The Home Page', () => {
       cy.contains('.path-node', '/{petId}').closest('.path-tree-node').then(($pathNode) => {
         const pathNode = $pathNode[0];
         const pathContent = pathNode.querySelector(':scope > .path-tree-node-content');
+        const pathChildren = pathNode.querySelector(':scope > .path-tree-children');
         const pathRect = pathContent.getBoundingClientRect();
+        const childrenRect = pathChildren.getBoundingClientRect();
         const incomingConnector = getComputedStyle(pathContent, '::before');
+        const outgoingConnector = getComputedStyle(pathContent, '::after');
         const connectorCenter = pathRect.top + parseFloat(incomingConnector.top) + 0.5;
         const contentCenter = pathRect.top + pathRect.height / 2;
+        const outgoingConnectorRight = pathRect.left
+          + parseFloat(outgoingConnector.left)
+          + parseFloat(outgoingConnector.width);
 
         expect(Math.abs(connectorCenter - contentCenter)).to.be.lessThan(1);
+        expect(childrenRect.left).to.be.greaterThan(pathRect.right);
+        expect(Math.abs(outgoingConnectorRight - childrenRect.left)).to.be.lessThan(3);
       });
     })
 

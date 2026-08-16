@@ -126,7 +126,9 @@
     }
 
     .path-tree-children > .path-tree-node {
-        display: block;
+        align-items: center;
+        display: flex;
+        flex-direction: row;
         position: relative;
     }
 
