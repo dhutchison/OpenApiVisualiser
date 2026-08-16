@@ -8,8 +8,6 @@ import { provideRouter } from '@angular/router';
 
 import { MainComponent } from './main.component';
 
-import { TreeModule } from 'primeng/tree';
-import { TreeTableModule } from 'primeng/treetable';
 
 import { ApiComponentsDetailComponent } from '../api-components-detail/api-components-detail.component';
 import { ApiInformationComponent } from '../api-information/api-information.component';
@@ -50,8 +48,6 @@ describe('MainComponent', () => {
         PipesModule,
 
         FormsModule,
-        TreeModule,
-        TreeTableModule
       ],
       providers: [
         provideHttpClient(withXhr()),

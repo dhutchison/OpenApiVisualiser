@@ -478,12 +478,11 @@ describe('The Home Page', () => {
         const initialTop = getPageTop($petsHeader[0]);
 
         accordionHeader('Pet').click();
-        cy.get('#components_schemas_Pet p-treetable').should('be.visible');
-        cy.get('#components_schemas_Pet p-treetable').within(() => {
-          /* The TreeTable header/body templates must continue to render through the migration. */
-          cy.contains('th', 'Name').should('be.visible')
-          cy.contains('td', 'id').should('be.visible')
-        })
+        cy.get('#components_schemas_Pet .schema-property-list').should('be.visible');
+        cy.get('#components_schemas_Pet [data-schema-property="id"]')
+          .should('be.visible')
+          .and('contain.text', 'id')
+          .and('contain.text', 'integer')
 
         accordionHeader('Pet')
             .closest('.app-disclosure')
