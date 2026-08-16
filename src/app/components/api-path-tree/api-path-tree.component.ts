@@ -1,5 +1,6 @@
 
 import { Component, AfterViewInit, ElementRef, OnDestroy, OnInit, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
+import { CdkTreeModule } from '@angular/cdk/tree';
 import {
   LucideArrowDownAZ,
   LucideArrowDownUp,
@@ -13,8 +14,6 @@ import {
   LucideMinimize2,
   LucideNetwork
 } from '@lucide/angular';
-import { TreeNode } from 'primeng/api';
-import { TreeModule } from 'primeng/tree';
 import { FileReaderService } from '../../services/file-reader.service';
 import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
 import { UserPreferenceControllerService } from '../../controllers/user-preference-controller.service';
@@ -28,26 +27,22 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
 const UNTAGGED_FILTER_VALUE = '__untagged__';
 type ApiPathSortOrder = 'default' | 'asc' | 'desc';
 
-interface PrimeNgApiPathNode extends TreeNode {
-  tooltip?: string;
-  id?: string;
-}
-
 @Component({
   selector: 'app-api-path-tree',
   imports: [
     AppDialogComponent,
     AppTooltipDirective,
+    CdkTreeModule,
     EndpointSwaggerComponent,
     SegmentedControlComponent,
-    TreeModule,
     LucideChevronRight,
     LucideDownload,
     LucideFilterX,
     LucideFunnel
 ],
   changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './api-path-tree.component.html'
+  templateUrl: './api-path-tree.component.html',
+  styleUrls: ['./api-path-tree.component.scss']
 })
 export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
 
@@ -64,9 +59,6 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
    * Object hoilding the tree nodes to display
    */
   apiPathNodes: ApiPathTreeNode[] = [];
-
-  /** PrimeNG-specific view model used only by the tree renderer. */
-  apiPathRenderNodes: PrimeNgApiPathNode[] = [];
 
   selectedOperationNode?: ApiOperationNode;
 
@@ -104,6 +96,12 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
   tagFilterOptions: Array<{label: string; value: string}> = [];
 
   selectedTagFilters: string[] = [];
+
+  readonly childrenAccessor = (node: ApiPathTreeNode) => node.children;
+
+  isApiOperationNode(node: ApiPathTreeNode): node is ApiOperationNode {
+    return isApiOperationNode(node);
+  }
 
   /**
    * The original (uncompressed) version of the tree nodes
@@ -301,8 +299,6 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
       this.sortTreeNodes(this.apiPathNodes);
     }
 
-    this.apiPathRenderNodes = this.createPrimeNgTreeNodes(this.apiPathNodes);
-
     this.schedulePathTreeMeasurement();
   }
 
@@ -331,29 +327,14 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     }
 
     treeNode.expanded = !treeNode.expanded;
-    this.apiPathRenderNodes = this.createPrimeNgTreeNodes(this.apiPathNodes);
     this.schedulePathTreeMeasurement();
   }
 
-  private createPrimeNgTreeNodes(nodes: ApiPathTreeNode[]): PrimeNgApiPathNode[] {
-    return nodes.map(node => {
-      const renderedNode: PrimeNgApiPathNode = {
-        label: node.label,
-        leaf: node.leaf,
-        expanded: node.expanded,
-        children: this.createPrimeNgTreeNodes(node.children),
-        data: node
-      };
-
-      if (isApiOperationNode(node)) {
-        renderedNode.type = 'operation';
-        renderedNode.styleClass = 'p-treenode-http-method-' + (node.method ?? node.label).toLowerCase();
-        renderedNode.tooltip = node.tooltip;
-        renderedNode.id = node.id;
-      }
-
-      return renderedNode;
-    });
+  setNodeExpanded(node: ApiPathTreeNode, expanded: boolean): void {
+    if (!node.leaf) {
+      node.expanded = expanded;
+      this.schedulePathTreeMeasurement();
+    }
   }
 
   /**  When we compress the view, we will merge any nodes which have only a
@@ -576,7 +557,7 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
   }
 
   private updateHorizontalConnectorBounds(layoutElement: HTMLElement) {
-    const childLists = Array.from(layoutElement.querySelectorAll('.tree-horizontal .p-tree-node-children')) as HTMLElement[];
+    const childLists = Array.from(layoutElement.querySelectorAll('.tree-horizontal .path-tree-children')) as HTMLElement[];
 
     childLists.forEach((childList) => {
       const immediateChildContents = this.getImmediateChildNodeContents(childList);
@@ -605,11 +586,11 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
           return undefined;
         }
 
-        if (childElement.matches('.p-tree-node')) {
-          return childElement.querySelector(':scope > .p-tree-node-content') as HTMLElement | null;
+        if (childElement.matches('.path-tree-node')) {
+          return childElement.querySelector(':scope > .path-tree-node-content') as HTMLElement | null;
         }
 
-        return childElement.querySelector(':scope > .p-tree-node > .p-tree-node-content') as HTMLElement | null;
+        return childElement.querySelector(':scope > .path-tree-node > .path-tree-node-content') as HTMLElement | null;
       })
       .filter((contentElement): contentElement is HTMLElement => contentElement instanceof HTMLElement);
   }

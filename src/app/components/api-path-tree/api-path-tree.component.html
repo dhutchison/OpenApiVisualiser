@@ -61,35 +61,56 @@
 
   <div>
     <div class="tree-view" #treeView>
-      <p-tree [value]="apiPathRenderNodes"
-        (onNodeSelect)="openEndpointDetail($event.node?.data)"
-        [class]="horizontalView? 'tree-horizontal': 'tree-vertical'">
-
-        <ng-template #node let-node>
-          @if (node.type === 'operation') {
-            <button
-              type="button"
-              class="operation-node"
-              [appTooltip]="node.tooltip"
-              id="{{ node.id }}-node"
-              (click)="openEndpointDetail(node.data)">{{ node.label }}</button>
-          } @else {
-            <button
-              type="button"
-              class="path-node"
-              [attr.aria-expanded]="node.leaf ? null : node.expanded"
-              [class.is-collapsed]="!node.leaf && !node.expanded"
-              (click)="togglePathNode(node.data, $event)">
-              @if (!node.leaf && !node.expanded) {
-                <span class="path-node-toggle" aria-hidden="true">
-                  <svg lucideChevronRight class="app-icon" aria-hidden="true" focusable="false"></svg>
-                </span>
-              }
-              <span>{{ node.label }}</span>
-            </button>
+      <cdk-tree
+        [dataSource]="apiPathNodes"
+        [childrenAccessor]="childrenAccessor"
+        [class]="horizontalView ? 'tree-horizontal' : 'tree-vertical'"
+        aria-label="API paths">
+        <cdk-nested-tree-node
+          *cdkTreeNodeDef="let node"
+          class="path-tree-node"
+          [isExpandable]="!node.leaf"
+          [isExpanded]="node.expanded"
+          [cdkTreeNodeTypeaheadLabel]="node.label"
+          (expandedChange)="setNodeExpanded(node, $event)">
+          <div
+            class="path-tree-node-content"
+            [class.method-get]="isApiOperationNode(node) && node.method === 'GET'"
+            [class.method-post]="isApiOperationNode(node) && node.method === 'POST'"
+            [class.method-put]="isApiOperationNode(node) && node.method === 'PUT'"
+            [class.method-delete]="isApiOperationNode(node) && node.method === 'DELETE'"
+            [attr.data-node-kind]="node.kind"
+            [attr.data-method]="isApiOperationNode(node) ? node.method : null">
+            @if (isApiOperationNode(node)) {
+              <button
+                type="button"
+                class="operation-node"
+                [appTooltip]="node.tooltip"
+                [id]="node.id ? node.id + '-node' : null"
+                (click)="openEndpointDetail(node)">{{ node.label }}</button>
+            } @else {
+              <button
+                type="button"
+                class="path-node"
+                [attr.aria-expanded]="node.expanded"
+                [class.is-collapsed]="!node.expanded"
+                (click)="togglePathNode(node, $event)">
+                @if (!node.expanded) {
+                  <span class="path-node-toggle" aria-hidden="true">
+                    <svg lucideChevronRight class="app-icon" aria-hidden="true" focusable="false"></svg>
+                  </span>
+                }
+                <span>{{ node.label }}</span>
+              </button>
+            }
+          </div>
+          @if (!node.leaf && node.expanded) {
+            <div class="path-tree-children" role="group">
+              <ng-container cdkTreeNodeOutlet></ng-container>
+            </div>
           }
-        </ng-template>
-      </p-tree>
+        </cdk-nested-tree-node>
+      </cdk-tree>
     </div>
   </div>
 </div>

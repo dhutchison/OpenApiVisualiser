@@ -79,7 +79,7 @@ describe('The Home Page', () => {
 
       accordionHeader('API Paths').click()
       cy.get('#listPets-node').should('be.visible').then(($getNode) => {
-        const getNodeStyle = getComputedStyle($getNode.closest('.p-tree-node-content')[0]);
+        const getNodeStyle = getComputedStyle($getNode.closest('.path-tree-node-content')[0]);
 
         cy.get('#method-header-get').should(($getHeader) => {
           const getHeaderStyle = getComputedStyle($getHeader[0]);
@@ -90,7 +90,7 @@ describe('The Home Page', () => {
       });
 
       cy.get('#createPets-node').should('be.visible').then(($postNode) => {
-        const postNodeStyle = getComputedStyle($postNode.closest('.p-tree-node-content')[0]);
+        const postNodeStyle = getComputedStyle($postNode.closest('.path-tree-node-content')[0]);
 
         cy.get('#method-header-post').should(($postHeader) => {
           const postHeaderStyle = getComputedStyle($postHeader[0]);
@@ -417,12 +417,12 @@ describe('The Home Page', () => {
       cy.visit('/?url=http://local.test/petstore.yaml')
 
       accordionHeader('API Paths').click()
-      cy.get('p-tree.tree-horizontal').should('exist')
-      cy.get('p-tree.tree-horizontal .p-tree-root-children')
+      cy.get('cdk-tree.tree-horizontal').should('exist')
+      cy.get('cdk-tree.tree-horizontal > .path-tree-node')
           .should('have.css', 'display', 'flex')
       cy.get('#listPets-node').should('be.visible')
 
-      cy.get('p-tree.tree-horizontal .p-tree-node-content').first().then(($rootNode) => {
+      cy.get('cdk-tree.tree-horizontal > .path-tree-node > .path-tree-node-content').first().then(($rootNode) => {
         const rootRight = $rootNode[0].getBoundingClientRect().right;
 
         cy.get('#listPets-node').should(($operationNode) => {
@@ -434,9 +434,9 @@ describe('The Home Page', () => {
 
       cy.get('#listPets-node').then(($getNode) => {
         const getRect = $getNode[0].getBoundingClientRect();
-        const operationGroup = $getNode.closest('.p-tree-node-children')[0];
+        const operationGroup = $getNode.closest('.path-tree-children')[0];
         const operationGroupBranch = getComputedStyle(operationGroup, '::after');
-        const getNodeConnector = getComputedStyle($getNode.closest('p-treenode')[0], '::before');
+        const getNodeConnector = getComputedStyle($getNode.closest('.path-tree-node')[0], '::before');
 
         expect(getComputedStyle(operationGroup).flexDirection).to.eq('column');
         expect(operationGroupBranch.display).to.eq('block');
@@ -445,7 +445,7 @@ describe('The Home Page', () => {
 
         cy.get('#createPets-node').should(($postNode) => {
           const postRect = $postNode[0].getBoundingClientRect();
-          const postNodeConnector = getComputedStyle($postNode.closest('p-treenode')[0], '::before');
+          const postNodeConnector = getComputedStyle($postNode.closest('.path-tree-node')[0], '::before');
 
           expect(Math.abs(postRect.left - getRect.left)).to.be.lessThan(2);
           expect(postRect.top).to.be.greaterThan(getRect.top);
