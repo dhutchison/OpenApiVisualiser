@@ -471,7 +471,7 @@ describe('The Home Page', () => {
 
         expect(Math.abs(connectorCenter - contentCenter)).to.be.lessThan(1);
         expect(childrenRect.left).to.be.greaterThan(pathRect.right);
-        expect(Math.abs(outgoingConnectorRight - childrenRect.left)).to.be.lessThan(3);
+        expect(Math.abs(outgoingConnectorRight - childrenRect.left)).to.be.lessThan(0.5);
       });
     })
 

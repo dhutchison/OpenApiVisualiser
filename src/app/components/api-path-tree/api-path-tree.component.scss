@@ -159,7 +159,7 @@
         left: 100%;
         position: absolute;
         top: 50%;
-        width: var(--tree-link-gutter);
+        width: calc(var(--tree-link-gutter) + 2px);
     }
 
     .path-tree-node:has(> .path-tree-node-content .operation-node) > .path-tree-node-content::after,
