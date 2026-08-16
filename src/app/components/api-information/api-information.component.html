@@ -64,7 +64,7 @@
       <section class="detail-section">
         <h3>Reusable Components</h3>
         <dl class="metadata-grid compact">
-          @for (component of getComponentSummaries(api); track component) {
+          @for (component of getComponentSummaries(api); track component.label) {
             <div>
               <dt>{{ component.label }}</dt>
               <dd>{{ component.count }}</dd>

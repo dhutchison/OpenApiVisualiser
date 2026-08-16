@@ -60,4 +60,46 @@ describe('ApiInformationComponent', () => {
     expect(fixture.nativeElement.querySelector('p-panel')).toBeNull();
     expect(fixture.nativeElement.querySelector('p-fieldset')).toBeNull();
   });
+
+  it('renders only non-empty reusable component summaries', async () => {
+    fileReaderService.apiChanged.next({
+      openapi: '3.1.0',
+      info: {title: 'Pets API', version: '1.0.0'},
+      paths: {},
+      components: {
+        schemas: {
+          Pet: {type: 'object'},
+          Category: {type: 'object'},
+          Order: {type: 'object'},
+          User: {type: 'object'},
+          Tag: {type: 'object'},
+          ApiResponse: {type: 'object'}
+        },
+        requestBodies: {
+          Pet: {content: {}},
+          UserArray: {content: {}}
+        },
+        securitySchemes: {
+          petstoreAuth: {type: 'apiKey', name: 'Authorization', in: 'header'},
+          apiKey: {type: 'apiKey', name: 'X-API-Key', in: 'header'}
+        }
+      }
+    });
+    fixture.componentRef.changeDetectorRef.markForCheck();
+    fixture.detectChanges(false);
+    await fixture.whenStable();
+    fixture.detectChanges(false);
+
+    const cards = [...fixture.nativeElement.querySelectorAll('.metadata-grid.compact > div')]
+      .map((card: HTMLElement) => ({
+        label: card.querySelector('dt')?.textContent,
+        count: card.querySelector('dd')?.textContent
+      }));
+
+    expect(cards).toEqual([
+      {label: 'Schemas', count: '6'},
+      {label: 'Request bodies', count: '2'},
+      {label: 'Security schemes', count: '2'}
+    ]);
+  });
 });
