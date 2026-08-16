@@ -8,9 +8,6 @@ import { provideRouter } from '@angular/router';
 
 import { MainComponent } from './main.component';
 
-import { FieldsetModule } from 'primeng/fieldset';
-import { PanelModule } from 'primeng/panel';
-import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
 import { TreeTableModule } from 'primeng/treetable';
 
@@ -52,10 +49,7 @@ describe('MainComponent', () => {
         UrlChooserComponent,
         PipesModule,
 
-        FieldsetModule,
         FormsModule,
-        PanelModule,
-        TooltipModule,
         TreeModule,
         TreeTableModule
       ],
@@ -82,29 +76,29 @@ describe('MainComponent', () => {
   });
 
   it('should render section headers as buttons', () => {
-    const headers = fixture.debugElement.queryAll(By.css('.p-accordionheader'));
+    const headers = fixture.nativeElement.querySelectorAll('summary') as NodeListOf<HTMLElement>;
 
     expect(headers.length).toBe(5);
-    expect(headers[0].nativeElement.textContent).toContain('API Information');
+    expect(headers[0].textContent).toContain('API Information');
   });
 
   it('should toggle sections open and closed', () => {
     const apiPathsHeader = fixture.debugElement.query(By.css('#api-path-tab'));
-    const apiPathsPanel = () => fixture.debugElement.query(By.css('#main-panel-2')).nativeElement as HTMLElement;
+    const apiPathsDetails = () => fixture.nativeElement.querySelector('#api-path-tab').parentElement as HTMLDetailsElement;
 
-    expect(apiPathsPanel().hidden).toBeTrue();
+    expect(apiPathsDetails().open).toBeFalse();
 
     apiPathsHeader.nativeElement.click();
     fixture.detectChanges();
 
     expect(component.activePanels).toEqual(['2']);
-    expect(apiPathsPanel().hidden).toBeFalse();
+    expect(apiPathsDetails().open).toBeTrue();
 
     apiPathsHeader.nativeElement.click();
     fixture.detectChanges();
 
     expect(component.activePanels).toEqual([]);
-    expect(apiPathsPanel().hidden).toBeTrue();
+    expect(apiPathsDetails().open).toBeFalse();
   });
 
   it('should show a dialog when a URL import fails', () => {

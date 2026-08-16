@@ -14,7 +14,6 @@ import {
   LucideNetwork
 } from '@lucide/angular';
 import { TreeNode } from 'primeng/api';
-import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
 import { FileReaderService } from '../../services/file-reader.service';
 import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
@@ -23,6 +22,8 @@ import { createApiTreeSvg } from '../../utils/api-tree-svg-exporter';
 import { ApiOperationNode, ApiPathTreeNode, isApiOperationNode } from '../../models/hierarchy.models';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
 import { AppDialogComponent } from '../app-dialog/app-dialog.component';
+import { SegmentedControlComponent, SegmentedControlOption } from '../segmented-control/segmented-control.component';
+import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
 
 const UNTAGGED_FILTER_VALUE = '__untagged__';
 type ApiPathSortOrder = 'default' | 'asc' | 'desc';
@@ -36,20 +37,14 @@ interface PrimeNgApiPathNode extends TreeNode {
   selector: 'app-api-path-tree',
   imports: [
     AppDialogComponent,
+    AppTooltipDirective,
     EndpointSwaggerComponent,
-    TooltipModule,
+    SegmentedControlComponent,
     TreeModule,
-    LucideArrowDownAZ,
-    LucideArrowDownUp,
-    LucideArrowUpAZ,
     LucideChevronRight,
     LucideDownload,
     LucideFilterX,
-    LucideFunnel,
-    LucideList,
-    LucideMaximize2,
-    LucideMinimize2,
-    LucideNetwork
+    LucideFunnel
 ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './api-path-tree.component.html'
@@ -82,11 +77,27 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
   /* Boolean holding the state on if an image generation is in progress */
   generatingImage = false;
 
-  readonly sortTypes: Array<{title: string; value: ApiPathSortOrder}> = [
-    {title: 'Default', value: 'default'},
-    {title: 'A-Z', value: 'asc'},
-    {title: 'Z-A', value: 'desc'}
+  readonly sortTypes: Array<{title: string; value: ApiPathSortOrder; icon: SegmentedControlOption['icon']}> = [
+    {title: 'Default', value: 'default', icon: LucideArrowDownUp},
+    {title: 'A-Z', value: 'asc', icon: LucideArrowDownAZ},
+    {title: 'Z-A', value: 'desc', icon: LucideArrowUpAZ}
   ];
+
+  readonly viewOptions: SegmentedControlOption[] = [
+    {label: 'Tree', value: 'tree', icon: LucideNetwork},
+    {label: 'List', value: 'list', icon: LucideList}
+  ];
+
+  readonly compressionOptions: SegmentedControlOption[] = [
+    {label: 'Compressed', value: 'compressed', icon: LucideMinimize2},
+    {label: 'Expanded', value: 'expanded', icon: LucideMaximize2}
+  ];
+
+  readonly sortOptions: SegmentedControlOption[] = this.sortTypes.map(sortType => ({
+    label: sortType.title,
+    value: sortType.value,
+    icon: sortType.icon
+  }));
 
   readonly untaggedFilterValue = UNTAGGED_FILTER_VALUE;
 
@@ -143,6 +154,24 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     this.selectedOperationNode = undefined;
     this.endpointDialogVisible = false;
     this.setTreeNodes();
+  }
+
+  setView(value: string) {
+    if (value === 'tree' || value === 'list') {
+      this.horizontalView = value === 'tree';
+    }
+  }
+
+  setCompression(value: string) {
+    if (value === 'compressed' || value === 'expanded') {
+      this.joinNodesWithNoLeaves = value === 'compressed';
+    }
+  }
+
+  setSortOrder(value: string) {
+    if (value === 'default' || value === 'asc' || value === 'desc') {
+      this.sortOrder = value;
+    }
   }
 
   ngOnInit() {

@@ -9,9 +9,6 @@ import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.c
 
 import { PipesModule } from '../../pipes/pipes.module';
 
-import { FieldsetModule } from 'primeng/fieldset';
-import { PanelModule } from 'primeng/panel';
-import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
 
 describe('ApiPathTreeComponent', () => {
@@ -23,11 +20,8 @@ describe('ApiPathTreeComponent', () => {
       imports: [
         ApiPathTreeComponent,
         EndpointSwaggerComponent,
-        FieldsetModule,
         FormsModule,
-        PanelModule,
         PipesModule,
-        TooltipModule,
         TreeModule
       ],
       providers: [
@@ -48,11 +42,17 @@ describe('ApiPathTreeComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render native segmented controls with decorative icons', () => {
-    const options = fixture.nativeElement.querySelectorAll('.segmented-control__option') as NodeListOf<HTMLButtonElement>;
-    const icons = fixture.nativeElement.querySelectorAll('.segmented-control__option svg') as NodeListOf<SVGElement>;
+  it('should render labelled radio segmented controls with decorative icons', () => {
+    const options = fixture.nativeElement.querySelectorAll('input[type="radio"]') as NodeListOf<HTMLInputElement>;
+    const icons = fixture.nativeElement.querySelectorAll('[role="radiogroup"] svg') as NodeListOf<SVGElement>;
+    const groups = fixture.nativeElement.querySelectorAll('[role="radiogroup"]') as NodeListOf<HTMLElement>;
 
     expect(options.length).toBe(7);
+    expect(groups.length).toBe(3);
+    expect(groups[0].getAttribute('aria-label')).toBe('View orientation');
+    expect(groups[1].getAttribute('aria-label')).toBe('Path expansion');
+    expect(groups[2].getAttribute('aria-label')).toBe('Path sorting');
+    expect(options[0].checked).toBeTrue();
     expect(fixture.nativeElement.querySelector('p-selectbutton')).toBeNull();
     expect(icons.length).toBe(7);
     icons.forEach(icon => expect(icon.getAttribute('aria-hidden')).toBe('true'));

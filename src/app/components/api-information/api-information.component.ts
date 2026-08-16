@@ -1,7 +1,5 @@
 
 import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
-import { FieldsetModule } from 'primeng/fieldset';
-import { PanelModule } from 'primeng/panel';
 import { FileReaderService } from '../../services/file-reader.service';
 import { OpenAPIObject, ServerObject, SecurityRequirementObject } from 'openapi3-ts/oas31';
 import { MarkdownifyPipe } from '../../pipes/markdownify.pipe';
@@ -16,12 +14,11 @@ interface ComponentSummary {
   selector: 'app-api-information',
   imports: [
     ExternalDocsComponent,
-    FieldsetModule,
-    MarkdownifyPipe,
-    PanelModule
-],
+    MarkdownifyPipe
+  ],
   changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './api-information.component.html'
+  templateUrl: './api-information.component.html',
+  styleUrls: ['./api-information.component.scss']
 })
 export class ApiInformationComponent implements OnInit {
 

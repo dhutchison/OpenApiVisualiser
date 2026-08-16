@@ -1,6 +1,8 @@
-@for (api of apiDefinitions; track api) {
-  <p-panel class="api-info" [toggleable]="true">
-    <p-header class="api-info-title">{{ api.info.title }} - {{ api.info.version }}</p-header>
+@for (api of apiDefinitions; track api; let apiIndex = $index) {
+  <section class="api-info app-panel" [attr.aria-labelledby]="'api-info-title-' + apiIndex">
+    <header class="app-panel__header">
+      <h2 class="api-info-title" [id]="'api-info-title-' + apiIndex">{{ api.info.title }} - {{ api.info.version }}</h2>
+    </header>
     <dl class="metadata-grid">
       <div>
         <dt>OpenAPI</dt>
@@ -62,7 +64,7 @@
       <section class="detail-section">
         <h3>Reusable Components</h3>
         <dl class="metadata-grid compact">
-          @for (component of getComponentSummaries(api); track component) {
+          @for (component of getComponentSummaries(api); track component.label) {
             <div>
               <dt>{{ component.label }}</dt>
               <dd>{{ component.count }}</dd>
@@ -72,20 +74,23 @@
       </section>
     }
     @if (api.externalDocs) {
-      <p-fieldset legend="External Documentation">
+      <fieldset class="app-fieldset">
+        <legend>External Documentation</legend>
         <app-external-docs [document]="api.externalDocs"></app-external-docs>
         @if (api.externalDocs.description) {
           <div [innerHTML]="(api.externalDocs.description | markdownify)"></div>
         }
-      </p-fieldset>
+      </fieldset>
     }
     @if (api.info.termsOfService) {
-      <p-fieldset legend="Terms of Service">
+      <fieldset class="app-fieldset">
+        <legend>Terms of Service</legend>
         <a href="{{ api.info.termsOfService }}" target="_blank">{{ api.info.termsOfService }}</a>
-      </p-fieldset>
+      </fieldset>
     }
     @if (api.info.contact) {
-      <p-fieldset legend="Contact">
+      <fieldset class="app-fieldset">
+        <legend>Contact</legend>
         <dl>
           <dt>Name</dt>
           <dd>{{ api.info.contact.name }}</dd>
@@ -106,10 +111,11 @@
             }
           </dd>
         </dl>
-      </p-fieldset>
+      </fieldset>
     }
     @if (api.info.license) {
-      <p-fieldset legend="License">
+      <fieldset class="app-fieldset">
+        <legend>License</legend>
         <dl>
           <dt>Name</dt>
           <dd>{{ api.info.license.name }}</dd>
@@ -122,7 +128,7 @@
             }
           </dd>
         </dl>
-      </p-fieldset>
+      </fieldset>
     }
-  </p-panel>
+  </section>
 }

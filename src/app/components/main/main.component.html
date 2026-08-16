@@ -20,16 +20,16 @@
     <app-url-chooser></app-url-chooser>
     <app-export></app-export>
   </div>
-  <div class="p-accordion">
+  <div class="app-disclosure-list">
     @for (section of sections; track section) {
-      <section class="p-accordionpanel" [attr.data-p-active]="isSectionExpanded(section.id)">
-        <button
-          type="button"
-          class="p-accordionheader"
+      <details
+        class="app-disclosure"
+        [open]="isSectionExpanded(section.id)">
+        <summary
+          class="app-disclosure__summary"
           [id]="section.headerId"
-          [attr.aria-expanded]="isSectionExpanded(section.id)"
           [attr.aria-controls]="'main-panel-' + section.id"
-          (click)="toggleSection(section.id)">
+          (click)="toggleSection(section.id, $event)">
           <span>{{ section.title }}</span>
           <svg
             lucideChevronDown
@@ -37,13 +37,12 @@
             [class.is-expanded]="isSectionExpanded(section.id)"
             aria-hidden="true"
             focusable="false"></svg>
-        </button>
+        </summary>
         <section
-          class="p-accordioncontent"
+          class="app-disclosure__content"
           [id]="'main-panel-' + section.id"
-          [hidden]="!isSectionExpanded(section.id)"
           [attr.aria-labelledby]="section.headerId">
-          <div class="p-accordioncontent-content">
+          <div class="app-disclosure__body">
             @if (section.id === '0') {
               <app-api-information></app-api-information>
             }
@@ -61,7 +60,7 @@
             }
           </div>
         </section>
-      </section>
+      </details>
     }
   </div>
 </div>

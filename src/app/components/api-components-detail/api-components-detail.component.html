@@ -7,17 +7,17 @@
       <h3>Schemas</h3>
     }
     @if (items.length) {
-      <div class="p-accordion">
+      <div class="app-disclosure-list">
         @for (item of items; track item) {
-          <section
-            class="p-accordionpanel"
-            [attr.data-p-active]="isSchemaExpanded(item)">
-            <button
-              type="button"
-              class="p-accordionheader"
+          <details
+            class="app-disclosure"
+            [open]="isSchemaExpanded(item)">
+            <summary
+              class="app-disclosure__summary"
               [attr.aria-expanded]="isSchemaExpanded(item)"
               [attr.aria-controls]="'components-schemas-panel-' + item"
-              (click)="toggleSchema(item)">
+              (click)="toggleSchema(item, $event)"
+              >
               <span>{{item}}</span>
               <span class="component-header-meta">
                 @if (schemas?.[item]) {
@@ -33,12 +33,12 @@
                   aria-hidden="true"
                   focusable="false"></svg>
               </span>
-            </button>
+            </summary>
             @if (isSchemaExpanded(item)) {
               <section
-                class="p-accordioncontent"
+                class="app-disclosure__content"
                 [id]="'components-schemas-panel-' + item">
-                <div class="p-accordioncontent-content">
+                <div class="app-disclosure__body">
                   @if (schemas?.[item]; as schema) {
                     <div class="schema-overview">
                       @if (!isReference(schema) && schema.description) {
@@ -67,24 +67,24 @@
                 </div>
               </section>
             }
-          </section>
+          </details>
         }
       </div>
     }
     @if (componentSections.length) {
       <section class="detail-section">
         <h3>Other Components</h3>
-        <div class="p-accordion">
+        <div class="app-disclosure-list">
           @for (section of componentSections; track section) {
-            <section
-              class="p-accordionpanel"
-              [attr.data-p-active]="isComponentSectionExpanded(section.key)">
-              <button
-                type="button"
-                class="p-accordionheader"
+            <details
+              class="app-disclosure"
+              [open]="isComponentSectionExpanded(section.key)">
+              <summary
+                class="app-disclosure__summary"
                 [attr.aria-expanded]="isComponentSectionExpanded(section.key)"
                 [attr.aria-controls]="'components-section-panel-' + section.key"
-                (click)="toggleComponentSection(section.key)">
+                (click)="toggleComponentSection(section.key, $event)"
+                >
                 <span>{{ section.label }}</span>
                 <span class="component-header-meta">
                   <span class="count-pill">{{ section.items.length }}</span>
@@ -95,12 +95,12 @@
                     aria-hidden="true"
                     focusable="false"></svg>
                 </span>
-              </button>
+              </summary>
               @if (isComponentSectionExpanded(section.key)) {
                 <section
-                  class="p-accordioncontent"
+                  class="app-disclosure__content"
                   [id]="'components-section-panel-' + section.key">
-                  <div class="p-accordioncontent-content">
+                  <div class="app-disclosure__body">
                     <dl class="component-list">
                       @for (entry of getComponentEntries(section); track entry) {
                         <dt>{{ entry.name }}</dt>
@@ -110,7 +110,7 @@
                   </div>
                 </section>
               }
-            </section>
+            </details>
           }
         </div>
       </section>

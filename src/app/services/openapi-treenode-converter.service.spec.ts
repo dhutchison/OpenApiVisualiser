@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { OpenapiTreenodeConverterService } from './openapi-treenode-converter.service';
-import { ApiPathTreeNode } from '../models/hierarchy.models';
+import { ApiPathTreeNode, isApiOperationNode } from '../models/hierarchy.models';
 
 describe('OpenapiTreenodeConverterService', () => {
 
@@ -57,6 +57,38 @@ describe('OpenapiTreenodeConverterService', () => {
     expect(emittedNodes?.[0].kind).toBe('path');
     expect(emittedNodes?.[0].children[0].kind).toBe('path');
     expect(emittedNodes?.[0].children[0].children[0].kind).toBe('operation');
+  });
+
+  it('uses newlines instead of HTML in operation tooltips', () => {
+    let emittedNodes: ApiPathTreeNode[] | undefined;
+    service.treeNodesChanged.subscribe(nodes => emittedNodes = nodes);
+
+    service.addApiSpecification({
+      openapi: '3.1.0',
+      info: {
+        title: 'Pets API',
+        version: '1.0.0'
+      },
+      paths: {
+        '/pets': {
+          get: {
+            summary: 'List pets',
+            responses: {
+              200: {
+                description: 'Pets'
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const operationNode = emittedNodes?.[0].children[0].children[0];
+
+    expect(operationNode && isApiOperationNode(operationNode)).toBeTrue();
+    if (operationNode && isApiOperationNode(operationNode)) {
+      expect(operationNode.tooltip).toBe('List pets\n\nComplexity: 1');
+    }
   });
 
   it('should emit application-owned schema property nodes', () => {

@@ -13,18 +13,17 @@ type FileSelectionEvent = {
     LucideFileUp
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './file-chooser.component.html'
+  templateUrl: './file-chooser.component.html',
+  styleUrls: ['./file-chooser.component.scss']
 })
 export class FileChooserComponent {
 
   private readonly fileReaderService = inject(FileReaderService);
 
-  readonly yamlFilenamePattern = /\.y(a)?ml/;
-  readonly jsonFilenamePattern = /\.json/;
+  readonly yamlFilenamePattern = /\.ya?ml$/i;
+  readonly jsonFilenamePattern = /\.json$/i;
 
   loadFile(event: Event | FileSelectionEvent) {
-
-    console.log(event);
 
     const nativeInput = event.target instanceof HTMLInputElement ? event.target : undefined;
 
@@ -49,11 +48,9 @@ export class FileChooserComponent {
     fileArray.forEach(file => {
       if (!file.name.match(this.yamlFilenamePattern) &&
             !file.name.match(this.jsonFilenamePattern)) {
-        alert(`You are trying to upload an unsupported file extension (${file.name}). ' +
-          'Please choose either a '.yaml', '.yml', or '.json' file.`);
+        alert(`You are trying to upload an unsupported file extension (${file.name}). Please choose either a .yaml, .yml, or .json file.`);
         return;
       }
-      console.log(file);
 
       this.fileReaderService.loadFile(file);
     });

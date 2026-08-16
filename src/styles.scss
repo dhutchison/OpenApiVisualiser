@@ -73,22 +73,6 @@ a {
     color: var(--app-brand);
 }
 
-/* PrimeNG v20 accordion hosts are custom elements, so make them participate in
- * normal document flow explicitly.
- */
-p-accordion,
-p-accordionpanel,
-p-accordion-panel,
-p-accordioncontent,
-p-accordion-content {
-    display: block;
-}
-
-p-accordionheader,
-p-accordion-header {
-    display: flex;
-}
-
 #masthead {
     background: url('assets/images/logo.png') top left no-repeat;
 
@@ -210,7 +194,6 @@ $putHighlightColour: #fca130;
 }
 
 .app-button:focus-visible,
-.segmented-control__option:focus-visible,
 .path-tree-tag-filter summary:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px var(--app-focus);
@@ -261,35 +244,21 @@ $putHighlightColour: #fca130;
     white-space: nowrap;
 }
 
-.file-chooser-input:focus-visible + .file-chooser-button {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--app-focus);
-}
-
-.p-panel,
-.p-fieldset,
-.p-accordionpanel,
-.p-accordion-panel {
+.app-disclosure {
     color: var(--app-text);
 }
 
-.p-panel,
-.p-accordioncontent,
-.p-accordion-content {
+.app-disclosure__body {
     background: var(--app-surface-solid);
 }
 
-.p-panel,
-.p-fieldset {
+.app-disclosure {
     border-color: var(--app-border);
     border-radius: 10px;
     box-shadow: var(--app-shadow);
 }
 
-.p-panel-header,
-.p-fieldset-legend,
-.p-accordionheader,
-.p-accordion-header {
+.app-disclosure__summary {
     border-color: var(--app-border);
     background: var(--app-surface);
     color: var(--app-text);
@@ -431,14 +400,13 @@ $putHighlightColour: #fca130;
     }
 }
 
-.p-accordion {
+.app-disclosure-list {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
 }
 
-.p-accordionpanel,
-.p-accordion-panel {
+.app-disclosure {
     overflow: hidden;
     border: 1px solid var(--app-border);
     border-radius: 10px;
@@ -446,22 +414,18 @@ $putHighlightColour: #fca130;
     box-shadow: 0 10px 28px rgba(23, 32, 51, 0.08);
 }
 
-.p-accordionpanel:has(.path-tree-tag-filter[open]),
-.p-accordion-panel:has(.path-tree-tag-filter[open]) {
+.app-disclosure:has(.path-tree-tag-filter[open]) {
     overflow: visible;
     position: relative;
     z-index: 5;
 }
 
-.p-accordionpanel:has(.path-tree-tag-filter[open]) > .p-accordioncontent,
-.p-accordion-panel:has(.path-tree-tag-filter[open]) > .p-accordion-content,
-.p-accordionpanel:has(.path-tree-tag-filter[open]) > .p-accordioncontent > .p-accordioncontent-content,
-.p-accordion-panel:has(.path-tree-tag-filter[open]) > .p-accordion-content > .p-accordion-content-content {
+.app-disclosure:has(.path-tree-tag-filter[open]) > .app-disclosure__content,
+.app-disclosure:has(.path-tree-tag-filter[open]) > .app-disclosure__content > .app-disclosure__body {
     overflow: visible;
 }
 
-.p-accordionheader,
-.p-accordion-header {
+.app-disclosure__summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -473,6 +437,16 @@ $putHighlightColour: #fca130;
     font-weight: 800;
     text-align: left;
     cursor: pointer;
+    list-style: none;
+}
+
+.app-disclosure__summary::-webkit-details-marker {
+    display: none;
+}
+
+.app-disclosure__summary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--app-focus);
 }
 
 .component-header-meta {
@@ -494,24 +468,10 @@ $putHighlightColour: #fca130;
     color: var(--app-text);
 }
 
-.p-accordioncontent-content,
-.p-accordion-content-content {
+.app-disclosure__body {
     padding: 1rem;
     border-color: var(--app-border);
     background: var(--app-surface-solid);
-}
-
-/* PrimeNG animates accordion content with an explicit height measurement.
- * Safari can hold onto a stale measured height for nested/dynamic content,
- * so force open panels back to their natural size.
- */
-.p-accordionpanel[data-p-active="true"] > .p-accordioncontent > .p-accordioncontent-content,
-.p-accordion-panel[data-p-active="true"] > .p-accordion-content > .p-accordion-content-content,
-.p-accordionpanel[data-p-active="true"] > .p-accordioncontent > .p-accordion-content-content,
-.p-accordion-panel[data-p-active="true"] > .p-accordion-content > .p-accordioncontent-content {
-    height: auto !important;
-    overflow: visible;
-    visibility: visible;
 }
 
 
@@ -532,38 +492,28 @@ $putHighlightColour: #fca130;
     }
 }
 
-.segmented-control {
-    display: inline-flex;
-    overflow: hidden;
-    border: 1px solid var(--app-border);
-    border-radius: 8px;
-    background: var(--app-surface-solid);
+.app-tooltip-host {
+    position: relative;
 }
 
-.segmented-control__option {
-    align-items: center;
-    display: inline-flex;
-    gap: 0.4rem;
-    min-height: 2.55rem;
-    padding: 0.45rem 0.7rem;
-    border: 0;
-    border-right: 1px solid var(--app-border);
-    background: transparent;
-    color: var(--app-text-muted);
-    cursor: pointer;
-    font: inherit;
-    font-size: 0.86rem;
-    font-weight: 700;
-}
-
-.segmented-control__option:last-child {
-    border-right: 0;
-}
-
-.segmented-control__option:hover,
-.segmented-control__option.is-selected {
-    background: var(--app-brand-soft);
-    color: var(--app-text);
+.app-tooltip {
+    position: fixed;
+    z-index: 30;
+    top: 0;
+    left: 0;
+    width: max-content;
+    max-width: min(24rem, calc(100vw - 2rem));
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--app-border-strong);
+    border-radius: 6px;
+    background: var(--app-text);
+    color: var(--app-bg);
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.35;
+    pointer-events: none;
+    transform: translate(-50%, calc(-100% - 0.45rem));
+    white-space: pre-line;
 }
 
 .path-tree-tag-filter {
@@ -1040,55 +990,6 @@ select {
 .empty-state,
 .muted {
     color: var(--app-text-muted);
-}
-
-.http-post {
-    .p-panel, .p-component-header, .p-panel-content, .p-panel-footer {
-        border-color: $postHighlightColour;
-        background: color-mix(in srgb, #49cc90 12%, var(--app-surface-solid));
-    }
-
-    .p-component-header button {
-        background: $postHighlightColour;
-        border-color: $postHighlightColour;
-        padding: 0 0.5em
-    }
-}
-
-.http-put {
-    .p-panel, .p-component-header, .p-panel-content, .p-panel-footer {
-        border-color:$putHighlightColour;
-        background: color-mix(in srgb, #fca130 12%, var(--app-surface-solid));
-    }
-    .p-component-header button {
-        border-color:$putHighlightColour;
-        background: $putHighlightColour;
-        padding: 0 0.5em
-    }
-}
-
-.http-get {
-    .p-panel, .p-component-header, .p-panel-content, .p-panel-footer {
-        border-color: $getHighlightColour;
-        background: color-mix(in srgb, #61affe 12%, var(--app-surface-solid));
-    }
-    .p-component-header button {
-        border-color: $getHighlightColour;
-        background: $getHighlightColour;
-        padding: 0 0.5em
-    }
-}
-
-.http-delete {
-    .p-panel, .p-component-header, .p-panel-content, .p-panel-footer {
-        border-color:$deleteHighlightColour;
-        background: color-mix(in srgb, #f93e3e 12%, var(--app-surface-solid));
-    }
-    .p-component-header button {
-        border-color:$deleteHighlightColour;
-        background: $deleteHighlightColour;
-        padding: 0 0.5em
-    }
 }
 
 // body
