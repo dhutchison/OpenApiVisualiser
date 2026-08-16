@@ -4,7 +4,6 @@ import { OpenAPIObject } from 'openapi3-ts/oas31';
 
 import { ApiComponentsDetailComponent } from './api-components-detail.component';
 import { SchemaDetailComponent } from './schema-detail/schema-detail.component';
-import { TreeTableModule } from 'primeng/treetable';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { PipesModule } from '../../pipes/pipes.module';
@@ -21,7 +20,6 @@ describe('ApiComponentsDetailComponent', () => {
         ApiComponentsDetailComponent,
         SchemaDetailComponent,
         PipesModule,
-        TreeTableModule
       ],
       providers: [
         provideHttpClient(withXhr()),
@@ -75,11 +73,11 @@ describe('ApiComponentsDetailComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges(false);
 
-    const headers = fixture.debugElement.queryAll(By.css('.p-accordionheader'));
+    const headers = fixture.nativeElement.querySelectorAll('summary') as NodeListOf<HTMLElement>;
 
     expect(headers.length).toBe(2);
-    expect(headers[0].nativeElement.textContent).toContain('Pet');
-    expect(headers[1].nativeElement.textContent).toContain('Responses');
+    expect(headers[0].textContent).toContain('Pet');
+    expect(headers[1].textContent).toContain('Responses');
   });
 
   it('should toggle schema details open and closed', async () => {
@@ -104,11 +102,11 @@ describe('ApiComponentsDetailComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges(false);
 
-    const schemaHeader = fixture.debugElement.query(By.css('.p-accordionheader'));
+    const schemaHeader = fixture.nativeElement.querySelector('summary') as HTMLElement;
 
     expect(fixture.debugElement.query(By.css('#components-schemas-panel-Pet'))).toBeNull();
 
-    schemaHeader.nativeElement.click();
+    schemaHeader.click();
     fixture.detectChanges(false);
     await fixture.whenStable();
     fixture.detectChanges(false);
@@ -116,7 +114,7 @@ describe('ApiComponentsDetailComponent', () => {
     expect(component.expandedSchemas).toEqual(['Pet']);
     expect(fixture.debugElement.query(By.css('#components-schemas-panel-Pet'))).not.toBeNull();
 
-    schemaHeader.nativeElement.click();
+    schemaHeader.click();
     fixture.detectChanges(false);
     await fixture.whenStable();
     fixture.detectChanges(false);

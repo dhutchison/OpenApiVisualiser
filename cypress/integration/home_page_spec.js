@@ -7,7 +7,7 @@ describe('The Home Page', () => {
       return top + scrollY;
     }
 
-    const accordionHeader = (text) => cy.contains('button.p-accordionheader', text)
+    const accordionHeader = (text) => cy.contains('summary[aria-controls]', text)
 
     const dialogByName = (name) => cy.get('dialog[open]').filter((_, dialog) => {
       const titleId = dialog.getAttribute('aria-labelledby');
@@ -486,8 +486,8 @@ describe('The Home Page', () => {
         })
 
         accordionHeader('Pet')
-            .closest('.p-accordionpanel, .p-accordion-panel')
-            .find('.p-accordioncontent-content, .p-accordion-content-content')
+            .closest('.app-disclosure')
+            .find('.app-disclosure__body')
             .should(($content) => {
               const content = $content[0];
 

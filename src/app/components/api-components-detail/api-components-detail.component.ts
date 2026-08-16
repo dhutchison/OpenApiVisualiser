@@ -71,7 +71,8 @@ export class ApiComponentsDetailComponent implements OnInit {
     });
   }
 
-  toggleSchema(schemaName: string) {
+  toggleSchema(schemaName: string, event?: Event) {
+    event?.preventDefault();
     this.expandedSchemas = this.toggleExpandedItem(this.expandedSchemas, schemaName);
   }
 
@@ -79,7 +80,8 @@ export class ApiComponentsDetailComponent implements OnInit {
     return this.expandedSchemas.includes(schemaName);
   }
 
-  toggleComponentSection(sectionKey: keyof ComponentsObject) {
+  toggleComponentSection(sectionKey: keyof ComponentsObject, event?: Event) {
+    event?.preventDefault();
     this.expandedComponentSections = this.toggleExpandedItem(this.expandedComponentSections, sectionKey);
   }
 
@@ -208,5 +210,6 @@ export class ApiComponentsDetailComponent implements OnInit {
 
     return [...items, item];
   }
+
 
 }

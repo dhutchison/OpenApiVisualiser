@@ -72,15 +72,14 @@ export class MainComponent implements AfterViewInit {
     });
   }
 
-  toggleSection(sectionId: string) {
-    const sectionIndex = this.activePanels.indexOf(sectionId);
+  toggleSection(sectionId: string, event?: Event) {
+    event?.preventDefault();
 
-    if (sectionIndex >= 0) {
+    if (this.activePanels.includes(sectionId)) {
       this.activePanels = this.activePanels.filter(panelId => panelId !== sectionId);
-      return;
+    } else {
+      this.activePanels = [...this.activePanels, sectionId];
     }
-
-    this.activePanels = [...this.activePanels, sectionId];
   }
 
   isSectionExpanded(sectionId: string): boolean {
