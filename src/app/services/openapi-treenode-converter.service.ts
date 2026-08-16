@@ -258,7 +258,7 @@ export class OpenapiTreenodeConverterService {
     }
 
     if (node.tooltip) {
-      node.tooltip += '<br/><br/>Complexity: ' + node.complexity;
+      node.tooltip += '\n\nComplexity: ' + node.complexity;
     } else {
       node.tooltip = 'Complexity: ' + node.complexity;
     }
