@@ -8,7 +8,6 @@ import { provideRouter } from '@angular/router';
 
 import { MainComponent } from './main.component';
 
-import { DialogModule } from 'primeng/dialog';
 import { FieldsetModule } from 'primeng/fieldset';
 import { PanelModule } from 'primeng/panel';
 import { TooltipModule } from 'primeng/tooltip';
@@ -53,7 +52,6 @@ describe('MainComponent', () => {
         UrlChooserComponent,
         PipesModule,
 
-        DialogModule,
         FieldsetModule,
         FormsModule,
         PanelModule,
@@ -117,5 +115,11 @@ describe('MainComponent', () => {
 
     expect(component.displayLoadFailureDialog).toBeTrue();
     expect(component.loadFailureMessage).toBe(message);
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    expect(dialog.querySelector('h2')?.textContent).toContain('API definition could not be loaded');
+
+    component.displayLoadFailureDialog = false;
+    fixture.detectChanges(false);
+    expect(component.displayLoadFailureDialog).toBeFalse();
   });
 });

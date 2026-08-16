@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ExportComponent } from './export.component';
-import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
@@ -14,7 +13,6 @@ describe('ExportComponent', () => {
     TestBed.configureTestingModule({
       imports: [
         ExportComponent,
-        DialogModule,
         FormsModule
       ],
       providers: [
@@ -33,5 +31,18 @@ describe('ExportComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should open and close the export dialog', () => {
+    component.apiDefinitions = [{ info: { title: 'Test API' } } as any];
+    component.showDialog();
+    fixture.detectChanges(false);
+
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    expect(dialog.querySelector('h2')?.textContent).toContain('Export');
+
+    component.display = true;
+    component.export();
+    expect(component.display).toBeFalse();
   });
 });

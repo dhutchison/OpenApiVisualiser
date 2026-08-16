@@ -3,8 +3,8 @@ import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/cor
 import { LucideCheck, LucideDownload, LucideX } from '@lucide/angular';
 import { FormsModule } from '@angular/forms';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
-import { DialogModule } from 'primeng/dialog';
 import { FileReaderService } from '../../services/file-reader.service';
+import { AppDialogComponent } from '../app-dialog/app-dialog.component';
 
 import { saveAs } from 'file-saver';
 import * as jsyaml from 'js-yaml';
@@ -12,7 +12,7 @@ import * as jsyaml from 'js-yaml';
 @Component({
   selector: 'app-export',
   imports: [
-    DialogModule,
+    AppDialogComponent,
     FormsModule,
     LucideCheck,
     LucideDownload,

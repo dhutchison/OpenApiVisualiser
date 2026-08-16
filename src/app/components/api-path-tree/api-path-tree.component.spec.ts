@@ -9,7 +9,6 @@ import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.c
 
 import { PipesModule } from '../../pipes/pipes.module';
 
-import { DialogModule } from 'primeng/dialog';
 import { FieldsetModule } from 'primeng/fieldset';
 import { PanelModule } from 'primeng/panel';
 import { TooltipModule } from 'primeng/tooltip';
@@ -23,7 +22,6 @@ describe('ApiPathTreeComponent', () => {
     TestBed.configureTestingModule({
       imports: [
         ApiPathTreeComponent,
-        DialogModule,
         EndpointSwaggerComponent,
         FieldsetModule,
         FormsModule,
@@ -69,6 +67,35 @@ describe('ApiPathTreeComponent', () => {
     expect(component.horizontalView).toBeFalsy();
 
 
+  });
+
+  it('should open and close endpoint details in the application dialog', () => {
+    const operationNode = {
+      kind: 'operation',
+      label: 'GET',
+      leaf: true,
+      expanded: false,
+      children: [],
+      method: 'GET',
+      path: '/pets',
+      operation: {responses: {}},
+      apiDefinition: {
+        openapi: '3.1.0',
+        info: {title: 'Pets', version: '1.0.0'},
+        paths: {}
+      },
+      complexity: 0
+    } as ApiOperationNode;
+
+    component.openEndpointDetail(operationNode);
+    fixture.detectChanges(false);
+
+    expect(component.endpointDialogVisible).toBeTrue();
+    expect(component.selectedOperationNode).toBe(operationNode);
+
+    component.openEndpointDetail();
+    expect(component.endpointDialogVisible).toBeFalse();
+    expect(component.selectedOperationNode).toBeUndefined();
   });
 
   it('should toggle path nodes', () => {

@@ -14,7 +14,6 @@ import {
   LucideNetwork
 } from '@lucide/angular';
 import { TreeNode } from 'primeng/api';
-import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { TreeModule } from 'primeng/tree';
 import { FileReaderService } from '../../services/file-reader.service';
@@ -23,6 +22,7 @@ import { UserPreferenceControllerService } from '../../controllers/user-preferen
 import { createApiTreeSvg } from '../../utils/api-tree-svg-exporter';
 import { ApiOperationNode, ApiPathTreeNode, isApiOperationNode } from '../../models/hierarchy.models';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
+import { AppDialogComponent } from '../app-dialog/app-dialog.component';
 
 const UNTAGGED_FILTER_VALUE = '__untagged__';
 type ApiPathSortOrder = 'default' | 'asc' | 'desc';
@@ -35,7 +35,7 @@ interface PrimeNgApiPathNode extends TreeNode {
 @Component({
   selector: 'app-api-path-tree',
   imports: [
-    DialogModule,
+    AppDialogComponent,
     EndpointSwaggerComponent,
     TooltipModule,
     TreeModule,

@@ -1,9 +1,9 @@
 
-<p-dialog header="Import from URL" [(visible)]="display" [modal]="true"
-  [style]="{width: 'min(42rem, 92vw)'}"
-  [contentStyle]="{overflow: 'visible'}"
-  class="url-import-dialog"
-  [minY]="70">
+<app-dialog
+  title="Import from URL"
+  [(open)]="display"
+  size="medium"
+  class="url-import-dialog">
       <div class="url-import-dialog__body">
         <div class="url-import-dialog__field-row">
           <label class="url-import-dialog__label" for="url-input">URL</label>
@@ -19,8 +19,7 @@
           </div>
         </div>
       </div>
-      <ng-template #footer>
-          <div class="url-import-dialog__footer">
+          <div class="url-import-dialog__footer" dialog-footer>
             <button type="submit" class="app-button app-button--primary"
               [disabled]="!(url && url.length > 0)"
               (click)="import()">
@@ -33,8 +32,7 @@
               <span>Cancel</span>
             </button>
           </div>
-      </ng-template>
-</p-dialog>
+</app-dialog>
 
 <button type="button" (click)="showDialog()" class="app-button app-button--primary">
   <svg lucideCloudUpload class="app-icon" aria-hidden="true" focusable="false"></svg>

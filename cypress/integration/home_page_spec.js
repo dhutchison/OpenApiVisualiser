@@ -9,6 +9,13 @@ describe('The Home Page', () => {
 
     const accordionHeader = (text) => cy.contains('button.p-accordionheader', text)
 
+    const dialogByName = (name) => cy.get('dialog[open]').filter((_, dialog) => {
+      const titleId = dialog.getAttribute('aria-labelledby');
+      const title = titleId ? dialog.ownerDocument.getElementById(titleId) : null;
+
+      return title?.textContent?.trim() === name;
+    })
+
     /* Test the app launches at all */
     it('successfully loads', () => {
       /* Open the application */
@@ -153,19 +160,18 @@ describe('The Home Page', () => {
 
         cy.visit('/')
 
-        cy.contains('Import from URL').click();
+        cy.contains('button', 'Import from URL').click();
 
         /* The footer projection and native button content must remain available. */
-        cy.get('.url-import-dialog .p-dialog-footer').should('be.visible')
-        cy.get('.url-import-dialog .p-dialog-footer button[type=submit]')
+        dialogByName('Import from URL').find('button[type=submit]')
             .find('span')
             .should('have.text', 'Import')
-        cy.get('.url-import-dialog .p-dialog-footer button[type=submit]')
+        dialogByName('Import from URL').find('button[type=submit]')
             .find('.app-icon')
             .should('have.attr', 'aria-hidden', 'true')
 
         /* Submit button should be initially disabled */
-        cy.get('button[type=submit]').should('be.disabled')
+        dialogByName('Import from URL').find('button[type=submit]').should('be.disabled')
 
         /* Type in a URL */
         cy.get('#url-input')
@@ -173,7 +179,7 @@ describe('The Home Page', () => {
             .should('have.value', testUrl)
 
         /* And check the submit button is enabled now and click it */
-        cy.get('button[type=submit]').should('be.enabled').click()
+        dialogByName('Import from URL').find('button[type=submit]').should('be.enabled').click()
 
         /* Give the dialog a short period to disappear */
         cy.wait(250);
@@ -188,11 +194,11 @@ describe('The Home Page', () => {
     it('Lets the URL input fill the dialog body width', () => {
       cy.visit('/')
 
-      cy.contains('Import from URL').click()
+      cy.contains('button', 'Import from URL').click()
 
       cy.get('.url-import-dialog').should('be.visible')
       cy.get('.url-import-dialog').should('exist')
-      cy.get('.p-dialog').should('be.visible')
+      dialogByName('Import from URL').should('be.visible')
       cy.get('.url-import-dialog__field-row').should('be.visible')
       cy.get('.url-import-dialog__input-wrap').should('be.visible')
       cy.get('#url-input').should('be.visible')
@@ -297,9 +303,7 @@ describe('The Home Page', () => {
           .should('have.text', 'GET')
 
       cy.get('#listPets-node').click()
-      cy.get('.p-dialog')
-          .should('be.visible')
-          .contains('GET /pets')
+      dialogByName('GET /pets').should('be.visible')
       cy.get('.swagger-ui', { timeout: 20000 })
           .should('exist')
           .contains('List all pets')
@@ -379,9 +383,7 @@ describe('The Home Page', () => {
       accordionHeader('API Paths').click()
       cy.get('#listPets-node').click()
 
-      cy.get('.p-dialog')
-          .should('be.visible')
-          .contains('GET /pets')
+      dialogByName('GET /pets').should('be.visible')
 
       cy.get('.endpoint-swagger-warning', { timeout: 20000 })
           .should('be.visible')

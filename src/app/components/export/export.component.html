@@ -1,5 +1,4 @@
-<p-dialog header="Export" [(visible)]="display" [modal]="true"
-  [style]="{width: '350px', minWidth: '200px'}" [minY]="70">
+<app-dialog title="Export" [(open)]="display" size="small">
   <select [(ngModel)]="exportFormat">
     @for (format of exportFormats; track format) {
       <option [value]="format.id">
@@ -7,7 +6,7 @@
       </option>
     }
   </select>
-  <ng-template #footer>
+  <div dialog-footer>
     <button type="submit" class="app-button app-button--primary" (click)="export()">
       <svg lucideCheck class="app-icon" aria-hidden="true" focusable="false"></svg>
       <span>Export</span>
@@ -16,8 +15,8 @@
       <svg lucideX class="app-icon" aria-hidden="true" focusable="false"></svg>
       <span>Cancel</span>
     </button>
-  </ng-template>
-</p-dialog>
+  </div>
+</app-dialog>
 
 <button type="button" class="app-button app-button--primary"
   (click)="showDialog()"
