@@ -1,11 +1,10 @@
 <div>
-  <p-dialog
-    header="API definition could not be loaded"
-    [(visible)]="displayLoadFailureDialog"
-    [modal]="true"
-    [style]="{width: 'min(34rem, 92vw)'}">
+  <app-dialog
+    title="API definition could not be loaded"
+    [(open)]="displayLoadFailureDialog"
+    size="medium">
     <p>{{ loadFailureMessage }}</p>
-    <ng-template #footer>
+    <div dialog-footer>
       <button
         type="button"
         class="app-button app-button--secondary"
@@ -13,8 +12,8 @@
         <svg lucideX class="app-icon" aria-hidden="true" focusable="false"></svg>
         <span>Close</span>
       </button>
-    </ng-template>
-  </p-dialog>
+    </div>
+  </app-dialog>
 
   <div class="button-bar">
     <app-file-chooser></app-file-chooser>

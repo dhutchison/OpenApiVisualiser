@@ -3,7 +3,6 @@ import { Component, AfterViewInit, inject, ChangeDetectionStrategy } from '@angu
 import { LucideChevronDown, LucideX } from '@lucide/angular';
 import { FileReaderService } from '../../services/file-reader.service';
 import { ActivatedRoute } from '@angular/router';
-import { DialogModule } from 'primeng/dialog';
 import { ApiComponentsDetailComponent } from '../api-components-detail/api-components-detail.component';
 import { ApiInformationComponent } from '../api-information/api-information.component';
 import { ApiPathTreeComponent } from '../api-path-tree/api-path-tree.component';
@@ -12,6 +11,7 @@ import { ExportComponent } from '../export/export.component';
 import { FileChooserComponent } from '../file-chooser/file-chooser.component';
 import { SummaryComponent } from '../summary/summary.component';
 import { UrlChooserComponent } from '../url-chooser/url-chooser.component';
+import { AppDialogComponent } from '../app-dialog/app-dialog.component';
 
 interface MainSection {
   id: string;
@@ -26,7 +26,7 @@ interface MainSection {
     ApiInformationComponent,
     ApiPathTreeComponent,
     ApiTagsComponent,
-    DialogModule,
+    AppDialogComponent,
     ExportComponent,
     FileChooserComponent,
     SummaryComponent,

@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { UrlChooserComponent } from './url-chooser.component';
-import { DialogModule } from 'primeng/dialog';
 import { FileReaderService } from '../../services/file-reader.service';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
@@ -17,9 +16,7 @@ describe('UrlChooserComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [
-        UrlChooserComponent,
-
-        DialogModule
+        UrlChooserComponent
       ],
       providers: [
         provideHttpClient(withXhr()),
@@ -44,8 +41,11 @@ describe('UrlChooserComponent', () => {
 
   it('should set dialog to be shown', () => {
     component.showDialog();
+    fixture.detectChanges(false);
 
     expect(component.display).toBeTruthy();
+    const dialog = fixture.nativeElement.querySelector('dialog') as HTMLDialogElement;
+    expect(dialog.querySelector('h2')?.textContent).toContain('Import from URL');
   });
 
   it('should import from url', () => {

@@ -136,21 +136,15 @@
 </div>
 
 @if (endpointDialogVisible && selectedOperationNode) {
-  <p-dialog
-    header="{{ selectedOperationNode?.method }} {{ selectedOperationNode?.path }}"
-    [(visible)]="endpointDialogVisible"
-    [modal]="true"
-    [draggable]="false"
-    [resizable]="true"
-    [style]="{width: '90vw'}"
-    [contentStyle]="{'max-height': '80vh', overflow: 'auto'}">
-    <ng-template #content>
+  <app-dialog
+    [title]="selectedOperationNode.method + ' ' + selectedOperationNode.path"
+    [(open)]="endpointDialogVisible"
+    size="large">
       <app-endpoint-swagger
         [apiSpec]="selectedOperationNode.apiDefinition"
         [path]="selectedOperationNode.path"
         [method]="selectedOperationNode.method"
         [operation]="selectedOperationNode.operation">
       </app-endpoint-swagger>
-    </ng-template>
-  </p-dialog>
+  </app-dialog>
 }

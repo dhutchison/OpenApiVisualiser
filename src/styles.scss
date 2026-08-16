@@ -266,7 +266,6 @@ $putHighlightColour: #fca130;
     box-shadow: 0 0 0 3px var(--app-focus);
 }
 
-.p-dialog,
 .p-panel,
 .p-fieldset,
 .p-accordionpanel,
@@ -274,14 +273,12 @@ $putHighlightColour: #fca130;
     color: var(--app-text);
 }
 
-.p-dialog,
 .p-panel,
 .p-accordioncontent,
 .p-accordion-content {
     background: var(--app-surface-solid);
 }
 
-.p-dialog,
 .p-panel,
 .p-fieldset {
     border-color: var(--app-border);
@@ -289,7 +286,6 @@ $putHighlightColour: #fca130;
     box-shadow: var(--app-shadow);
 }
 
-.p-dialog-header,
 .p-panel-header,
 .p-fieldset-legend,
 .p-accordionheader,
@@ -299,12 +295,85 @@ $putHighlightColour: #fca130;
     color: var(--app-text);
 }
 
+.app-dialog {
+    width: min(42rem, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 2rem);
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--app-border);
+    border-radius: 10px;
+    background: var(--app-surface-solid);
+    color: var(--app-text);
+    box-shadow: var(--app-shadow);
+
+    &::backdrop {
+        background: rgba(7, 12, 16, 0.58);
+        backdrop-filter: blur(2px);
+    }
+}
+
+.app-dialog--small {
+    width: min(22rem, calc(100vw - 2rem));
+}
+
+.app-dialog--large {
+    width: min(90vw, 80rem);
+}
+
+.app-dialog__surface {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 2rem);
+}
+
+.app-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--app-border);
+    background: var(--app-surface);
+}
+
+.app-dialog__header h2 {
+    margin: 0;
+    color: var(--app-text);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.25;
+}
+
+.app-dialog__close {
+    min-height: 2rem;
+    padding: 0.35rem;
+}
+
+.app-dialog__description {
+    margin: 1rem 1.25rem 0;
+    color: var(--app-text-muted);
+}
+
+.app-dialog__content {
+    min-width: 0;
+    overflow: auto;
+    padding: 1.25rem;
+}
+
+.app-dialog__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 0 1.25rem 1.25rem;
+}
+
 .url-import-dialog {
-    .p-dialog-content {
+    .app-dialog__content {
         padding: 1.5rem 2rem 1rem;
     }
 
-    .p-dialog-footer {
+    .app-dialog__footer {
         padding: 0 2rem 1.5rem;
     }
 }
