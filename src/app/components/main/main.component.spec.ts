@@ -2,7 +2,6 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 
@@ -52,8 +51,7 @@ describe('MainComponent', () => {
       providers: [
         provideHttpClient(withXhr()),
         provideHttpClientTesting(),
-        provideRouter([]),
-        provideNoopAnimations()
+        provideRouter([])
       ]
 
     })

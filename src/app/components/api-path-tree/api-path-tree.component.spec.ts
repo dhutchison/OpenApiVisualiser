@@ -71,7 +71,6 @@ describe('ApiPathTreeComponent', () => {
     fixture.componentRef.changeDetectorRef.detectChanges();
 
     expect(fixture.nativeElement.querySelector('cdk-tree')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('p-tree')).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('.path-tree-node-content').length).toBe(2);
     expect(fixture.nativeElement.querySelector('#listPets-node')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('[data-node-kind="operation"]')).toBeTruthy();
@@ -88,7 +87,6 @@ describe('ApiPathTreeComponent', () => {
     expect(groups[1].getAttribute('aria-label')).toBe('Path expansion');
     expect(groups[2].getAttribute('aria-label')).toBe('Path sorting');
     expect(options[0].checked).toBeTrue();
-    expect(fixture.nativeElement.querySelector('p-selectbutton')).toBeNull();
     expect(icons.length).toBe(7);
     icons.forEach(icon => expect(icon.getAttribute('aria-hidden')).toBe('true'));
   });
