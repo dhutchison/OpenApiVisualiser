@@ -194,6 +194,12 @@
     border: 0;
     width: auto;
 
+    .path-tree-children {
+        border-left: 2px solid var(--app-border);
+        margin-left: 1rem;
+        padding-left: 1rem;
+    }
+
     .path-tree-node-content {
         background: var(--app-surface-muted);
         border: 1px solid var(--app-border);

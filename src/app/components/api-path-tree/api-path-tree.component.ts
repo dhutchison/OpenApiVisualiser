@@ -99,10 +99,6 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
 
   readonly childrenAccessor = (node: ApiPathTreeNode) => node.children;
 
-  isApiOperationNode(node: ApiPathTreeNode): node is ApiOperationNode {
-    return isApiOperationNode(node);
-  }
-
   /**
    * The original (uncompressed) version of the tree nodes
    */
@@ -123,6 +119,7 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
     this.endpointDialogVisible = false;
     /* Change the view */
     this.preferenceService.horizontalView = value;
+    this.setTreeNodes();
     this.schedulePathTreeMeasurement();
   }
 
@@ -326,15 +323,18 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
       return;
     }
 
-    treeNode.expanded = !treeNode.expanded;
-    this.schedulePathTreeMeasurement();
+    this.updateNodeExpansion(treeNode, !treeNode.expanded);
   }
 
   setNodeExpanded(node: ApiPathTreeNode, expanded: boolean): void {
     if (!node.leaf) {
-      node.expanded = expanded;
-      this.schedulePathTreeMeasurement();
+      this.updateNodeExpansion(node, expanded);
     }
+  }
+
+  private updateNodeExpansion(node: ApiPathTreeNode, expanded: boolean): void {
+    node.expanded = expanded;
+    this.schedulePathTreeMeasurement();
   }
 
   /**  When we compress the view, we will merge any nodes which have only a

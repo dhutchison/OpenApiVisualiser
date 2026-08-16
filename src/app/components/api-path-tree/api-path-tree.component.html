@@ -75,13 +75,9 @@
           (expandedChange)="setNodeExpanded(node, $event)">
           <div
             class="path-tree-node-content"
-            [class.method-get]="isApiOperationNode(node) && node.method === 'GET'"
-            [class.method-post]="isApiOperationNode(node) && node.method === 'POST'"
-            [class.method-put]="isApiOperationNode(node) && node.method === 'PUT'"
-            [class.method-delete]="isApiOperationNode(node) && node.method === 'DELETE'"
             [attr.data-node-kind]="node.kind"
-            [attr.data-method]="isApiOperationNode(node) ? node.method : null">
-            @if (isApiOperationNode(node)) {
+            [attr.data-method]="node.kind === 'operation' ? node.method : null">
+            @if (node.kind === 'operation') {
               <button
                 type="button"
                 class="operation-node"

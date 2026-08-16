@@ -111,17 +111,35 @@ export class OpenapiTreenodeConverterService {
    *
    * @param schema the schema object
    */
-  public createComponentSchemaPropertiesToTreeNodes(schema: SchemaObject | ReferenceObject, apiDefinition: OpenAPIObject): SchemaPropertyNode[] {
-    
+  public createComponentSchemaPropertiesToTreeNodes(
+    schema: SchemaObject | ReferenceObject,
+    apiDefinition: OpenAPIObject,
+    visitedReferences = new Set<string>()
+  ): SchemaPropertyNode[] {
+    if (this.isReferenceObject(schema) && visitedReferences.has(schema.$ref)) {
+      return [];
+    }
+
+    const nextVisitedReferences = new Set(visitedReferences);
+    if (this.isReferenceObject(schema)) {
+      nextVisitedReferences.add(schema.$ref);
+    }
+
     let schemaObject = this.getSchemaObjectFromReference(schema, apiDefinition);
-    
+
     const nodes: SchemaPropertyNode[] = [];
     if (schemaObject.type && schemaObject.type === 'array') {
-      const node = this.createSchemaPropertyToTreeNode(schemaObject.title ?? '', schemaObject.items, apiDefinition);
+      const node = this.createSchemaPropertyToTreeNode(
+        schemaObject.title ?? '',
+        schemaObject.items,
+        apiDefinition,
+        false,
+        nextVisitedReferences
+      );
       if (node) {
         const root: SchemaPropertyNode = {
           label: schemaObject.title ?? '',
-          leaf: false,
+          leaf: node.children.length === 0,
           expanded: true,
           children: [node],
           data: schemaObject
@@ -135,7 +153,8 @@ export class OpenapiTreenodeConverterService {
           title,
           schemaObject.properties[title],
           apiDefinition,
-          schemaObject.required?.includes(title)
+          schemaObject.required?.includes(title),
+          nextVisitedReferences
         );
         if (node) {
           nodes.push(node);
@@ -365,7 +384,8 @@ export class OpenapiTreenodeConverterService {
     title: string,
     property: SchemaObject | ReferenceObject,
     apiDefinition: OpenAPIObject,
-    required = false
+    required = false,
+    visitedReferences = new Set<string>()
   ): SchemaPropertyNode {
 
     let schemaObject = this.getSchemaObjectFromReference(property, apiDefinition);
@@ -380,12 +400,15 @@ export class OpenapiTreenodeConverterService {
     };
 
     if (schemaObject.type === 'array' && schemaObject.items) {
-      node.leaf = false;
-      node.children = this.createComponentSchemaPropertiesToTreeNodes(schemaObject.items, apiDefinition);
+      node.children = this.createComponentSchemaPropertiesToTreeNodes(
+        schemaObject.items,
+        apiDefinition,
+        visitedReferences
+      );
     } else if (schemaObject.properties) {
-      node.leaf = false;
-      node.children = this.createComponentSchemaPropertiesToTreeNodes(schemaObject, apiDefinition);
+      node.children = this.createComponentSchemaPropertiesToTreeNodes(schemaObject, apiDefinition, visitedReferences);
     }
+    node.leaf = node.children.length === 0;
     return node;
   }
 

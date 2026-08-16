@@ -140,4 +140,37 @@ describe('OpenapiTreenodeConverterService', () => {
     expect(nodes[0].required).toBeTrue();
     expect(nodes[1].required).toBeFalse();
   });
+
+  it('should stop expanding recursive schema references', () => {
+    const schema = {$ref: '#/components/schemas/Node'};
+    const apiDefinition = {
+      openapi: '3.1.0' as const,
+      info: {
+        title: 'Recursive API',
+        version: '1.0.0'
+      },
+      paths: {},
+      components: {
+        schemas: {
+          Node: {
+            type: 'object' as const,
+            properties: {
+              value: {type: 'string' as const},
+              children: {
+                type: 'array' as const,
+                items: schema
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const nodes = service.createComponentSchemaPropertiesToTreeNodes(schema, apiDefinition);
+    const childrenNode = nodes.find(node => node.label === 'children');
+
+    expect(childrenNode).toBeTruthy();
+    expect(childrenNode?.leaf).toBeTrue();
+    expect(childrenNode?.children).toEqual([]);
+  });
 });

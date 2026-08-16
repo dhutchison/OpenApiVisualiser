@@ -454,6 +454,39 @@ describe('The Home Page', () => {
       });
     })
 
+    it('Renders nested API paths clearly in list mode and supports keyboard expansion', () => {
+
+      cy.fixture('petstore.yaml', 'utf8').then((data) => {
+
+        const response = {
+          statusCode: 200,
+          body: data,
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8'
+          }
+        };
+        cy.intercept(
+          'GET',
+          /^http:\/\/local.test\/petstore.yaml$/,
+          response)
+      })
+
+      cy.visit('/?url=http://local.test/petstore.yaml')
+      accordionHeader('API Paths').click()
+      cy.get('[role="radiogroup"][aria-label="View orientation"] input[value="list"]')
+        .check({force: true})
+
+      cy.get('cdk-tree.tree-vertical').should('exist')
+      cy.get('.operation-node').first().should('be.visible')
+      cy.get('.operation-node').first().closest('.path-tree-children').should(($children) => {
+        expect(parseFloat(getComputedStyle($children[0]).marginLeft)).to.be.greaterThan(0)
+      })
+
+      cy.get('.path-node').first().focus().type('{enter}')
+      cy.get('.path-node').first().should('have.attr', 'aria-expanded', 'false')
+      cy.get('.operation-node').should('not.exist')
+    })
+
     it('Pushes nested schema sections down when Components expands', () => {
 
       cy.fixture('petstore.yaml', 'utf8').then((data) => {
