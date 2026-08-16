@@ -17,7 +17,8 @@ interface ComponentSummary {
     MarkdownifyPipe
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './api-information.component.html'
+  templateUrl: './api-information.component.html',
+  styleUrls: ['./api-information.component.scss']
 })
 export class ApiInformationComponent implements OnInit {
 

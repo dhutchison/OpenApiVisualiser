@@ -13,7 +13,8 @@ type FileSelectionEvent = {
     LucideFileUp
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './file-chooser.component.html'
+  templateUrl: './file-chooser.component.html',
+  styleUrls: ['./file-chooser.component.scss']
 })
 export class FileChooserComponent {
 

@@ -1,0 +1,4 @@
+.file-chooser-input:focus-visible + .file-chooser-button {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--app-focus);
+}

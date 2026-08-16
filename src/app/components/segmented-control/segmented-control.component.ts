@@ -25,7 +25,8 @@ let nextSegmentedControlId = 0;
   selector: 'app-segmented-control',
   imports: [NgComponentOutlet],
   changeDetection: ChangeDetectionStrategy.Eager,
-  templateUrl: './segmented-control.component.html'
+  templateUrl: './segmented-control.component.html',
+  styleUrls: ['./segmented-control.component.scss']
 })
 export class SegmentedControlComponent {
 
