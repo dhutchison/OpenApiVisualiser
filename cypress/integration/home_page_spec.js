@@ -248,6 +248,7 @@ describe('The Home Page', () => {
 
         expect(tooltipRect.top).to.be.at.least(treeRect.top)
         expect(tooltipRect.bottom).to.be.at.most(treeRect.bottom)
+        expect($tooltip[0].scrollWidth).to.be.at.most($tooltip[0].clientWidth)
       })
     })
 
