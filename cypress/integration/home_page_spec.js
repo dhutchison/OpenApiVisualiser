@@ -228,6 +228,29 @@ describe('The Home Page', () => {
         cy.get('.api-info-title').should('be.visible').and('contain.text', 'Imported API')
     })
 
+    it('Keeps long API tooltips inside the tree background', () => {
+      cy.visit('/')
+
+      cy.readFile('sample_openapi/uspto.yaml').then((data) => {
+        cy.get('#file-input').selectFile({
+          contents: Cypress.Buffer.from(data),
+          fileName: 'uspto.yaml',
+          mimeType: 'text/yaml'
+        }, {force: true})
+      })
+
+      accordionHeader('API Paths').click()
+      cy.get('#perform-search-node').should('be.visible').trigger('mouseenter')
+
+      cy.get('.app-tooltip:not([hidden])').then(($tooltip) => {
+        const tooltipRect = $tooltip[0].getBoundingClientRect()
+        const treeRect = $tooltip[0].ownerDocument.querySelector('.tree-view').getBoundingClientRect()
+
+        expect(tooltipRect.top).to.be.at.least(treeRect.top)
+        expect(tooltipRect.bottom).to.be.at.most(treeRect.bottom)
+      })
+    })
+
     /*
      * Test when we load a spec from a URL, with root node endpoints, that they
      * are rendered

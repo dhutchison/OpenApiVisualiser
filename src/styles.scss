@@ -493,6 +493,7 @@ $putHighlightColour: #fca130;
     font-size: 0.78rem;
     font-weight: 600;
     line-height: 1.35;
+    overflow: auto;
     pointer-events: none;
     transform: translate(-50%, calc(-100% - 0.45rem));
     white-space: pre-line;
