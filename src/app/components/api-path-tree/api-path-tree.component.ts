@@ -7,7 +7,7 @@ import {
   LucideArrowUpAZ,
   LucideChevronRight,
   LucideDownload,
-  LucideFilterX,
+  LucideFunnelX,
   LucideFunnel,
   LucideList,
   LucideMaximize2,
@@ -37,7 +37,7 @@ type ApiPathSortOrder = 'default' | 'asc' | 'desc';
     SegmentedControlComponent,
     LucideChevronRight,
     LucideDownload,
-    LucideFilterX,
+    LucideFunnelX,
     LucideFunnel
 ],
   changeDetection: ChangeDetectionStrategy.Eager,

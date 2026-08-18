@@ -77,8 +77,13 @@
 }
 
 .schema-property__required {
-    background: color-mix(in srgb, #dc2626 14%, transparent);
-    color: #b91c1c;
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+:host-context(.dark-mode) .schema-property__required {
+    background: #450a0a;
+    color: #fecaca;
 }
 
 .schema-property__description {

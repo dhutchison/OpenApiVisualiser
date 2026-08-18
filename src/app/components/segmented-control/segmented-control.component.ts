@@ -48,7 +48,12 @@ export class SegmentedControlComponent {
   handleKeydown(event: KeyboardEvent, optionIndex: number) {
     const forwardKey = this.orientation === 'horizontal' ? 'ArrowRight' : 'ArrowDown';
     const backwardKey = this.orientation === 'horizontal' ? 'ArrowLeft' : 'ArrowUp';
-    const direction = event.key === forwardKey ? 1 : event.key === backwardKey ? -1 : undefined;
+    let direction: -1 | 1 | undefined;
+    if (event.key === forwardKey) {
+      direction = 1;
+    } else if (event.key === backwardKey) {
+      direction = -1;
+    }
 
     if (direction === undefined && event.key !== 'Home' && event.key !== 'End') {
       return;
@@ -56,11 +61,14 @@ export class SegmentedControlComponent {
 
     event.preventDefault();
 
-    const nextIndex = event.key === 'Home'
-      ? 0
-      : event.key === 'End'
-        ? this.options.length - 1
-        : (optionIndex + direction + this.options.length) % this.options.length;
+    let nextIndex: number;
+    if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = this.options.length - 1;
+    } else {
+      nextIndex = (optionIndex + direction! + this.options.length) % this.options.length;
+    }
     const nextOption = this.options[nextIndex];
 
     if (!nextOption) {

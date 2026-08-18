@@ -55,10 +55,10 @@ describe('ApiInformationComponent', () => {
     fixture.detectChanges(false);
 
     expect(fixture.nativeElement.querySelector('section.app-panel h2')?.textContent).toContain('Pets API');
-    expect(fixture.nativeElement.querySelectorAll('fieldset').length).toBe(4);
+    expect(fixture.nativeElement.querySelectorAll('fieldset')).toHaveSize(4);
     expect(fixture.nativeElement.querySelectorAll('legend')[0].textContent).toContain('External Documentation');
     expect(fixture.nativeElement.querySelector('section.app-panel')).toBeTruthy();
-    expect(fixture.nativeElement.querySelectorAll('fieldset.app-fieldset').length).toBe(4);
+    expect(fixture.nativeElement.querySelectorAll('fieldset.app-fieldset')).toHaveSize(4);
   });
 
   it('renders only non-empty reusable component summaries', async () => {

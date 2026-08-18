@@ -30,7 +30,7 @@ describe('SegmentedControlComponent', () => {
     const radios = fixture.nativeElement.querySelectorAll('input[type="radio"]') as NodeListOf<HTMLInputElement>;
 
     expect(group.getAttribute('aria-label')).toBe('View mode');
-    expect(radios.length).toBe(3);
+    expect(radios).toHaveSize(3);
     expect(radios[0].checked).toBeTrue();
     expect(radios[1].checked).toBeFalse();
     expect(radios[0].parentElement?.textContent).toContain('Tree');

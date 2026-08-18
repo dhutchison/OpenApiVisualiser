@@ -42,7 +42,7 @@
             class="app-button app-button--secondary"
             [disabled]="!selectedTagFilters.length"
             (click)="clearTagFilters()">
-            <svg lucideFilterX class="app-icon" aria-hidden="true" focusable="false"></svg>
+            <svg lucideFunnelX class="app-icon" aria-hidden="true" focusable="false"></svg>
             <span>Clear</span>
           </button>
         </div>
@@ -101,6 +101,7 @@
             }
           </div>
           @if (!node.leaf && node.expanded) {
+            <!-- NOSONAR: role=group is required by the ARIA tree pattern for nested CDK tree nodes. -->
             <div class="path-tree-children" role="group">
               <ng-container cdkTreeNodeOutlet></ng-container>
             </div>

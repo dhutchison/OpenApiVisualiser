@@ -71,7 +71,7 @@ describe('ApiPathTreeComponent', () => {
     fixture.componentRef.changeDetectorRef.detectChanges();
 
     expect(fixture.nativeElement.querySelector('cdk-tree')).toBeTruthy();
-    expect(fixture.nativeElement.querySelectorAll('.path-tree-node-content').length).toBe(2);
+    expect(fixture.nativeElement.querySelectorAll('.path-tree-node-content')).toHaveSize(2);
     expect(fixture.nativeElement.querySelector('#listPets-node')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('[data-node-kind="operation"]')).toBeTruthy();
   });
@@ -81,13 +81,13 @@ describe('ApiPathTreeComponent', () => {
     const icons = fixture.nativeElement.querySelectorAll('[role="radiogroup"] svg') as NodeListOf<SVGElement>;
     const groups = fixture.nativeElement.querySelectorAll('[role="radiogroup"]') as NodeListOf<HTMLElement>;
 
-    expect(options.length).toBe(7);
-    expect(groups.length).toBe(3);
+    expect(options).toHaveSize(7);
+    expect(groups).toHaveSize(3);
     expect(groups[0].getAttribute('aria-label')).toBe('View orientation');
     expect(groups[1].getAttribute('aria-label')).toBe('Path expansion');
     expect(groups[2].getAttribute('aria-label')).toBe('Path sorting');
     expect(options[0].checked).toBeTrue();
-    expect(icons.length).toBe(7);
+    expect(icons).toHaveSize(7);
     icons.forEach(icon => expect(icon.getAttribute('aria-hidden')).toBe('true'));
   });
 
