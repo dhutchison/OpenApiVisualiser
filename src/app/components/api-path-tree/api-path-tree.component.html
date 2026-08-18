@@ -101,8 +101,7 @@
             }
           </div>
           @if (!node.leaf && node.expanded) {
-            <!-- NOSONAR: role=group is required by the ARIA tree pattern for nested CDK tree nodes. -->
-            <div class="path-tree-children" role="group">
+            <div class="path-tree-children" role="group"><!-- NOSONAR: role=group is required by the ARIA tree pattern for nested CDK tree nodes. -->
               <ng-container cdkTreeNodeOutlet></ng-container>
             </div>
           }
