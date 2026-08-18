@@ -111,17 +111,35 @@ export class OpenapiTreenodeConverterService {
    *
    * @param schema the schema object
    */
-  public createComponentSchemaPropertiesToTreeNodes(schema: SchemaObject | ReferenceObject, apiDefinition: OpenAPIObject): SchemaPropertyNode[] {
-    
+  public createComponentSchemaPropertiesToTreeNodes(
+    schema: SchemaObject | ReferenceObject,
+    apiDefinition: OpenAPIObject,
+    visitedReferences = new Set<string>()
+  ): SchemaPropertyNode[] {
+    if (this.isReferenceObject(schema) && visitedReferences.has(schema.$ref)) {
+      return [];
+    }
+
+    const nextVisitedReferences = new Set(visitedReferences);
+    if (this.isReferenceObject(schema)) {
+      nextVisitedReferences.add(schema.$ref);
+    }
+
     let schemaObject = this.getSchemaObjectFromReference(schema, apiDefinition);
-    
+
     const nodes: SchemaPropertyNode[] = [];
     if (schemaObject.type && schemaObject.type === 'array') {
-      const node = this.createSchemaPropertyToTreeNode(schemaObject.title ?? '', schemaObject.items, apiDefinition);
+      const node = this.createSchemaPropertyToTreeNode(
+        schemaObject.title ?? '',
+        schemaObject.items,
+        apiDefinition,
+        false,
+        nextVisitedReferences
+      );
       if (node) {
         const root: SchemaPropertyNode = {
           label: schemaObject.title ?? '',
-          leaf: false,
+          leaf: node.children.length === 0,
           expanded: true,
           children: [node],
           data: schemaObject
@@ -131,7 +149,13 @@ export class OpenapiTreenodeConverterService {
     }
     if (schemaObject.properties) {
       Object.keys(schemaObject.properties).forEach(title => {
-        const node = this.createSchemaPropertyToTreeNode(title, schemaObject.properties[title], apiDefinition);
+        const node = this.createSchemaPropertyToTreeNode(
+          title,
+          schemaObject.properties[title],
+          apiDefinition,
+          schemaObject.required?.includes(title),
+          nextVisitedReferences
+        );
         if (node) {
           nodes.push(node);
         }
@@ -356,7 +380,13 @@ export class OpenapiTreenodeConverterService {
    *
    * @param schema the schema object
    */
-  private createSchemaPropertyToTreeNode(title: string, property: SchemaObject | ReferenceObject, apiDefinition: OpenAPIObject): SchemaPropertyNode {
+  private createSchemaPropertyToTreeNode(
+    title: string,
+    property: SchemaObject | ReferenceObject,
+    apiDefinition: OpenAPIObject,
+    required = false,
+    visitedReferences = new Set<string>()
+  ): SchemaPropertyNode {
 
     let schemaObject = this.getSchemaObjectFromReference(property, apiDefinition);
     
@@ -364,19 +394,21 @@ export class OpenapiTreenodeConverterService {
       label: title,
       leaf: true,
       expanded: false,
+      required,
       children: [],
       data: property
     };
 
-    Object.keys(property).forEach(key => {
-        if (key === 'type' && property[key] === 'array') {
-          // If we have an array type then start to recursively traverse and add child nodes
-          node.leaf = false;
-          node.children = this.createComponentSchemaPropertiesToTreeNodes(schemaObject.items, apiDefinition);
-        } else {
-          // console.log(`Unrecognised property: [${key}]`);
-        }
-    });
+    if (schemaObject.type === 'array' && schemaObject.items) {
+      node.children = this.createComponentSchemaPropertiesToTreeNodes(
+        schemaObject.items,
+        apiDefinition,
+        visitedReferences
+      );
+    } else if (schemaObject.properties) {
+      node.children = this.createComponentSchemaPropertiesToTreeNodes(schemaObject, apiDefinition, visitedReferences);
+    }
+    node.leaf = node.children.length === 0;
     return node;
   }
 
@@ -430,7 +462,11 @@ export class OpenapiTreenodeConverterService {
       schemaObject.allOf !== undefined ||
       schemaObject.anyOf !== undefined ||
       schemaObject.oneOf !== undefined ||
-      schemaObject.not !== undefined);
+      schemaObject.not !== undefined ||
+      schemaObject.type !== undefined ||
+      schemaObject.description !== undefined ||
+      schemaObject.format !== undefined ||
+      schemaObject.enum !== undefined);
   }
 
   private getSchemaObjectFromReference(object: SchemaObject | ReferenceObject, apiDefinition: OpenAPIObject): SchemaObject {

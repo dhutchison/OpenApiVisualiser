@@ -32,6 +32,7 @@ export interface SchemaPropertyNode {
   label: string;
   leaf: boolean;
   expanded: boolean;
+  required?: boolean;
   children: SchemaPropertyNode[];
   data: SchemaObject | ReferenceObject;
 }

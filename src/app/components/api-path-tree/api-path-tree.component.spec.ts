@@ -9,7 +9,6 @@ import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.c
 
 import { PipesModule } from '../../pipes/pipes.module';
 
-import { TreeModule } from 'primeng/tree';
 
 describe('ApiPathTreeComponent', () => {
   let component: ApiPathTreeComponent;
@@ -21,8 +20,7 @@ describe('ApiPathTreeComponent', () => {
         ApiPathTreeComponent,
         EndpointSwaggerComponent,
         FormsModule,
-        PipesModule,
-        TreeModule
+        PipesModule
       ],
       providers: [
         provideHttpClient(withXhr()),
@@ -42,6 +40,42 @@ describe('ApiPathTreeComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('renders the application-owned CDK tree contract', () => {
+    const operationNode = {
+      kind: 'operation',
+      label: 'GET',
+      leaf: true,
+      children: [],
+      tooltip: 'List pets',
+      id: 'listPets',
+      method: 'GET',
+      path: '/pets',
+      operation: {responses: {}},
+      apiDefinition: {
+        openapi: '3.1.0',
+        info: {title: 'Pets', version: '1.0.0'},
+        paths: {}
+      },
+      complexity: 0
+    } as ApiOperationNode;
+    const pathNode: ApiPathTreeNode = {
+      kind: 'path',
+      label: '/pets',
+      leaf: false,
+      expanded: true,
+      children: [operationNode]
+    };
+
+    (component as any).apiPathNodesOrig = [pathNode];
+    (component as any).setTreeNodes();
+    fixture.componentRef.changeDetectorRef.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('cdk-tree')).toBeTruthy();
+    expect(fixture.nativeElement.querySelectorAll('.path-tree-node-content').length).toBe(2);
+    expect(fixture.nativeElement.querySelector('#listPets-node')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-node-kind="operation"]')).toBeTruthy();
+  });
+
   it('should render labelled radio segmented controls with decorative icons', () => {
     const options = fixture.nativeElement.querySelectorAll('input[type="radio"]') as NodeListOf<HTMLInputElement>;
     const icons = fixture.nativeElement.querySelectorAll('[role="radiogroup"] svg') as NodeListOf<SVGElement>;
@@ -53,7 +87,6 @@ describe('ApiPathTreeComponent', () => {
     expect(groups[1].getAttribute('aria-label')).toBe('Path expansion');
     expect(groups[2].getAttribute('aria-label')).toBe('Path sorting');
     expect(options[0].checked).toBeTrue();
-    expect(fixture.nativeElement.querySelector('p-selectbutton')).toBeNull();
     expect(icons.length).toBe(7);
     icons.forEach(icon => expect(icon.getAttribute('aria-hidden')).toBe('true'));
   });

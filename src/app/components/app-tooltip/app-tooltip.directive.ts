@@ -80,8 +80,32 @@ export class AppTooltipDirective implements AfterViewInit, OnChanges, OnDestroy 
 
       if (this.appTooltip && (this.pointerOver || this.focused)) {
         const hostRect = this.host.nativeElement.getBoundingClientRect();
-        this.renderer.setStyle(this.tooltipElement, 'left', `${hostRect.left + hostRect.width / 2}px`);
-        this.renderer.setStyle(this.tooltipElement, 'top', `${hostRect.top}px`);
+        const tooltip = this.tooltipElement;
+        const treeView = this.host.nativeElement.closest('.tree-view') as HTMLElement | null;
+        const boundary = treeView?.getBoundingClientRect() ?? {
+          left: 0,
+          top: 0,
+          right: this.document.documentElement.clientWidth,
+          bottom: this.document.documentElement.clientHeight
+        };
+        const padding = 8;
+        const initialLeft = hostRect.left + hostRect.width / 2;
+        const initialTop = hostRect.top;
+
+        this.renderer.setStyle(tooltip, 'max-height', `${Math.max(0, boundary.bottom - boundary.top - padding * 2)}px`);
+        this.renderer.setStyle(tooltip, 'left', `${initialLeft}px`);
+        this.renderer.setStyle(tooltip, 'top', `${initialTop}px`);
+
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const minLeft = boundary.left + padding;
+        const maxLeft = Math.max(minLeft, boundary.right - padding - tooltipRect.width);
+        const minTop = boundary.top + padding;
+        const maxTop = Math.max(minTop, boundary.bottom - padding - tooltipRect.height);
+        const adjustedLeft = Math.min(Math.max(tooltipRect.left, minLeft), maxLeft);
+        const adjustedTop = Math.min(Math.max(tooltipRect.top, minTop), maxTop);
+
+        this.renderer.setStyle(tooltip, 'left', `${initialLeft + adjustedLeft - tooltipRect.left}px`);
+        this.renderer.setStyle(tooltip, 'top', `${initialTop + adjustedTop - tooltipRect.top}px`);
       }
     }
   }

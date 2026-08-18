@@ -1,7 +1,7 @@
 
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, Input, OnChanges, inject, ChangeDetectionStrategy } from '@angular/core';
 import { OpenAPIObject, SchemaObject } from 'openapi3-ts/oas31';
-import { TreeTableModule } from 'primeng/treetable';
 import { OpenapiTreenodeConverterService } from '../../../services/openapi-treenode-converter.service';
 import { SchemaPropertyNode } from '../../../models/hierarchy.models';
 import { MarkdownifyPipe } from '../../../pipes/markdownify.pipe';
@@ -10,9 +10,9 @@ import { StringReplacePipe } from '../../../pipes/stringreplacepipe.pipe';
 @Component({
   selector: 'app-schema-detail',
   imports: [
+    NgTemplateOutlet,
     MarkdownifyPipe,
-    StringReplacePipe,
-    TreeTableModule
+    StringReplacePipe
 ],
   templateUrl: './schema-detail.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -39,6 +39,24 @@ export class SchemaDetailComponent implements OnChanges {
           this.schema, this.apiSpec
       );
     }
+  }
+
+  toggleNode(node: SchemaPropertyNode): void {
+    if (!node.leaf) {
+      node.expanded = !node.expanded;
+    }
+  }
+
+  getType(node: SchemaPropertyNode): string {
+    if ('$ref' in node.data) {
+      return 'reference';
+    }
+
+    if (Array.isArray(node.data.type)) {
+      return node.data.type.join(' | ');
+    }
+
+    return node.data.type ?? (node.data.properties ? 'object' : 'schema');
   }
 
 }

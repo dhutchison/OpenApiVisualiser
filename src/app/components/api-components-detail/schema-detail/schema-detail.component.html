@@ -7,58 +7,47 @@
 </ul>
 -->
 
-<p-treetable [value]="treeModel">
-  <ng-template #header>
-    <tr>
-      <th class="ui-p-1">Name</th>
-      <th class="ui-p-1">Type</th>
-      <th class="ui-p-4">Description</th>
-      <!--
-      <th>Node</th>
-      <th>Data</th>
-      -->
-    </tr>
+<ul class="schema-property-list" aria-label="Schema properties">
+  <ng-template #propertyList let-nodes let-level="level">
+    @for (node of nodes; track node.label) {
+      <li class="schema-property" [attr.data-schema-property]="node.label" [style.--schema-level]="level">
+        <article class="schema-property__card">
+          <header class="schema-property__header">
+            @if (!node.leaf) {
+              <button
+                type="button"
+                class="schema-property__toggle"
+                [attr.aria-expanded]="node.expanded"
+                [attr.aria-label]="(node.expanded ? 'Collapse ' : 'Expand ') + node.label"
+                (click)="toggleNode(node)">
+                <span aria-hidden="true">›</span>
+              </button>
+            } @else {
+              <span class="schema-property__toggle-spacer" aria-hidden="true"></span>
+            }
+            <strong>{{ node.label }}</strong>
+            <span class="schema-property__type">{{ getType(node) }}</span>
+            @if (node.required) {
+              <span class="schema-property__required">required</span>
+            }
+          </header>
+          @if ('$ref' in node.data) {
+            <a class="schema-property__reference" [href]="node.data.$ref | replaceSlash">{{ node.data.$ref }}</a>
+          }
+          @if ('format' in node.data && node.data.format) {
+            <span class="schema-property__format">Format: {{ node.data.format }}</span>
+          }
+          @if ('description' in node.data && node.data.description) {
+            <div class="schema-property__description" [innerHTML]="node.data.description | markdownify"></div>
+          }
+        </article>
+        @if (node.expanded && node.children.length) {
+          <ul class="schema-property__children">
+            <ng-container *ngTemplateOutlet="propertyList; context: {$implicit: node.children, level: level + 1}"></ng-container>
+          </ul>
+        }
+      </li>
+    }
   </ng-template>
-  <ng-template #body let-rowNode let-rowData="rowData">
-
-    <tr [ttRow]="rowNode">
-      <td>
-        @if (!rowNode.node.leaf) {
-          <p-treetable-toggler [rowNode]="rowNode"></p-treetable-toggler>
-        }
-        {{rowNode.node.label}}
-        @if (schema.required && schema.required.includes(rowNode.node.label)) {
-          <strong class="required"> *</strong>
-        }
-      </td>
-      <td>
-        {{rowData.type}}
-        @if (rowData.format) {
-          <em>{{rowData.format}}</em>
-        }
-        @if (rowData.$ref) {
-          <em><a href="{{rowData.$ref | replaceSlash }}">{{rowData.$ref}}</a></em>
-        }
-      </td>
-      <td>
-        <div [innerHTML]="(rowData.description | markdownify)"></div>
-      </td>
-      <!--
-      <td>
-        <ul>
-          <li *ngFor="let item of rowNode.node | keyvalue">
-            Key: <b>{{item.key}}</b> and Value: <b>{{item.value}}</b>
-          </li>
-        </ul>
-      </td>
-      <td>
-        <ul>
-          <li *ngFor="let item of rowData | keyvalue">
-            Key: <b>{{item.key}}</b> and Value: <b>{{item.value}}</b>
-          </li>
-        </ul>
-      </td>
-      -->
-    </tr>
-  </ng-template>
-</p-treetable>
+  <ng-container *ngTemplateOutlet="propertyList; context: {$implicit: treeModel, level: 0}"></ng-container>
+</ul>

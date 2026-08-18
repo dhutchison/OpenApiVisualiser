@@ -1,11 +1,122 @@
-.required {
-    color: red;
+.schema-property-list,
+.schema-property__children {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
-tbody th {
-    text-align: left;
+.schema-property__children {
+    border-left: 2px solid var(--app-border);
+    margin-left: 1rem;
+    padding-left: 1rem;
 }
-th, td {
-    border: 1px solid #666;
-    padding: 0.25em 0.5em;
+
+.schema-property {
+    margin: 0.5rem 0;
+}
+
+.schema-property__card {
+    background: var(--app-surface-muted);
+    border: 1px solid var(--app-border);
+    border-radius: 0.6rem;
+    padding: 0.75rem 1rem;
+}
+
+.schema-property__header {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.schema-property__toggle,
+.schema-property__toggle-spacer {
+    align-items: center;
+    display: inline-flex;
+    flex: 0 0 1.7rem;
+    height: 1.7rem;
+    justify-content: center;
+    width: 1.7rem;
+}
+
+.schema-property__toggle {
+    background: var(--app-surface-solid);
+    border: 1px solid var(--app-border);
+    border-radius: 0.35rem;
+    color: var(--app-text);
+    cursor: pointer;
+    padding: 0;
+}
+
+.schema-property__toggle span {
+    font-size: 1.35rem;
+    line-height: 1;
+    transition: transform 0.15s ease;
+}
+
+.schema-property__toggle[aria-expanded="true"] span {
+    transform: rotate(90deg);
+}
+
+.schema-property__toggle:focus-visible {
+    outline: 3px solid var(--app-focus);
+    outline-offset: 2px;
+}
+
+.schema-property__type,
+.schema-property__required {
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+}
+
+.schema-property__type {
+    background: var(--app-brand-soft);
+    color: var(--app-brand);
+}
+
+.schema-property__required {
+    background: color-mix(in srgb, #dc2626 14%, transparent);
+    color: #b91c1c;
+}
+
+.schema-property__description {
+    color: var(--app-text-muted);
+    line-height: 1.5;
+    margin: 0.6rem 0 0 2.2rem;
+}
+
+.schema-property__description :first-child {
+    margin-top: 0;
+}
+
+.schema-property__description :last-child {
+    margin-bottom: 0;
+}
+
+.schema-property__format,
+.schema-property__reference {
+    color: var(--app-text-muted);
+    display: block;
+    font-size: 0.85rem;
+    margin: 0.45rem 0 0 2.2rem;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+    .schema-property__card {
+        padding: 0.65rem;
+    }
+
+    .schema-property__children {
+        margin-left: 0.35rem;
+        padding-left: 0.55rem;
+    }
+
+    .schema-property__description,
+    .schema-property__format,
+    .schema-property__reference {
+        margin-left: 0;
+    }
 }
