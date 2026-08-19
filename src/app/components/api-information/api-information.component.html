@@ -3,6 +3,7 @@
     <header class="app-panel__header">
       <h2 class="api-info-title" [id]="'api-info-title-' + apiIndex">{{ api.info.title }} - {{ api.info.version }}</h2>
     </header>
+    <div class="api-info__body">
     <dl class="metadata-grid">
       <div>
         <dt>OpenAPI</dt>
@@ -130,5 +131,6 @@
         </dl>
       </fieldset>
     }
+    </div>
   </section>
 }

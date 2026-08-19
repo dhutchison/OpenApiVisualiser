@@ -604,6 +604,19 @@ describe('The Home Page', () => {
       cy.contains('.api-info', 'http://petstore.swagger.io/v1')
       cy.contains('.api-info', 'Paths').parent().contains('3')
       cy.contains('.api-info', 'Operations').parent().contains('4')
+      cy.get('.api-info__body')
+          .should('have.css', 'padding', '16px')
+          .then(() => {
+            cy.get('.api-info__body .metadata-grid').then(($metadata) => {
+              const metadataLeft = $metadata[0].getBoundingClientRect().left
+
+              cy.get('.api-info').should(($panel) => {
+                const panelLeft = $panel[0].getBoundingClientRect().left
+
+                expect(metadataLeft - panelLeft).to.be.closeTo(17, 1)
+              })
+            })
+          })
 
       accordionHeader('Tags').click()
       cy.contains('.tag-list article', 'pets')
