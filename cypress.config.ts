@@ -5,13 +5,6 @@ export default defineConfig({
         baseUrl: "http://127.0.0.1:4200",
         video: false,
         specPattern: 'cypress/integration/*_spec.js',
-        setupNodeEvents(on, config) {
-            require('@cypress/code-coverage/task')(on, config)
-            // include any other plugin code...
-      
-            // It's IMPORTANT to return the config object
-            // with any changed environment variables
-            return config
-          },
+        supportFile: false,
     },
 })

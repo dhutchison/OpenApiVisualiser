@@ -102,4 +102,60 @@ describe('ApiInformationComponent', () => {
       {label: 'Security schemes', count: '2'}
     ]);
   });
+
+  it('calculates paths, operations, security, and server variables', () => {
+    const api = {
+      openapi: '3.1.0',
+      info: {title: 'Pets API', version: '1.0.0'},
+      paths: {
+        'x-vendor-path': {},
+        '/pets': {
+          get: {},
+          put: {},
+          post: {},
+          delete: {},
+          options: {},
+          head: {},
+          patch: {},
+          trace: {}
+        }
+      },
+      security: [
+        {},
+        {apiKey: []},
+        {oauth: ['read', 'write'], apiKey: ['scope']}
+      ],
+      servers: [{
+        url: 'https://{region}.example.test',
+        variables: {
+          region: {default: 'eu-west-1', description: 'Deployment region'}
+        }
+      }]
+    } as any;
+
+    expect(component.getPathCount(api)).toBe(1);
+    expect(component.getOperationCount(api)).toBe(8);
+    expect(component.getSecurityRequirements(api.security)).toEqual([
+      'No authentication required',
+      'apiKey',
+      'oauth (read, write), apiKey (scope)'
+    ]);
+    expect(component.getSecurityRequirements()).toEqual([]);
+    expect(component.getServerVariables(api.servers[0])).toEqual([
+      {name: 'region', defaultValue: 'eu-west-1', description: 'Deployment region'}
+    ]);
+    expect(component.getServerVariables({url: 'https://example.test'})).toEqual([]);
+  });
+
+  it('resets API definitions when files are reset', () => {
+    fileReaderService.apiChanged.next({
+      openapi: '3.1.0',
+      info: {title: 'Pets API', version: '1.0.0'},
+      paths: {}
+    });
+
+    fileReaderService.resetFiles.next();
+
+    expect(component.apiDefinitions).toEqual([]);
+  });
 });

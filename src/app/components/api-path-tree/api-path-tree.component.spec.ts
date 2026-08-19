@@ -102,6 +102,31 @@ describe('ApiPathTreeComponent', () => {
 
   });
 
+  it('accepts view, compression, and sort control values', () => {
+    component.setView('tree');
+    expect(component.horizontalView).toBeTrue();
+    component.setView('list');
+    expect(component.horizontalView).toBeFalse();
+    component.setView('unknown');
+    expect(component.horizontalView).toBeFalse();
+
+    component.setCompression('expanded');
+    expect(component.joinNodesWithNoLeaves).toBeFalse();
+    component.setCompression('compressed');
+    expect(component.joinNodesWithNoLeaves).toBeTrue();
+    component.setCompression('unknown');
+    expect(component.joinNodesWithNoLeaves).toBeTrue();
+
+    component.setSortOrder('default');
+    expect(component.sortOrder).toBe('default');
+    component.setSortOrder('asc');
+    expect(component.sortOrder).toBe('asc');
+    component.setSortOrder('desc');
+    expect(component.sortOrder).toBe('desc');
+    component.setSortOrder('unknown');
+    expect(component.sortOrder).toBe('desc');
+  });
+
   it('should open and close endpoint details in the application dialog', () => {
     const operationNode = {
       kind: 'operation',
@@ -175,6 +200,46 @@ describe('ApiPathTreeComponent', () => {
     expect(operationNode.expanded).toBeFalse();
     expect(event.stopPropagation).toHaveBeenCalled();
     expect(scheduleMeasurementSpy).not.toHaveBeenCalled();
+  });
+
+  it('only opens endpoint details for operation nodes', () => {
+    const pathNode = {
+      kind: 'path',
+      label: '/pets',
+      leaf: false,
+      children: []
+    } as ApiPathTreeNode;
+
+    component.endpointDialogVisible = true;
+    component.selectedOperationNode = {} as ApiOperationNode;
+    component.openEndpointDetail(pathNode);
+
+    expect(component.endpointDialogVisible).toBeFalse();
+    expect(component.selectedOperationNode).toBeUndefined();
+  });
+
+  it('expands only non-leaf nodes through the public expansion method', () => {
+    const pathNode = {
+      kind: 'path',
+      label: '/pets',
+      leaf: false,
+      expanded: false,
+      children: []
+    } as ApiPathTreeNode;
+    const operationNode = {
+      kind: 'operation',
+      label: 'GET',
+      leaf: true,
+      children: []
+    } as unknown as ApiOperationNode;
+    const scheduleMeasurementSpy = spyOn<any>(component, 'schedulePathTreeMeasurement');
+
+    component.setNodeExpanded(pathNode, true);
+    component.setNodeExpanded(operationNode, true);
+
+    expect(pathNode.expanded).toBeTrue();
+    expect(scheduleMeasurementSpy).toHaveBeenCalledTimes(1);
+    expect(operationNode.expanded).toBeUndefined();
   });
 
   it('should clone tree structure without duplicating operation payloads', () => {
@@ -321,6 +386,73 @@ describe('ApiPathTreeComponent', () => {
     component.toggleTagFilter(component.untaggedFilterValue);
 
     expect(component.apiPathNodes[0].children?.map(node => node.label)).toEqual(['/pets', '/health']);
+  });
+
+  it('clears selected tag filters and restores the original tree', () => {
+    const operation = {
+      kind: 'operation',
+      label: 'GET',
+      leaf: true,
+      children: [],
+      operation: {tags: ['pets']}
+    } as unknown as ApiOperationNode;
+    (component as any).apiPathNodesOrig = [{
+      kind: 'path',
+      label: '/',
+      leaf: false,
+      children: [operation]
+    }];
+    component.selectedTagFilters = ['pets'];
+    component.clearTagFilters();
+
+    expect(component.selectedTagFilters).toEqual([]);
+    expect(component.apiPathNodes[0].children).toHaveSize(1);
+  });
+
+  it('creates sorted tag options and includes untagged operations', () => {
+    const options = (component as any).createTagFilterOptions([
+      {
+        kind: 'path',
+        label: '/',
+        leaf: false,
+        children: [
+          {kind: 'operation', label: 'GET', leaf: true, children: [], operation: {tags: ['zebra', 'alpha']}} as unknown as ApiOperationNode,
+          {kind: 'operation', label: 'POST', leaf: true, children: [], operation: {}} as unknown as ApiOperationNode
+        ]
+      }
+    ]);
+
+    expect(options).toEqual([
+      {label: 'alpha', value: 'alpha'},
+      {label: 'zebra', value: 'zebra'},
+      {label: 'Untagged', value: component.untaggedFilterValue}
+    ]);
+  });
+
+  it('compresses paths with a single non-leaf child', () => {
+    const nodes: ApiPathTreeNode[] = [{
+      kind: 'path',
+      label: '/',
+      leaf: false,
+      expanded: true,
+      children: [{
+        kind: 'path',
+        label: '/pets',
+        leaf: false,
+        expanded: true,
+        children: [{
+          kind: 'operation',
+          label: 'GET',
+          leaf: true,
+          children: []
+        } as unknown as ApiOperationNode]
+      }]
+    }];
+
+    const compressed = (component as any).cloneCompressedTreeNodes(nodes) as ApiPathTreeNode[];
+
+    expect(compressed[0].label).toBe('/pets');
+    expect(compressed[0].children?.map(node => node.label)).toEqual(['GET']);
   });
 
   it('should include sort and tag filter details in generated SVG metadata', () => {

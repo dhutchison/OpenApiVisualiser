@@ -127,4 +127,56 @@ describe('createApiTreeSvg', () => {
     expect(svg).toContain('Tags: pets, Untagged');
     expect(svg.indexOf('Sort: A-Z')).toBeLessThan(svg.indexOf('/pets'));
   });
+
+  it('escapes SVG metadata text', () => {
+    const svg = createApiTreeSvg([], {
+      metadata: ['Tags: pets & <admin>']
+    });
+
+    expect(svg).toContain('Tags: pets &amp; &lt;admin&gt;');
+    expect(svg).not.toContain('Tags: pets & <admin>');
+  });
+
+  it('uses method palettes, fallback palettes, and escaped backgrounds', () => {
+    const operation = (method: string, label: string) => ({
+      kind: 'operation',
+      label,
+      leaf: true,
+      children: [],
+      method,
+      path: '/pets',
+      operation: {responses: {}},
+      apiDefinition: {
+        openapi: '3.1.0',
+        info: {title: 'Pets', version: '1.0.0'},
+        paths: {}
+      },
+      complexity: 0
+    } as any);
+
+    const svg = createApiTreeSvg([
+      operation('DELETE', 'DELETE'),
+      operation('POST', 'POST'),
+      operation('PUT', 'PUT'),
+      operation('OPTIONS', 'OPTIONS')
+    ], {
+      background: '#1b1f1b"&',
+      cssVar: (_name, fallback) => fallback
+    });
+
+    expect(svg).toContain('fill="#1b1f1b&quot;&amp;"');
+    expect(svg).toContain('stroke="#f93e3e"');
+    expect(svg).toContain('stroke="#49cc90"');
+    expect(svg).toContain('stroke="#fca130"');
+    expect(svg).toContain('stroke="#66735f"');
+  });
+
+  it('renders an empty SVG when there are no tree nodes', () => {
+    const svg = createApiTreeSvg([]);
+
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('width="48"');
+    expect(svg).toContain('height="48"');
+    expect(svg).not.toContain('<path');
+  });
 });

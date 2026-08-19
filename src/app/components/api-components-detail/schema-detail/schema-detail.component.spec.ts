@@ -68,4 +68,43 @@ describe('SchemaDetailComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-schema-property="name"]')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('[data-schema-property="name"]')?.textContent).toContain('required');
   });
+
+  it('resolves reference, union, inferred, and fallback property types', () => {
+    expect(component.getType({data: {$ref: '#/components/schemas/Pet'}} as any)).toBe('reference');
+    expect(component.getType({data: {type: ['string', 'null']}} as any)).toBe('string | null');
+    expect(component.getType({data: {type: 'integer'}} as any)).toBe('integer');
+    expect(component.getType({data: {properties: {id: {type: 'integer'}}}} as any)).toBe('object');
+    expect(component.getType({data: {}} as any)).toBe('schema');
+  });
+
+  it('renders references, formats, and descriptions for schema properties', () => {
+    component.apiSpec = {
+      openapi: '3.1.0',
+      info: {title: 'Pets', version: '1.0.0'},
+      paths: {},
+      components: {
+        schemas: {
+          Owner: {type: 'object', properties: {name: {type: 'string'}}}
+        }
+      }
+    };
+    component.schema = {
+      type: 'object',
+      properties: {
+        id: {type: 'integer', format: 'int64'},
+        owner: {$ref: '#/components/schemas/Owner'},
+        notes: {type: 'string', description: 'Pet **notes**'}
+      }
+    };
+
+    component.ngOnChanges();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-schema-property="id"]')?.textContent)
+      .toContain('Format: int64');
+    expect(fixture.nativeElement.querySelector('[data-schema-property="owner"] a')?.getAttribute('href'))
+      .toBe('#_components_schemas_Owner');
+    expect(fixture.nativeElement.querySelector('[data-schema-property="notes"]')?.innerHTML)
+      .toContain('<strong>notes</strong>');
+  });
 });
