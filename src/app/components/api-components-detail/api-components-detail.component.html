@@ -75,7 +75,7 @@
       <section class="detail-section">
         <h3>Other Components</h3>
         <div class="app-disclosure-list">
-          @for (section of componentSections; track section) {
+        @for (section of componentSections; track section.key) {
             <details
               class="app-disclosure"
               [open]="isComponentSectionExpanded(section.key)">
@@ -102,7 +102,7 @@
                   [id]="'components-section-panel-' + section.key">
                   <div class="app-disclosure__body">
                     <dl class="component-list">
-                      @for (entry of getComponentEntries(section); track entry) {
+                      @for (entry of getComponentEntries(section); track entry.name) {
                         <dt>{{ entry.name }}</dt>
                         <dd>{{ describeComponent(entry.value) }}</dd>
                       }

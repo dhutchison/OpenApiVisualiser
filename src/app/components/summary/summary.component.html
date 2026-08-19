@@ -6,7 +6,7 @@
     <col class="count-column">
   </colgroup>
   <tbody>
-    @for (entry of methodSummary | keyvalue; track entry) {
+    @for (entry of methodSummary | keyvalue; track entry.key) {
       <tr>
         <th
           id="method-header-{{ entry.key | lowercase }}"

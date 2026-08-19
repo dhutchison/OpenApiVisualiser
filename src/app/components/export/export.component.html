@@ -1,6 +1,6 @@
 <app-dialog title="Export" [(open)]="display" size="small">
   <select [(ngModel)]="exportFormat">
-    @for (format of exportFormats; track format) {
+    @for (format of exportFormats; track format.id) {
       <option [value]="format.id">
         {{ format.description }}
       </option>

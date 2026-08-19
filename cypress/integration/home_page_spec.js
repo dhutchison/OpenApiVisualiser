@@ -619,4 +619,25 @@ describe('The Home Page', () => {
       accordionHeader('Pet').click()
       cy.contains('.schema-overview', '2 required')
     })
+
+    it('Renders request body component details from the petstore JSON example', () => {
+      cy.visit('/')
+
+      cy.readFile('sample_openapi/petstore3.json').then((data) => {
+        cy.get('#file-input').selectFile({
+          contents: Cypress.Buffer.from(JSON.stringify(data)),
+          fileName: 'petstore3.json',
+          mimeType: 'application/json'
+        }, {force: true})
+      })
+
+      accordionHeader('Components').click()
+      accordionHeader('Request bodies').should('contain.text', '2').click()
+      cy.get('#components-section-panel-requestBodies .component-list dt')
+        .should('have.length', 2)
+        .then(($entries) => {
+          expect($entries.text()).to.contain('Pet')
+          expect($entries.text()).to.contain('UserArray')
+        })
+    })
   })

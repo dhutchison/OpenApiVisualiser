@@ -4,7 +4,7 @@
 
 @if (tagSummaries.length) {
   <div class="tag-list">
-    @for (tag of tagSummaries; track tag) {
+    @for (tag of tagSummaries; track tag.name) {
       <article class="detail-item">
         <header class="section-heading">
           <h3>{{ tag.name }}</h3>
@@ -18,7 +18,7 @@
         }
         @if (tag.operations.length) {
           <ul class="operation-list">
-            @for (operation of tag.operations; track operation) {
+            @for (operation of tag.operations; track operation.method + ':' + operation.path) {
               <li>
                 <span class="method-pill method-{{ operation.method | lowercase }}">{{ operation.method }}</span>
                 <code>{{ operation.path }}</code>
