@@ -1,10 +1,11 @@
-<!-- Cannot use the "accept" attribute as there is not a mime type for YAML -->
-<p-fileUpload 
-    name="myfile[]" 
-    mode="basic" 
-    chooseLabel="Import File(s)"
-    auto="true"
-    multiple="multiple"
-    customUpload="true" 
-    (uploadHandler)="loadFile($event, fileUpload)"
-    #fileUpload></p-fileUpload>
+<input
+  id="file-input"
+  class="visually-hidden file-chooser-input"
+  type="file"
+  accept=".yaml,.yml,.json"
+  multiple
+  (change)="loadFile($event)">
+<label class="app-button app-button--primary file-chooser-button" for="file-input">
+  <svg lucideFileUp class="app-icon" aria-hidden="true" focusable="false"></svg>
+  <span>Import File(s)</span>
+</label>

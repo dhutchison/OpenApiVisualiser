@@ -4,8 +4,7 @@ import { OpenAPIObject } from 'openapi3-ts/oas31';
 
 import { ApiComponentsDetailComponent } from './api-components-detail.component';
 import { SchemaDetailComponent } from './schema-detail/schema-detail.component';
-import { TreeTableModule } from 'primeng/treetable';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { PipesModule } from '../../pipes/pipes.module';
 import { FileReaderService } from '../../services/file-reader.service';
@@ -21,10 +20,9 @@ describe('ApiComponentsDetailComponent', () => {
         ApiComponentsDetailComponent,
         SchemaDetailComponent,
         PipesModule,
-        TreeTableModule
       ],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting()
       ]
     })
@@ -42,7 +40,7 @@ describe('ApiComponentsDetailComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render schema and component section headers as buttons', () => {
+  it('should render schema and component section headers as buttons', async () => {
     const apiSpec: OpenAPIObject = {
       openapi: '3.1.0',
       info: {
@@ -70,16 +68,19 @@ describe('ApiComponentsDetailComponent', () => {
     };
 
     fileReaderService.apiChanged.next(apiSpec);
-    fixture.detectChanges();
+    fixture.componentRef.changeDetectorRef.markForCheck();
+    fixture.detectChanges(false);
+    await fixture.whenStable();
+    fixture.detectChanges(false);
 
-    const headers = fixture.debugElement.queryAll(By.css('.p-accordionheader'));
+    const headers = fixture.nativeElement.querySelectorAll('summary') as NodeListOf<HTMLElement>;
 
     expect(headers.length).toBe(2);
-    expect(headers[0].nativeElement.textContent).toContain('Pet');
-    expect(headers[1].nativeElement.textContent).toContain('Responses');
+    expect(headers[0].textContent).toContain('Pet');
+    expect(headers[1].textContent).toContain('Responses');
   });
 
-  it('should toggle schema details open and closed', () => {
+  it('should toggle schema details open and closed', async () => {
     fileReaderService.apiChanged.next({
       openapi: '3.1.0',
       info: {
@@ -96,20 +97,27 @@ describe('ApiComponentsDetailComponent', () => {
         }
       }
     });
-    fixture.detectChanges();
+    fixture.componentRef.changeDetectorRef.markForCheck();
+    fixture.detectChanges(false);
+    await fixture.whenStable();
+    fixture.detectChanges(false);
 
-    const schemaHeader = fixture.debugElement.query(By.css('.p-accordionheader'));
+    const schemaHeader = fixture.nativeElement.querySelector('summary') as HTMLElement;
 
     expect(fixture.debugElement.query(By.css('#components-schemas-panel-Pet'))).toBeNull();
 
-    schemaHeader.nativeElement.click();
-    fixture.detectChanges();
+    schemaHeader.click();
+    fixture.detectChanges(false);
+    await fixture.whenStable();
+    fixture.detectChanges(false);
 
     expect(component.expandedSchemas).toEqual(['Pet']);
     expect(fixture.debugElement.query(By.css('#components-schemas-panel-Pet'))).not.toBeNull();
 
-    schemaHeader.nativeElement.click();
-    fixture.detectChanges();
+    schemaHeader.click();
+    fixture.detectChanges(false);
+    await fixture.whenStable();
+    fixture.detectChanges(false);
 
     expect(component.expandedSchemas).toEqual([]);
     expect(fixture.debugElement.query(By.css('#components-schemas-panel-Pet'))).toBeNull();

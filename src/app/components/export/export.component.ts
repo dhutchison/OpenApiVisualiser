@@ -1,10 +1,10 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { LucideCheck, LucideDownload, LucideX } from '@lucide/angular';
 import { FormsModule } from '@angular/forms';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
-import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
 import { FileReaderService } from '../../services/file-reader.service';
+import { AppDialogComponent } from '../app-dialog/app-dialog.component';
 
 import { saveAs } from 'file-saver';
 import * as jsyaml from 'js-yaml';
@@ -12,11 +12,13 @@ import * as jsyaml from 'js-yaml';
 @Component({
   selector: 'app-export',
   imports: [
-    ButtonModule,
-    CommonModule,
-    DialogModule,
-    FormsModule
-  ],
+    AppDialogComponent,
+    FormsModule,
+    LucideCheck,
+    LucideDownload,
+    LucideX
+],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './export.component.html'
 })
 export class ExportComponent implements OnInit {

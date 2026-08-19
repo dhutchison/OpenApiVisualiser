@@ -1,7 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
-import { FieldsetModule } from 'primeng/fieldset';
-import { PanelModule } from 'primeng/panel';
+
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FileReaderService } from '../../services/file-reader.service';
 import { OpenAPIObject, ServerObject, SecurityRequirementObject } from 'openapi3-ts/oas31';
 import { MarkdownifyPipe } from '../../pipes/markdownify.pipe';
@@ -15,13 +13,12 @@ interface ComponentSummary {
 @Component({
   selector: 'app-api-information',
   imports: [
-    CommonModule,
     ExternalDocsComponent,
-    FieldsetModule,
-    MarkdownifyPipe,
-    PanelModule
+    MarkdownifyPipe
   ],
-  templateUrl: './api-information.component.html'
+  changeDetection: ChangeDetectionStrategy.Eager,
+  templateUrl: './api-information.component.html',
+  styleUrls: ['./api-information.component.scss']
 })
 export class ApiInformationComponent implements OnInit {
 

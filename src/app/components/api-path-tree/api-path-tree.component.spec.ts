@@ -1,21 +1,14 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { TreeNode } from 'primeng/api';
+import { ApiOperationNode, ApiPathTreeNode } from '../../models/hierarchy.models';
 
 import { ApiPathTreeComponent } from './api-path-tree.component';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
 
 import { PipesModule } from '../../pipes/pipes.module';
 
-import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
-import { FieldsetModule } from 'primeng/fieldset';
-import { PanelModule } from 'primeng/panel';
-import { SelectButtonModule } from 'primeng/selectbutton';
-import { TooltipModule } from 'primeng/tooltip';
-import { TreeModule } from 'primeng/tree';
 
 describe('ApiPathTreeComponent', () => {
   let component: ApiPathTreeComponent;
@@ -25,19 +18,12 @@ describe('ApiPathTreeComponent', () => {
     TestBed.configureTestingModule({
       imports: [
         ApiPathTreeComponent,
-        ButtonModule,
-        DialogModule,
         EndpointSwaggerComponent,
-        FieldsetModule,
         FormsModule,
-        PanelModule,
-        PipesModule,
-        SelectButtonModule,
-        TooltipModule,
-        TreeModule
+        PipesModule
       ],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting()
       ]
     })
@@ -54,6 +40,57 @@ describe('ApiPathTreeComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('renders the application-owned CDK tree contract', () => {
+    const operationNode = {
+      kind: 'operation',
+      label: 'GET',
+      leaf: true,
+      children: [],
+      tooltip: 'List pets',
+      id: 'listPets',
+      method: 'GET',
+      path: '/pets',
+      operation: {responses: {}},
+      apiDefinition: {
+        openapi: '3.1.0',
+        info: {title: 'Pets', version: '1.0.0'},
+        paths: {}
+      },
+      complexity: 0
+    } as ApiOperationNode;
+    const pathNode: ApiPathTreeNode = {
+      kind: 'path',
+      label: '/pets',
+      leaf: false,
+      expanded: true,
+      children: [operationNode]
+    };
+
+    (component as any).apiPathNodesOrig = [pathNode];
+    (component as any).setTreeNodes();
+    fixture.componentRef.changeDetectorRef.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('cdk-tree')).toBeTruthy();
+    expect(fixture.nativeElement.querySelectorAll('.path-tree-node-content')).toHaveSize(2);
+    expect(fixture.nativeElement.querySelector('#listPets-node')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-node-kind="operation"]')).toBeTruthy();
+  });
+
+  it('should render labelled radio segmented controls with decorative icons', () => {
+    const options = fixture.nativeElement.querySelectorAll('input[type="radio"]') as NodeListOf<HTMLInputElement>;
+    const icons = fixture.nativeElement.querySelectorAll('[role="radiogroup"] svg') as NodeListOf<SVGElement>;
+    const groups = fixture.nativeElement.querySelectorAll('[role="radiogroup"]') as NodeListOf<HTMLElement>;
+
+    expect(options).toHaveSize(7);
+    expect(groups).toHaveSize(3);
+    expect(groups[0].getAttribute('aria-label')).toBe('View orientation');
+    expect(groups[1].getAttribute('aria-label')).toBe('Path expansion');
+    expect(groups[2].getAttribute('aria-label')).toBe('Path sorting');
+    expect(options[0].checked).toBeTrue();
+    expect(icons).toHaveSize(7);
+    icons.forEach(icon => expect(icon.getAttribute('aria-hidden')).toBe('true'));
+  });
+
   it('should allow view orientation to be set', () => {
     /* Check the default value */
     expect(component.horizontalView).toBeTruthy();
@@ -65,8 +102,38 @@ describe('ApiPathTreeComponent', () => {
 
   });
 
+  it('should open and close endpoint details in the application dialog', () => {
+    const operationNode = {
+      kind: 'operation',
+      label: 'GET',
+      leaf: true,
+      expanded: false,
+      children: [],
+      method: 'GET',
+      path: '/pets',
+      operation: {responses: {}},
+      apiDefinition: {
+        openapi: '3.1.0',
+        info: {title: 'Pets', version: '1.0.0'},
+        paths: {}
+      },
+      complexity: 0
+    } as ApiOperationNode;
+
+    component.openEndpointDetail(operationNode);
+    fixture.detectChanges(false);
+
+    expect(component.endpointDialogVisible).toBeTrue();
+    expect(component.selectedOperationNode).toBe(operationNode);
+
+    component.openEndpointDetail();
+    expect(component.endpointDialogVisible).toBeFalse();
+    expect(component.selectedOperationNode).toBeUndefined();
+  });
+
   it('should toggle path nodes', () => {
-    const pathNode: TreeNode = {
+    const pathNode: ApiPathTreeNode = {
+      kind: 'path',
       label: '/pets',
       leaf: false,
       expanded: true,
@@ -84,11 +151,22 @@ describe('ApiPathTreeComponent', () => {
 
   it('should not toggle operation leaf nodes', () => {
     const operationNode = {
+      kind: 'operation',
       label: 'GET',
       leaf: true,
       expanded: false,
-      type: 'operation'
-    } as TreeNode;
+      children: [],
+      tooltip: '',
+      method: 'GET',
+      path: '/pets',
+      operation: {responses: {}},
+      apiDefinition: {
+        openapi: '3.1.0',
+        info: {title: 'Pets', version: '1.0.0'},
+        paths: {}
+      },
+      complexity: 0
+    } as ApiOperationNode;
     const event = jasmine.createSpyObj<Event>('event', ['stopPropagation']);
     const scheduleMeasurementSpy = spyOn<any>(component, 'schedulePathTreeMeasurement');
 
@@ -115,23 +193,27 @@ describe('ApiPathTreeComponent', () => {
         }
       }
     };
-    const originalNodes: TreeNode[] = [
+    const originalNodes: ApiPathTreeNode[] = [
       {
+        kind: 'path',
         label: '/',
         leaf: false,
+        expanded: true,
         children: [
           {
+            kind: 'operation',
             label: 'GET',
             leaf: true,
-            type: 'operation',
+            children: [],
+            tooltip: '',
             apiDefinition,
             operation
-          } as TreeNode
+          } as unknown as ApiOperationNode
         ]
       }
     ];
 
-    const clonedNodes = (component as any).cloneTreeNodes(originalNodes) as TreeNode[];
+    const clonedNodes = (component as any).cloneTreeNodes(originalNodes) as ApiPathTreeNode[];
     const clonedOperationNode = clonedNodes[0].children?.[0] as any;
 
     expect(clonedNodes).not.toBe(originalNodes);
@@ -144,18 +226,21 @@ describe('ApiPathTreeComponent', () => {
   it('should sort nodes within their parent alphabetically', () => {
     (component as any).apiPathNodesOrig = [
       {
+        kind: 'path',
         label: '/',
         leaf: false,
         children: [
           {
+            kind: 'path',
             label: '/zebra',
             leaf: false,
             children: [
-              {label: 'POST', leaf: true, type: 'operation'} as TreeNode,
-              {label: 'GET', leaf: true, type: 'operation'} as TreeNode
+              {kind: 'operation', label: 'POST', leaf: true, children: []} as unknown as ApiOperationNode,
+              {kind: 'operation', label: 'GET', leaf: true, children: []} as unknown as ApiOperationNode
             ]
           },
           {
+            kind: 'path',
             label: '/alpha',
             leaf: false,
             children: []
@@ -179,41 +264,47 @@ describe('ApiPathTreeComponent', () => {
   it('should filter operations by selected tags and prune empty branches', () => {
     (component as any).apiPathNodesOrig = [
       {
+        kind: 'path',
         label: '/',
         leaf: false,
         children: [
           {
+            kind: 'path',
             label: '/pets',
             leaf: false,
             children: [
               {
+                kind: 'operation',
                 label: 'GET',
                 leaf: true,
-                type: 'operation',
+                children: [],
                 operation: {
                   tags: ['pets']
                 }
-              } as TreeNode,
+              } as unknown as ApiOperationNode,
               {
+                kind: 'operation',
                 label: 'POST',
                 leaf: true,
-                type: 'operation',
+                children: [],
                 operation: {
                   tags: ['admin']
                 }
-              } as TreeNode
+              } as unknown as ApiOperationNode
             ]
           },
           {
+            kind: 'path',
             label: '/health',
             leaf: false,
             children: [
               {
+                kind: 'operation',
                 label: 'GET',
                 leaf: true,
-                type: 'operation',
+                children: [],
                 operation: {}
-              } as TreeNode
+              } as unknown as ApiOperationNode
             ]
           }
         ]
@@ -257,11 +348,13 @@ describe('ApiPathTreeComponent', () => {
     expect(component.pathTreeMinHeight).not.toBe(500);
   });
 
-  it('should include the open tag filter panel when measuring path tree min height', () => {
+  it('should include the open tag filter panel when measuring path tree min height', async () => {
     component.tagFilterOptions = [
       {label: 'audit', value: 'audit'}
     ];
-    fixture.detectChanges();
+    fixture.componentRef.changeDetectorRef.detectChanges();
+    await fixture.whenStable();
+    fixture.componentRef.changeDetectorRef.detectChanges();
 
     const layoutElement = fixture.nativeElement.querySelector('.api-path-tree-layout') as HTMLElement;
     const tagFilter = fixture.nativeElement.querySelector('.path-tree-tag-filter') as HTMLElement;

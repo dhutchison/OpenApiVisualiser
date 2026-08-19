@@ -7,9 +7,8 @@ import { ApiInformationComponent } from './components/api-information/api-inform
 import { ApiPathTreeComponent } from './components/api-path-tree/api-path-tree.component';
 import { ApiTagsComponent } from './components/api-tags/api-tags.component';
 import { ExternalDocsComponent } from './components/external-docs/external-docs.component';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations'; // NOSONAR - PrimeNG components still require Angular's legacy animation renderer.
 import { ExportComponent } from './components/export/export.component';
 import { ApiComponentsDetailComponent } from './components/api-components-detail/api-components-detail.component';
 import { SchemaDetailComponent } from './components/api-components-detail/schema-detail/schema-detail.component';
@@ -20,15 +19,6 @@ import { UrlChooserComponent } from './components/url-chooser/url-chooser.compon
 import { SummaryComponent } from './components/summary/summary.component';
 import { EndpointSwaggerComponent } from './components/endpoint-swagger/endpoint-swagger.component';
 
-import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
-import { FieldsetModule } from 'primeng/fieldset';
-import { FileUploadModule } from 'primeng/fileupload';
-import { PanelModule } from 'primeng/panel';
-import { SelectButtonModule } from 'primeng/selectbutton';
-import { TreeModule } from 'primeng/tree';
-import { TreeTableModule } from 'primeng/treetable';
-import { TooltipModule } from 'primeng/tooltip';
 
 describe('AppComponent', () => {
 
@@ -50,21 +40,10 @@ describe('AppComponent', () => {
         SummaryComponent,
         UrlChooserComponent,
         PipesModule,
-
-        BrowserAnimationsModule, // NOSONAR - Keep until PrimeNG no longer depends on legacy animation triggers.
-        ButtonModule,
-        DialogModule,
-        FieldsetModule,
-        FileUploadModule,
         FormsModule,
-        PanelModule,
-        SelectButtonModule,
-        TooltipModule,
-        TreeModule,
-        TreeTableModule
       ],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting(),
         provideRouter([])
       ]

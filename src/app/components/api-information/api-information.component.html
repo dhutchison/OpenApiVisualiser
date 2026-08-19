@@ -1,5 +1,9 @@
-<p-panel styleClass="api-info" [toggleable]="true" *ngFor="let api of apiDefinitions">
-    <p-header class="api-info-title">{{ api.info.title }} - {{ api.info.version }}</p-header>
+@for (api of apiDefinitions; track api; let apiIndex = $index) {
+  <section class="api-info app-panel" [attr.aria-labelledby]="'api-info-title-' + apiIndex">
+    <header class="app-panel__header">
+      <h2 class="api-info-title" [id]="'api-info-title-' + apiIndex">{{ api.info.title }} - {{ api.info.version }}</h2>
+    </header>
+    <div class="api-info__body">
     <dl class="metadata-grid">
       <div>
         <dt>OpenAPI</dt>
@@ -18,86 +22,115 @@
         <dd>{{ api.tags?.length || 0 }}</dd>
       </div>
     </dl>
-
     <div [innerHTML]="(api.info.description | markdownify)"></div>
-
-    <section class="detail-section" *ngIf="api.servers?.length">
-      <h3>Servers</h3>
-      <div class="detail-list">
-        <article class="detail-item" *ngFor="let server of api.servers">
-          <code>{{ server.url }}</code>
-          <p *ngIf="server.description">{{ server.description }}</p>
-          <dl class="compact-list" *ngIf="getServerVariables(server).length">
-            <ng-container *ngFor="let variable of getServerVariables(server)">
-              <dt>{{ variable.name }}</dt>
-              <dd>
-                <code>{{ variable.defaultValue }}</code>
-                <span *ngIf="variable.description"> - {{ variable.description }}</span>
-              </dd>
-            </ng-container>
-          </dl>
-        </article>
-      </div>
-    </section>
-
-    <section class="detail-section" *ngIf="getSecurityRequirements(api.security).length">
-      <h3>Security</h3>
-      <ul class="pill-list">
-        <li *ngFor="let requirement of getSecurityRequirements(api.security)">{{ requirement }}</li>
-      </ul>
-    </section>
-
-    <section class="detail-section" *ngIf="getComponentSummaries(api).length">
-      <h3>Reusable Components</h3>
-      <dl class="metadata-grid compact">
-        <div *ngFor="let component of getComponentSummaries(api)">
-          <dt>{{ component.label }}</dt>
-          <dd>{{ component.count }}</dd>
+    @if (api.servers?.length) {
+      <section class="detail-section">
+        <h3>Servers</h3>
+        <div class="detail-list">
+          @for (server of api.servers; track server.url) {
+            <article class="detail-item">
+              <code>{{ server.url }}</code>
+              @if (server.description) {
+                <p>{{ server.description }}</p>
+              }
+              @if (getServerVariables(server).length) {
+                <dl class="compact-list">
+                  @for (variable of getServerVariables(server); track variable.name) {
+                    <dt>{{ variable.name }}</dt>
+                    <dd>
+                      <code>{{ variable.defaultValue }}</code>
+                      @if (variable.description) {
+                        <span> - {{ variable.description }}</span>
+                      }
+                    </dd>
+                  }
+                </dl>
+              }
+            </article>
+          }
         </div>
-      </dl>
-    </section>
-
-    <p-fieldset legend="External Documentation" *ngIf="api.externalDocs">
-      <app-external-docs [document]="api.externalDocs"></app-external-docs>
-      <div *ngIf="api.externalDocs.description" [innerHTML]="(api.externalDocs.description | markdownify)"></div>
-    </p-fieldset>
-
-    <p-fieldset legend="Terms of Service" *ngIf="api.info.termsOfService">
-      <a href="{{ api.info.termsOfService }}" target="_blank">{{ api.info.termsOfService }}</a>
-    </p-fieldset>
-
-    <p-fieldset legend="Contact" *ngIf="api.info.contact">
+      </section>
+    }
+    @if (getSecurityRequirements(api.security).length) {
+      <section class="detail-section">
+        <h3>Security</h3>
+        <ul class="pill-list">
+          @for (requirement of getSecurityRequirements(api.security); track requirement) {
+            <li>{{ requirement }}</li>
+          }
+        </ul>
+      </section>
+    }
+    @if (getComponentSummaries(api).length) {
+      <section class="detail-section">
+        <h3>Reusable Components</h3>
+        <dl class="metadata-grid compact">
+          @for (component of getComponentSummaries(api); track component.label) {
+            <div>
+              <dt>{{ component.label }}</dt>
+              <dd>{{ component.count }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+    }
+    @if (api.externalDocs) {
+      <fieldset class="app-fieldset">
+        <legend>External Documentation</legend>
+        <app-external-docs [document]="api.externalDocs"></app-external-docs>
+        @if (api.externalDocs.description) {
+          <div [innerHTML]="(api.externalDocs.description | markdownify)"></div>
+        }
+      </fieldset>
+    }
+    @if (api.info.termsOfService) {
+      <fieldset class="app-fieldset">
+        <legend>Terms of Service</legend>
+        <a href="{{ api.info.termsOfService }}" target="_blank">{{ api.info.termsOfService }}</a>
+      </fieldset>
+    }
+    @if (api.info.contact) {
+      <fieldset class="app-fieldset">
+        <legend>Contact</legend>
         <dl>
-            <dt>Name</dt>
-            <dd>{{ api.info.contact.name }}</dd>
-
-            <dt>URL</dt>
-            <dd>
-              <a href="{{ api.info.contact.url }}" target="_blank" *ngIf="api.info.contact.url">
+          <dt>Name</dt>
+          <dd>{{ api.info.contact.name }}</dd>
+          <dt>URL</dt>
+          <dd>
+            @if (api.info.contact.url) {
+              <a href="{{ api.info.contact.url }}" target="_blank">
                 {{ api.info.contact.url }}
               </a>
-            </dd>
-
-            <dt>Email</dt>
-            <dd>
-              <a href="mailto:{{ api.info.contact.email }}" *ngIf="api.info.contact.email">
+            }
+          </dd>
+          <dt>Email</dt>
+          <dd>
+            @if (api.info.contact.email) {
+              <a href="mailto:{{ api.info.contact.email }}">
                 {{ api.info.contact.email }}
               </a>
-            </dd>
+            }
+          </dd>
         </dl>
-    </p-fieldset>
-
-    <p-fieldset legend="License" *ngIf="api.info.license">
+      </fieldset>
+    }
+    @if (api.info.license) {
+      <fieldset class="app-fieldset">
+        <legend>License</legend>
         <dl>
           <dt>Name</dt>
           <dd>{{ api.info.license.name }}</dd>
-
           <dt>URL</dt>
           <dd>
-            <a href="{{ api.info.license.url }}" target="_blank" *ngIf="api.info.license.url">
-              {{ api.info.license.url }}
-            </a>
+            @if (api.info.license.url) {
+              <a href="{{ api.info.license.url }}" target="_blank">
+                {{ api.info.license.url }}
+              </a>
+            }
           </dd>
         </dl>
-    </p-fieldset>
-</p-panel>
+      </fieldset>
+    }
+    </div>
+  </section>
+}

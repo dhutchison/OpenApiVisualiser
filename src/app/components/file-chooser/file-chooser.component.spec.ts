@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { FileChooserComponent } from './file-chooser.component';
 import { FileReaderService } from '../../services/file-reader.service';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 describe('FileChooserComponent', () => {
@@ -11,8 +11,6 @@ describe('FileChooserComponent', () => {
 
   let fileReaderService: FileReaderService;
   let loadFileSpy: jasmine.Spy;
-  let fileUploadComponent;
-  let clearSpy: jasmine.Spy;
 
   beforeEach(waitForAsync(() => {
 
@@ -21,7 +19,7 @@ describe('FileChooserComponent', () => {
         FileChooserComponent
       ],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withXhr()),
         provideHttpClientTesting()
       ]
     })
@@ -30,11 +28,6 @@ describe('FileChooserComponent', () => {
     // fileReaderServiceSpy = TestBed.get(FileReaderService);
     fileReaderService = TestBed.inject(FileReaderService);
     loadFileSpy = spyOn(fileReaderService, 'loadFile');
-
-    fileUploadComponent = {
-      clear: () => {}
-    };
-    clearSpy = spyOn(fileUploadComponent, 'clear');
 
   }));
 
@@ -46,6 +39,16 @@ describe('FileChooserComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should render a native multi-file picker', () => {
+    const input = fixture.nativeElement.querySelector('#file-input') as HTMLInputElement;
+    const label = fixture.nativeElement.querySelector('label[for="file-input"]') as HTMLLabelElement;
+
+    expect(input.type).toBe('file');
+    expect(input.multiple).toBeTrue();
+    expect(input.accept).toBe('.yaml,.yml,.json');
+    expect(label.textContent).toContain('Import File(s)');
   });
 
   describe('Valid Inputs', () => {
@@ -89,19 +92,15 @@ describe('FileChooserComponent', () => {
         new File([], 'input.json'),
         new File([], 'input.yaml')
       ];
-      component.loadFile(
-        {
-          files: testFiles
-        }, fileUploadComponent);
+      component.loadFile({files: testFiles});
 
       expect(loadFileSpy.calls.count()).toBe(2, 'spy method was called twice');
-
-      expect(clearSpy.calls.count()).toBe(1, 'clear method on file upload component was called');
     });
   });
 
   describe('Invalid Inputs', () => {
     it('txt file extension rejected', () => {
+      spyOn(globalThis, 'alert');
       const testFiles: File[] = [new File([], 'input.txt')];
       component.loadFile(
         {
@@ -109,6 +108,31 @@ describe('FileChooserComponent', () => {
         });
 
       expect(loadFileSpy.calls.count()).toBe(0, 'spy method was not called');
+      expect(globalThis.alert).toHaveBeenCalled();
+    });
+
+    it('processes supported files when a selection also contains an unsupported file', () => {
+      spyOn(globalThis, 'alert');
+      const testFiles: File[] = [
+        new File([], 'input.txt'),
+        new File([], 'input.json')
+      ];
+
+      component.loadFile({files: testFiles});
+
+      expect(loadFileSpy.calls.count()).toBe(1);
+      expect(globalThis.alert).toHaveBeenCalledWith(
+        'You are trying to upload an unsupported file extension (input.txt). Please choose either a .yaml, .yml, or .json file.'
+      );
+    });
+
+    it('clears the native input after every selection', () => {
+      const input = fixture.nativeElement.querySelector('#file-input') as HTMLInputElement;
+      const testFiles: File[] = [new File([], 'input.json')];
+
+      component.loadFile({target: input, files: testFiles});
+
+      expect(input.value).toBe('');
     });
   });
 });

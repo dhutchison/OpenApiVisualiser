@@ -1,18 +1,20 @@
-import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { LucideCheck, LucideCloudUpload, LucideX } from '@lucide/angular';
 import { FormsModule } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
 import { FileReaderService } from '../../services/file-reader.service';
+import { AppDialogComponent } from '../app-dialog/app-dialog.component';
 
 @Component({
   selector: 'app-url-chooser',
   imports: [
-    ButtonModule,
-    CommonModule,
-    DialogModule,
-    FormsModule
-  ],
+    AppDialogComponent,
+    FormsModule,
+    LucideCheck,
+    LucideCloudUpload,
+    LucideX
+],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './url-chooser.component.html'
 })
 export class UrlChooserComponent {

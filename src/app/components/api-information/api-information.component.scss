@@ -1,0 +1,46 @@
+.app-panel,
+.app-fieldset {
+    color: var(--app-text);
+}
+
+.app-panel {
+    overflow: hidden;
+    border: 1px solid var(--app-border);
+    border-radius: 10px;
+    background: var(--app-surface-solid);
+    box-shadow: var(--app-shadow);
+}
+
+.app-panel__header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--app-border);
+    background: var(--app-surface);
+    color: var(--app-text);
+}
+
+.app-panel__header h2 {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.1rem;
+}
+
+.api-info__body {
+    padding: 1rem;
+}
+
+.app-fieldset {
+    min-width: 0;
+    margin: 1rem 0 0;
+    padding: 1rem;
+    border: 1px solid var(--app-border);
+    border-radius: 10px;
+    background: var(--app-surface-solid);
+    box-shadow: var(--app-shadow);
+}
+
+.app-fieldset legend {
+    padding: 0 0.5rem;
+    background: var(--app-surface);
+    color: var(--app-text);
+    font-weight: 800;
+}

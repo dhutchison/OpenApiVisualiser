@@ -7,12 +7,25 @@ describe('The Home Page', () => {
       return top + scrollY;
     }
 
-    const accordionHeader = (text) => cy.contains('button.p-accordionheader', text)
+    const accordionHeader = (text) => cy.contains('summary[aria-controls]', text)
+
+    const dialogByName = (name) => cy.get('dialog[open]').filter((_, dialog) => {
+      const titleId = dialog.getAttribute('aria-labelledby');
+      const title = titleId ? dialog.ownerDocument.getElementById(titleId) : null;
+
+      return title?.textContent?.trim() === name;
+    })
 
     /* Test the app launches at all */
     it('successfully loads', () => {
       /* Open the application */
       cy.visit('/')
+
+      cy.get('.button-bar .app-button').then(($buttons) => {
+        const fontSizes = [...$buttons].map((button) => getComputedStyle(button).fontSize)
+
+        expect(new Set(fontSizes).size).to.equal(1)
+      })
     })
 
     it('Toggles dark mode', () => {
@@ -51,10 +64,11 @@ describe('The Home Page', () => {
       })
 
       cy.get('html').should('not.have.class', 'dark-mode')
-      cy.get('.theme-toggle .p-button-label')
+      cy.get('.theme-toggle')
           .should('have.css', 'color', 'rgb(23, 32, 51)')
-      cy.get('.theme-toggle .p-button-icon')
+      cy.get('.theme-toggle .app-icon')
           .should('have.css', 'color', 'rgb(23, 32, 51)')
+          .and('have.attr', 'aria-hidden', 'true')
 
       accordionHeader('Summary').click()
       cy.get('#method-summary caption')
@@ -65,7 +79,7 @@ describe('The Home Page', () => {
 
       accordionHeader('API Paths').click()
       cy.get('#listPets-node').should('be.visible').then(($getNode) => {
-        const getNodeStyle = getComputedStyle($getNode.closest('.p-tree-node-content')[0]);
+        const getNodeStyle = getComputedStyle($getNode.closest('.path-tree-node-content')[0]);
 
         cy.get('#method-header-get').should(($getHeader) => {
           const getHeaderStyle = getComputedStyle($getHeader[0]);
@@ -76,7 +90,7 @@ describe('The Home Page', () => {
       });
 
       cy.get('#createPets-node').should('be.visible').then(($postNode) => {
-        const postNodeStyle = getComputedStyle($postNode.closest('.p-tree-node-content')[0]);
+        const postNodeStyle = getComputedStyle($postNode.closest('.path-tree-node-content')[0]);
 
         cy.get('#method-header-post').should(($postHeader) => {
           const postHeaderStyle = getComputedStyle($postHeader[0]);
@@ -96,10 +110,10 @@ describe('The Home Page', () => {
       cy.contains('button', 'Dark').click()
       cy.get('html').should('have.class', 'dark-mode')
       cy.contains('button', 'Light')
-          .find('.p-button-label')
+          .find('span')
           .should('have.css', 'color', 'rgb(243, 241, 232)')
       cy.contains('button', 'Light')
-          .find('.p-button-icon')
+          .find('.app-icon')
           .should('have.css', 'color', 'rgb(243, 241, 232)')
     })
 
@@ -146,10 +160,18 @@ describe('The Home Page', () => {
 
         cy.visit('/')
 
-        cy.contains('Import from URL').click();
+        cy.contains('button', 'Import from URL').click();
+
+        /* The footer projection and native button content must remain available. */
+        dialogByName('Import from URL').find('button[type=submit]')
+            .find('span')
+            .should('have.text', 'Import')
+        dialogByName('Import from URL').find('button[type=submit]')
+            .find('.app-icon')
+            .should('have.attr', 'aria-hidden', 'true')
 
         /* Submit button should be initially disabled */
-        cy.get('button[type=submit]').should('be.disabled')
+        dialogByName('Import from URL').find('button[type=submit]').should('be.disabled')
 
         /* Type in a URL */
         cy.get('#url-input')
@@ -157,7 +179,7 @@ describe('The Home Page', () => {
             .should('have.value', testUrl)
 
         /* And check the submit button is enabled now and click it */
-        cy.get('button[type=submit]').should('be.enabled').click()
+        dialogByName('Import from URL').find('button[type=submit]').should('be.enabled').click()
 
         /* Give the dialog a short period to disappear */
         cy.wait(250);
@@ -172,9 +194,11 @@ describe('The Home Page', () => {
     it('Lets the URL input fill the dialog body width', () => {
       cy.visit('/')
 
-      cy.contains('Import from URL').click()
+      cy.contains('button', 'Import from URL').click()
 
       cy.get('.url-import-dialog').should('be.visible')
+      cy.get('.url-import-dialog').should('exist')
+      dialogByName('Import from URL').should('be.visible')
       cy.get('.url-import-dialog__field-row').should('be.visible')
       cy.get('.url-import-dialog__input-wrap').should('be.visible')
       cy.get('#url-input').should('be.visible')
@@ -195,7 +219,37 @@ describe('The Home Page', () => {
     it('Loads from a single file', () => {
         cy.visit('/')
 
-        cy.contains('Import File(s)')//.click();
+        cy.get('#file-input').selectFile({
+          contents: Cypress.Buffer.from('openapi: 3.0.0\ninfo:\n  title: Imported API\n  version: 1.0.0\npaths: {}'),
+          fileName: 'input.yaml',
+          mimeType: 'text/yaml'
+        }, {force: true})
+        accordionHeader('API Information').click()
+        cy.get('.api-info-title').should('be.visible').and('contain.text', 'Imported API')
+    })
+
+    it('Keeps long API tooltips inside the tree background', () => {
+      cy.visit('/')
+
+      cy.readFile('sample_openapi/uspto.yaml').then((data) => {
+        cy.get('#file-input').selectFile({
+          contents: Cypress.Buffer.from(data),
+          fileName: 'uspto.yaml',
+          mimeType: 'text/yaml'
+        }, {force: true})
+      })
+
+      accordionHeader('API Paths').click()
+      cy.get('#perform-search-node').should('be.visible').trigger('mouseenter')
+
+      cy.get('.app-tooltip:not([hidden])').then(($tooltip) => {
+        const tooltipRect = $tooltip[0].getBoundingClientRect()
+        const treeRect = $tooltip[0].ownerDocument.querySelector('.tree-view').getBoundingClientRect()
+
+        expect(tooltipRect.top).to.be.at.least(treeRect.top)
+        expect(tooltipRect.bottom).to.be.at.most(treeRect.bottom)
+        expect($tooltip[0].scrollWidth).to.be.at.most($tooltip[0].clientWidth)
+      })
     })
 
     /*
@@ -273,9 +327,7 @@ describe('The Home Page', () => {
           .should('have.text', 'GET')
 
       cy.get('#listPets-node').click()
-      cy.get('.p-dialog')
-          .should('be.visible')
-          .contains('GET /pets')
+      dialogByName('GET /pets').should('be.visible')
       cy.get('.swagger-ui', { timeout: 20000 })
           .should('exist')
           .contains('List all pets')
@@ -355,9 +407,7 @@ describe('The Home Page', () => {
       accordionHeader('API Paths').click()
       cy.get('#listPets-node').click()
 
-      cy.get('.p-dialog')
-          .should('be.visible')
-          .contains('GET /pets')
+      dialogByName('GET /pets').should('be.visible')
 
       cy.get('.endpoint-swagger-warning', { timeout: 20000 })
           .should('be.visible')
@@ -391,12 +441,12 @@ describe('The Home Page', () => {
       cy.visit('/?url=http://local.test/petstore.yaml')
 
       accordionHeader('API Paths').click()
-      cy.get('p-tree.tree-horizontal').should('exist')
-      cy.get('p-tree.tree-horizontal .p-tree-root-children')
+      cy.get('cdk-tree.tree-horizontal').should('exist')
+      cy.get('cdk-tree.tree-horizontal > .path-tree-node')
           .should('have.css', 'display', 'flex')
       cy.get('#listPets-node').should('be.visible')
 
-      cy.get('p-tree.tree-horizontal .p-tree-node-content').first().then(($rootNode) => {
+      cy.get('cdk-tree.tree-horizontal > .path-tree-node > .path-tree-node-content').first().then(($rootNode) => {
         const rootRight = $rootNode[0].getBoundingClientRect().right;
 
         cy.get('#listPets-node').should(($operationNode) => {
@@ -408,9 +458,10 @@ describe('The Home Page', () => {
 
       cy.get('#listPets-node').then(($getNode) => {
         const getRect = $getNode[0].getBoundingClientRect();
-        const operationGroup = $getNode.closest('.p-tree-node-children')[0];
+        const operationGroup = $getNode.closest('.path-tree-children')[0];
         const operationGroupBranch = getComputedStyle(operationGroup, '::after');
-        const getNodeConnector = getComputedStyle($getNode.closest('p-treenode')[0], '::before');
+        const getNodeContent = $getNode.closest('.path-tree-node')[0].querySelector(':scope > .path-tree-node-content');
+        const getNodeConnector = getComputedStyle(getNodeContent, '::before');
 
         expect(getComputedStyle(operationGroup).flexDirection).to.eq('column');
         expect(operationGroupBranch.display).to.eq('block');
@@ -419,13 +470,66 @@ describe('The Home Page', () => {
 
         cy.get('#createPets-node').should(($postNode) => {
           const postRect = $postNode[0].getBoundingClientRect();
-          const postNodeConnector = getComputedStyle($postNode.closest('p-treenode')[0], '::before');
+          const postNodeContent = $postNode.closest('.path-tree-node')[0].querySelector(':scope > .path-tree-node-content');
+          const postNodeConnector = getComputedStyle(postNodeContent, '::before');
 
           expect(Math.abs(postRect.left - getRect.left)).to.be.lessThan(2);
           expect(postRect.top).to.be.greaterThan(getRect.top);
           expect(postNodeConnector.borderTopStyle).to.eq('solid');
         });
       });
+
+      cy.contains('.path-node', '/{petId}').closest('.path-tree-node').then(($pathNode) => {
+        const pathNode = $pathNode[0];
+        const pathContent = pathNode.querySelector(':scope > .path-tree-node-content');
+        const pathChildren = pathNode.querySelector(':scope > .path-tree-children');
+        const pathRect = pathContent.getBoundingClientRect();
+        const childrenRect = pathChildren.getBoundingClientRect();
+        const incomingConnector = getComputedStyle(pathContent, '::before');
+        const outgoingConnector = getComputedStyle(pathContent, '::after');
+        const connectorCenter = pathRect.top + parseFloat(incomingConnector.top) + 0.5;
+        const contentCenter = pathRect.top + pathRect.height / 2;
+        const outgoingConnectorRight = pathRect.left
+          + parseFloat(outgoingConnector.left)
+          + parseFloat(outgoingConnector.width);
+
+        expect(Math.abs(connectorCenter - contentCenter)).to.be.lessThan(1);
+        expect(childrenRect.left).to.be.greaterThan(pathRect.right);
+        expect(Math.abs(outgoingConnectorRight - childrenRect.left)).to.be.lessThan(0.5);
+      });
+    })
+
+    it('Renders nested API paths clearly in list mode and supports keyboard expansion', () => {
+
+      cy.fixture('petstore.yaml', 'utf8').then((data) => {
+
+        const response = {
+          statusCode: 200,
+          body: data,
+          headers: {
+            'Content-Type': 'text/plain; charset=utf-8'
+          }
+        };
+        cy.intercept(
+          'GET',
+          /^http:\/\/local.test\/petstore.yaml$/,
+          response)
+      })
+
+      cy.visit('/?url=http://local.test/petstore.yaml')
+      accordionHeader('API Paths').click()
+      cy.get('[role="radiogroup"][aria-label="View orientation"] input[value="list"]')
+        .check({force: true})
+
+      cy.get('cdk-tree.tree-vertical').should('exist')
+      cy.get('.operation-node').first().should('be.visible')
+      cy.get('.operation-node').first().closest('.path-tree-children').should(($children) => {
+        expect(parseFloat(getComputedStyle($children[0]).marginLeft)).to.be.greaterThan(0)
+      })
+
+      cy.get('.path-node').first().focus().type('{enter}')
+      cy.get('.path-node').first().should('have.attr', 'aria-expanded', 'false')
+      cy.get('.operation-node').should('not.exist')
     })
 
     it('Pushes nested schema sections down when Components expands', () => {
@@ -452,11 +556,15 @@ describe('The Home Page', () => {
         const initialTop = getPageTop($petsHeader[0]);
 
         accordionHeader('Pet').click();
-        cy.get('#components_schemas_Pet p-treetable').should('be.visible');
+        cy.get('#components_schemas_Pet .schema-property-list').should('be.visible');
+        cy.get('#components_schemas_Pet [data-schema-property="id"]')
+          .should('be.visible')
+          .and('contain.text', 'id')
+          .and('contain.text', 'integer')
 
         accordionHeader('Pet')
-            .closest('.p-accordionpanel, .p-accordion-panel')
-            .find('.p-accordioncontent-content, .p-accordion-content-content')
+            .closest('.app-disclosure')
+            .find('.app-disclosure__body')
             .should(($content) => {
               const content = $content[0];
 
@@ -496,6 +604,19 @@ describe('The Home Page', () => {
       cy.contains('.api-info', 'http://petstore.swagger.io/v1')
       cy.contains('.api-info', 'Paths').parent().contains('3')
       cy.contains('.api-info', 'Operations').parent().contains('4')
+      cy.get('.api-info__body')
+          .should('have.css', 'padding', '16px')
+          .then(() => {
+            cy.get('.api-info__body .metadata-grid').then(($metadata) => {
+              const metadataLeft = $metadata[0].getBoundingClientRect().left
+
+              cy.get('.api-info').should(($panel) => {
+                const panelLeft = $panel[0].getBoundingClientRect().left
+
+                expect(metadataLeft - panelLeft).to.be.closeTo(17, 1)
+              })
+            })
+          })
 
       accordionHeader('Tags').click()
       cy.contains('.tag-list article', 'pets')
@@ -510,5 +631,26 @@ describe('The Home Page', () => {
           .contains('3 properties')
       accordionHeader('Pet').click()
       cy.contains('.schema-overview', '2 required')
+    })
+
+    it('Renders request body component details from the petstore JSON example', () => {
+      cy.visit('/')
+
+      cy.readFile('sample_openapi/petstore3.json').then((data) => {
+        cy.get('#file-input').selectFile({
+          contents: Cypress.Buffer.from(JSON.stringify(data)),
+          fileName: 'petstore3.json',
+          mimeType: 'application/json'
+        }, {force: true})
+      })
+
+      accordionHeader('Components').click()
+      accordionHeader('Request bodies').should('contain.text', '2').click()
+      cy.get('#components-section-panel-requestBodies .component-list dt')
+        .should('have.length', 2)
+        .then(($entries) => {
+          expect($entries.text()).to.contain('Pet')
+          expect($entries.text()).to.contain('UserArray')
+        })
     })
   })

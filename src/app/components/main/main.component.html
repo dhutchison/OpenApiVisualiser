@@ -1,54 +1,66 @@
 <div>
-  <p-dialog
-    header="API definition could not be loaded"
-    [(visible)]="displayLoadFailureDialog"
-    [modal]="true"
-    [style]="{width: 'min(34rem, 92vw)'}">
+  <app-dialog
+    title="API definition could not be loaded"
+    [(open)]="displayLoadFailureDialog"
+    size="medium">
     <p>{{ loadFailureMessage }}</p>
-    <ng-template pTemplate="footer">
+    <div dialog-footer>
       <button
         type="button"
-        pButton
-        icon="pi pi-times"
-        label="Close"
-        (click)="displayLoadFailureDialog = false"></button>
-    </ng-template>
-  </p-dialog>
+        class="app-button app-button--secondary"
+      (click)="displayLoadFailureDialog = false">
+        <svg lucideX class="app-icon" aria-hidden="true" focusable="false"></svg>
+        <span>Close</span>
+      </button>
+    </div>
+  </app-dialog>
 
   <div class="button-bar">
     <app-file-chooser></app-file-chooser>
     <app-url-chooser></app-url-chooser>
     <app-export></app-export>
   </div>
-  <div class="p-accordion">
-    <section class="p-accordionpanel" *ngFor="let section of sections" [attr.data-p-active]="isSectionExpanded(section.id)">
-      <button
-        type="button"
-        class="p-accordionheader"
-        [id]="section.headerId"
-        [attr.aria-expanded]="isSectionExpanded(section.id)"
-        [attr.aria-controls]="'main-panel-' + section.id"
-        (click)="toggleSection(section.id)">
-        <span>{{ section.title }}</span>
-        <span
-          class="accordion-toggle-icon pi pi-chevron-down"
-          [class.is-expanded]="isSectionExpanded(section.id)"
-          aria-hidden="true"></span>
-      </button>
-
-      <section
-        class="p-accordioncontent"
-        [id]="'main-panel-' + section.id"
-        [hidden]="!isSectionExpanded(section.id)"
-        [attr.aria-labelledby]="section.headerId">
-        <div class="p-accordioncontent-content">
-          <app-api-information *ngIf="section.id === '0'"></app-api-information>
-          <app-summary *ngIf="section.id === '1'"></app-summary>
-          <app-api-path-tree *ngIf="section.id === '2'"></app-api-path-tree>
-          <app-api-tags *ngIf="section.id === '3'"></app-api-tags>
-          <app-api-components-detail *ngIf="section.id === '4'"></app-api-components-detail>
-        </div>
-      </section>
-    </section>
+  <div class="app-disclosure-list">
+    @for (section of sections; track section.id) {
+      <details
+        class="app-disclosure"
+        [open]="isSectionExpanded(section.id)">
+        <summary
+          class="app-disclosure__summary"
+          [id]="section.headerId"
+          [attr.aria-controls]="'main-panel-' + section.id"
+          (click)="toggleSection(section.id, $event)">
+          <span>{{ section.title }}</span>
+          <svg
+            lucideChevronDown
+            class="accordion-toggle-icon"
+            [class.is-expanded]="isSectionExpanded(section.id)"
+            aria-hidden="true"
+            focusable="false"></svg>
+        </summary>
+        <section
+          class="app-disclosure__content"
+          [id]="'main-panel-' + section.id"
+          [attr.aria-labelledby]="section.headerId">
+          <div class="app-disclosure__body">
+            @if (section.id === '0') {
+              <app-api-information></app-api-information>
+            }
+            @if (section.id === '1') {
+              <app-summary></app-summary>
+            }
+            @if (section.id === '2') {
+              <app-api-path-tree></app-api-path-tree>
+            }
+            @if (section.id === '3') {
+              <app-api-tags></app-api-tags>
+            }
+            @if (section.id === '4') {
+              <app-api-components-detail></app-api-components-detail>
+            }
+          </div>
+        </section>
+      </details>
+    }
   </div>
 </div>

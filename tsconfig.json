@@ -1,8 +1,10 @@
 {
-  "compileOnSave": false,
+    "compileOnSave": false,
   "compilerOptions": {
     "baseUrl": "./",
-    "downlevelIteration": true,
+    "ignoreDeprecations": "6.0",
+    "strict": false,
+    "esModuleInterop": true,
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
@@ -14,10 +16,6 @@
     "target": "ES2022",
     "typeRoots": [
       "node_modules/@types"
-    ],
-    "lib": [
-      "es2022",
-      "dom"
     ],
     "useDefineForClassFields": false
   }

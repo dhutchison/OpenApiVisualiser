@@ -37,7 +37,8 @@ describe('ExternalDocsComponent', () => {
     const testUrl = 'https://www.google.com';
 
     component.document = { url: testUrl };
-    fixture.detectChanges();
+    fixture.componentRef.changeDetectorRef.markForCheck();
+    fixture.detectChanges(false);
 
     const debugElement = fixture.debugElement.query(By.css('.external-document-link'));
     expect(debugElement).toBeDefined();
@@ -56,7 +57,8 @@ describe('ExternalDocsComponent', () => {
       url: testUrl,
       description: testDescriptionMarkdown
     };
-    fixture.detectChanges();
+    fixture.componentRef.changeDetectorRef.markForCheck();
+    fixture.detectChanges(false);
 
     const debugElement = fixture.debugElement.query(By.css('.external-document-link'));
     expect(debugElement).toBeDefined();

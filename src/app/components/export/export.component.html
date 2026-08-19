@@ -1,21 +1,26 @@
-<p-dialog header="Export" [(visible)]="display" [modal]="true"
-  [style]="{width: '350px', minWidth: '200px'}" [minY]="70">
-      <select [(ngModel)]="exportFormat">
-          <option *ngFor="let format of exportFormats" [value]="format.id">
-            {{ format.description }}
-          </option>
-      </select>
-      <ng-template pTemplate="footer">
-          <button type="submit" pButton icon="pi pi-check"
-            label="Export"
-            (click)="export()"></button>
-          <button type="button" pButton icon="pi pi-times"
-            (click)="display=false" label="Cancel"
-            class="p-button-secondary"></button>
-      </ng-template>
-</p-dialog>
+<app-dialog title="Export" [(open)]="display" size="small">
+  <select [(ngModel)]="exportFormat">
+    @for (format of exportFormats; track format.id) {
+      <option [value]="format.id">
+        {{ format.description }}
+      </option>
+    }
+  </select>
+  <div dialog-footer>
+    <button type="submit" class="app-button app-button--primary" (click)="export()">
+      <svg lucideCheck class="app-icon" aria-hidden="true" focusable="false"></svg>
+      <span>Export</span>
+    </button>
+    <button type="button" class="app-button app-button--secondary" (click)="display=false">
+      <svg lucideX class="app-icon" aria-hidden="true" focusable="false"></svg>
+      <span>Cancel</span>
+    </button>
+  </div>
+</app-dialog>
 
-<button type="button" pButton
+<button type="button" class="app-button app-button--primary"
   (click)="showDialog()"
-  [disabled]="!buttonEnabled"
-  icon="pi pi-download" label="Export"></button>
+  [disabled]="!buttonEnabled">
+  <svg lucideDownload class="app-icon" aria-hidden="true" focusable="false"></svg>
+  <span>Export</span>
+</button>

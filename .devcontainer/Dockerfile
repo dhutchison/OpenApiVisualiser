@@ -7,10 +7,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Configure apt and install packages
 RUN apt-get update \
-    # Install the bits required for ChromeHeadless tests
+    # Install the bits required for ChromeHeadless and Cypress tests
     # Using Chromium instead of full Chrome (saves having to add additional download sites which
     # may be blocked in some environments.
-    && apt-get install -y --no-install-recommends chromium chromium-l10n python3-pip pipx \
+    && apt-get install -y --no-install-recommends chromium chromium-l10n python3-pip pipx xvfb \
     # Install Commitizen so release configuration can be validated locally.
     && PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx install commitizen \
     # Clean up

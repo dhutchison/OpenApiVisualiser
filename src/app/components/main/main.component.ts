@@ -1,9 +1,8 @@
-import { CommonModule } from '@angular/common';
-import { Component, AfterViewInit, inject } from '@angular/core';
+
+import { Component, AfterViewInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { LucideChevronDown, LucideX } from '@lucide/angular';
 import { FileReaderService } from '../../services/file-reader.service';
 import { ActivatedRoute } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
 import { ApiComponentsDetailComponent } from '../api-components-detail/api-components-detail.component';
 import { ApiInformationComponent } from '../api-information/api-information.component';
 import { ApiPathTreeComponent } from '../api-path-tree/api-path-tree.component';
@@ -12,6 +11,7 @@ import { ExportComponent } from '../export/export.component';
 import { FileChooserComponent } from '../file-chooser/file-chooser.component';
 import { SummaryComponent } from '../summary/summary.component';
 import { UrlChooserComponent } from '../url-chooser/url-chooser.component';
+import { AppDialogComponent } from '../app-dialog/app-dialog.component';
 
 interface MainSection {
   id: string;
@@ -26,14 +26,15 @@ interface MainSection {
     ApiInformationComponent,
     ApiPathTreeComponent,
     ApiTagsComponent,
-    ButtonModule,
-    CommonModule,
-    DialogModule,
+    AppDialogComponent,
     ExportComponent,
     FileChooserComponent,
     SummaryComponent,
-    UrlChooserComponent
-  ],
+    UrlChooserComponent,
+    LucideChevronDown,
+    LucideX
+],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './main.component.html'
 })
 export class MainComponent implements AfterViewInit {
@@ -71,15 +72,14 @@ export class MainComponent implements AfterViewInit {
     });
   }
 
-  toggleSection(sectionId: string) {
-    const sectionIndex = this.activePanels.indexOf(sectionId);
+  toggleSection(sectionId: string, event?: Event) {
+    event?.preventDefault();
 
-    if (sectionIndex >= 0) {
+    if (this.activePanels.includes(sectionId)) {
       this.activePanels = this.activePanels.filter(panelId => panelId !== sectionId);
-      return;
+    } else {
+      this.activePanels = [...this.activePanels, sectionId];
     }
-
-    this.activePanels = [...this.activePanels, sectionId];
   }
 
   isSectionExpanded(sectionId: string): boolean {
