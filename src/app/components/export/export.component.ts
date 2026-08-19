@@ -102,7 +102,7 @@ export class ExportComponent implements OnInit {
 
     if (fileContent) {
       const file = new File([fileContent], fileName, {type: fileContentType});
-      saveAs(file);
+      this.saveFile(file);
     }
 
 
@@ -117,6 +117,10 @@ export class ExportComponent implements OnInit {
   private convertToOpenAPIJson(spec: OpenAPIObject): string {
 
     return JSON.stringify(spec, null, 2);
+  }
+
+  private saveFile(file: File) {
+    saveAs(file);
   }
 
 }

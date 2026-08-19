@@ -32,6 +32,22 @@ describe('SummaryComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('flattens nested path nodes and counts operations by method', () => {
+    const getNode = {kind: 'operation', label: 'GET', leaf: true, children: []} as any;
+    const postNode = {kind: 'operation', label: 'POST', leaf: true, children: []} as any;
+    const nested = {
+      kind: 'path',
+      label: '/pets',
+      leaf: false,
+      children: [getNode, {kind: 'path', label: '/{id}', leaf: false, children: [getNode, postNode]}]
+    } as any;
+
+    const flattened = component.flatten([nested]);
+
+    expect(flattened).toEqual([getNode, getNode, postNode]);
+    expect(component.flatten([])).toEqual([]);
+  });
+
   it('should flatten API path nodes to operation nodes', () => {
     const operation: ApiOperationNode = {
       kind: 'operation',
