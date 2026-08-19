@@ -1,5 +1,5 @@
 
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, InjectionToken, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { LucideCheck, LucideDownload, LucideX } from '@lucide/angular';
 import { FormsModule } from '@angular/forms';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
@@ -8,6 +8,11 @@ import { AppDialogComponent } from '../app-dialog/app-dialog.component';
 
 import { saveAs } from 'file-saver';
 import * as jsyaml from 'js-yaml';
+
+export const FILE_SAVER = new InjectionToken<(file: File) => void>('FILE_SAVER', {
+  providedIn: 'root',
+  factory: () => saveAs
+});
 
 @Component({
   selector: 'app-export',
@@ -24,6 +29,7 @@ import * as jsyaml from 'js-yaml';
 export class ExportComponent implements OnInit {
 
   private readonly fileReaderService = inject(FileReaderService);
+  private readonly saveFile = inject(FILE_SAVER);
 
   // TODO: A lot of comonality with this and the api-information component.
   display = false;
@@ -80,6 +86,11 @@ export class ExportComponent implements OnInit {
   }
 
   export() {
+    if (!this.buttonEnabled) {
+      this.display = false;
+      return;
+    }
+
     console.log(this.exportFormat);
     const yaml = false;
 
@@ -117,10 +128,6 @@ export class ExportComponent implements OnInit {
   private convertToOpenAPIJson(spec: OpenAPIObject): string {
 
     return JSON.stringify(spec, null, 2);
-  }
-
-  private saveFile(file: File) {
-    saveAs(file);
   }
 
 }

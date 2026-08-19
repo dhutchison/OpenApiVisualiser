@@ -156,6 +156,27 @@ describe('ApiComponentsDetailComponent', () => {
     const requestBodyPanel = fixture.nativeElement.querySelector('#components-section-panel-requestBodies');
     expect(requestBodyPanel?.textContent).toContain('Pet');
     expect(requestBodyPanel?.textContent).toContain('Pet body');
+
+    const expectedSections = [
+      {label: 'Responses', key: 'responses', name: 'Created', detail: 'Created response'},
+      {label: 'Parameters', key: 'parameters', name: 'Limit', detail: 'limit in query'},
+      {label: 'Examples', key: 'examples', name: 'Pet', detail: 'Example pet'},
+      {label: 'Headers', key: 'headers', name: 'RateLimit', detail: 'Rate limit'},
+      {label: 'Security schemes', key: 'securitySchemes', name: 'apiKey', detail: 'apiKey'},
+      {label: 'Links', key: 'links', name: 'Pet', detail: 'Pet link'},
+      {label: 'Callbacks', key: 'callbacks', name: 'Pet', detail: 'Defined component'}
+    ];
+
+    expectedSections.forEach(section => {
+      const summary = [...fixture.nativeElement.querySelectorAll('summary')]
+        .find(element => element.textContent?.includes(section.label)) as HTMLElement;
+      summary.click();
+      fixture.detectChanges();
+
+      const panel = fixture.nativeElement.querySelector(`#components-section-panel-${section.key}`) as HTMLElement;
+      expect(panel.textContent).toContain(section.name);
+      expect(panel.textContent).toContain(section.detail);
+    });
   });
 
   it('describes component values using the most specific available detail', () => {

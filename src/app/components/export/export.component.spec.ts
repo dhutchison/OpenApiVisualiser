@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
-import { ExportComponent } from './export.component';
+import { ExportComponent, FILE_SAVER } from './export.component';
 import { FormsModule } from '@angular/forms';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
@@ -10,8 +10,10 @@ describe('ExportComponent', () => {
   let component: ExportComponent;
   let fixture: ComponentFixture<ExportComponent>;
   let fileReaderService: FileReaderService;
+  let saveFileSpy: jasmine.Spy;
 
   beforeEach(waitForAsync(() => {
+    saveFileSpy = jasmine.createSpy('saveFile');
     TestBed.configureTestingModule({
       imports: [
         ExportComponent,
@@ -19,7 +21,8 @@ describe('ExportComponent', () => {
       ],
       providers: [
         provideHttpClient(withXhr()),
-        provideHttpClientTesting()
+        provideHttpClientTesting(),
+        {provide: FILE_SAVER, useValue: saveFileSpy}
       ]
     })
     .compileComponents();
@@ -59,8 +62,7 @@ describe('ExportComponent', () => {
     expect(component.buttonEnabled).toBeFalse();
   });
 
-  it('exports YAML and JSON files with the API title', () => {
-    const saveFileSpy = spyOn<any>(component, 'saveFile');
+  it('exports YAML and JSON files with the API title and payload', async () => {
     const api = {
       openapi: '3.1.0',
       info: {title: 'Test API', version: '1.0.0'},
@@ -72,14 +74,34 @@ describe('ExportComponent', () => {
     component.export();
     expect(saveFileSpy).toHaveBeenCalledWith(jasmine.any(File));
     expect((saveFileSpy.calls.mostRecent().args[0] as File).name).toBe('Test API.yaml');
-    expect((saveFileSpy.calls.mostRecent().args[0] as File).type).toBe('text/plain');
+    const yamlFile = saveFileSpy.calls.mostRecent().args[0] as File;
+    expect(yamlFile.type).toBe('text/plain');
+    expect(await yamlFile.text()).toContain('openapi: 3.1.0');
 
     component.display = true;
     component.exportFormat = 2;
     component.export();
     expect(saveFileSpy.calls.count()).toBe(2);
-    expect((saveFileSpy.calls.mostRecent().args[0] as File).name).toBe('Test API.json');
-    expect((saveFileSpy.calls.mostRecent().args[0] as File).type).toBe('application/json');
+    const jsonFile = saveFileSpy.calls.mostRecent().args[0] as File;
+    expect(jsonFile.name).toBe('Test API.json');
+    expect(jsonFile.type).toBe('application/json');
+    expect(JSON.parse(await jsonFile.text())).toEqual(api);
+    expect(component.display).toBeFalse();
+  });
+
+  it('does not export without exactly one API or with an unknown format', () => {
+    component.display = true;
+
+    component.export();
+    expect(saveFileSpy).not.toHaveBeenCalled();
+    expect(component.display).toBeFalse();
+
+    component.apiDefinitions = [{info: {title: 'Test API'}} as any];
+    component.display = true;
+    component.exportFormat = 999;
+    component.export();
+
+    expect(saveFileSpy).not.toHaveBeenCalled();
     expect(component.display).toBeFalse();
   });
 

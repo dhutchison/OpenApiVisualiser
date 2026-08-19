@@ -128,6 +128,15 @@ describe('createApiTreeSvg', () => {
     expect(svg.indexOf('Sort: A-Z')).toBeLessThan(svg.indexOf('/pets'));
   });
 
+  it('escapes SVG metadata text', () => {
+    const svg = createApiTreeSvg([], {
+      metadata: ['Tags: pets & <admin>']
+    });
+
+    expect(svg).toContain('Tags: pets &amp; &lt;admin&gt;');
+    expect(svg).not.toContain('Tags: pets & <admin>');
+  });
+
   it('uses method palettes, fallback palettes, and escaped backgrounds', () => {
     const operation = (method: string, label: string) => ({
       kind: 'operation',

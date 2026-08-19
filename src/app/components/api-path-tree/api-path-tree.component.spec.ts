@@ -103,6 +103,8 @@ describe('ApiPathTreeComponent', () => {
   });
 
   it('accepts view, compression, and sort control values', () => {
+    component.setView('tree');
+    expect(component.horizontalView).toBeTrue();
     component.setView('list');
     expect(component.horizontalView).toBeFalse();
     component.setView('unknown');
@@ -110,13 +112,19 @@ describe('ApiPathTreeComponent', () => {
 
     component.setCompression('expanded');
     expect(component.joinNodesWithNoLeaves).toBeFalse();
+    component.setCompression('compressed');
+    expect(component.joinNodesWithNoLeaves).toBeTrue();
     component.setCompression('unknown');
-    expect(component.joinNodesWithNoLeaves).toBeFalse();
+    expect(component.joinNodesWithNoLeaves).toBeTrue();
 
+    component.setSortOrder('default');
+    expect(component.sortOrder).toBe('default');
     component.setSortOrder('asc');
     expect(component.sortOrder).toBe('asc');
+    component.setSortOrder('desc');
+    expect(component.sortOrder).toBe('desc');
     component.setSortOrder('unknown');
-    expect(component.sortOrder).toBe('asc');
+    expect(component.sortOrder).toBe('desc');
   });
 
   it('should open and close endpoint details in the application dialog', () => {

@@ -106,6 +106,14 @@ describe('ApiTagsComponent', () => {
     const admin = cardFor('admin');
     expect(admin.textContent).toContain('admin');
     expect(admin.textContent).toContain('5 operations');
+    expect([...admin.querySelectorAll('.operation-list li')].map(operation => operation.textContent?.replace(/\s+/g, ' ').trim()))
+      .toEqual([
+        'DELETE/pets',
+        'OPTIONS/pets',
+        'HEAD/pets',
+        'PATCH/pets',
+        'TRACE/pets'
+      ]);
 
     const unused = cardFor('unused');
     expect(unused.textContent).toContain('0 operations');
