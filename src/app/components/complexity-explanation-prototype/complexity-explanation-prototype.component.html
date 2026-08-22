@@ -1,0 +1,274 @@
+@if (visible) {
+  <section class="prototype-shell" aria-labelledby="complexity-prototype-title">
+    <header class="prototype-intro">
+      <div>
+        <p class="prototype-kicker">Throwaway UI prototype</p>
+        <h2 id="complexity-prototype-title">Operation contract complexity</h2>
+        <p>How should absolute bands, detailed reasons and document hotspots appear without becoming another score dashboard?</p>
+      </div>
+      <span class="prototype-model">Model operation-contract-complexity/1.0.0</span>
+    </header>
+
+    @if (variant === 'A') {
+      <article class="variant variant-a" aria-label="Variant A, band first">
+        <section class="prototype-section">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">Tree and list</p>
+              <h3>Keep the band attached to the operation</h3>
+            </div>
+            <p>Text badges carry the meaning; colour only speeds up scanning.</p>
+          </div>
+
+          <div class="compact-surfaces">
+            <div class="surface-card tree-sample" aria-label="Example API path tree">
+              <div class="surface-title">Tree</div>
+              <div class="tree-root">/pet</div>
+              @for (operation of operations.slice(0, 3); track operation.method + operation.path) {
+                <div class="tree-operation">
+                  <span class="method method--{{ operation.method.toLowerCase() }}">{{ operation.method }}</span>
+                  <span class="tree-path">{{ operation.path.replace('/pet', '') || '/' }}</span>
+                  <span class="band-badge {{ bandClass(operation.band) }}">{{ operation.band }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="surface-card list-sample">
+              <div class="surface-title">List</div>
+              <table>
+                <thead><tr><th>Operation</th><th>Complexity</th><th>Confidence</th></tr></thead>
+                <tbody>
+                  @for (operation of operations.slice(0, 4); track operation.method + operation.path) {
+                    <tr>
+                      <td><span class="method method--{{ operation.method.toLowerCase() }}">{{ operation.method }}</span> {{ operation.path }}</td>
+                      <td><span class="band-badge {{ bandClass(operation.band) }}">{{ operation.band }}</span></td>
+                      <td>{{ operation.confidence }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="prototype-section detail-card">
+          <div class="detail-header">
+            <div>
+              <p class="section-kicker">Endpoint detail</p>
+              <h3><span class="method method--put">PUT</span> /pet</h3>
+            </div>
+            <div class="assessment-badges">
+              <span class="band-badge band--high band-badge--large">High complexity</span>
+              <span class="confidence-badge">Complete assessment</span>
+            </div>
+          </div>
+
+          <div class="mitigation-note">
+            <strong>Strong examples reduce this operation from Very high to High.</strong>
+            Request, success and error examples cover the important branches. Structural burden remains visible below.
+          </div>
+
+          <div class="dimension-profile">
+            @for (dimension of dimensions; track dimension.name) {
+              <div class="dimension-row">
+                <div>
+                  <strong>{{ dimension.name }}</strong>
+                  <span>{{ dimension.evidence }}</span>
+                </div>
+                <div class="level-track" aria-label="{{ dimension.name }}: {{ dimension.band }}">
+                  @for (level of ['Low', 'Moderate', 'High', 'Very high']; track level) {
+                    <span [class.is-active]="level === dimension.band" class="{{ bandClass($any(level)) }}"></span>
+                  }
+                </div>
+                <span class="dimension-band {{ bandClass(dimension.band) }}">{{ dimension.band }}</span>
+                <p>{{ dimension.detail }}</p>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="prototype-section">
+          <div class="section-heading">
+            <div><p class="section-kicker">Summary</p><h3>Distribution and hotspots</h3></div>
+            <span class="summary-total">19 operations · 1 needs assessment</span>
+          </div>
+          <div class="summary-grid">
+            <div class="distribution-card">
+              <h4>Absolute complexity bands</h4>
+              <div class="distribution-bar" aria-label="5 low, 7 moderate, 5 high, 1 very high and 1 unknown operation">
+                @for (item of distribution; track item.band) {
+                  <span class="{{ bandClass(item.band) }}" [style.width.%]="item.percent"></span>
+                }
+              </div>
+              <div class="distribution-legend">
+                @for (item of distribution; track item.band) {
+                  <div><span class="legend-dot {{ bandClass(item.band) }}"></span><strong>{{ item.count }}</strong> {{ item.band }}</div>
+                }
+              </div>
+            </div>
+            <div class="hotspot-card">
+              <h4>Document hotspots</h4>
+              <ol>
+                @for (operation of operations.slice(0, 3); track operation.method + operation.path) {
+                  <li>
+                    <span><span class="method method--{{ operation.method.toLowerCase() }}">{{ operation.method }}</span> {{ operation.path }}</span>
+                    <span class="band-badge {{ bandClass(operation.band) }}">{{ operation.band }}</span>
+                  </li>
+                }
+              </ol>
+            </div>
+          </div>
+        </section>
+      </article>
+    }
+
+    @if (variant === 'B') {
+      <article class="variant variant-b" aria-label="Variant B, comparison matrix">
+        <section class="prototype-section scan-layout">
+          <div class="scan-sidebar">
+            <p class="section-kicker">Tree and list</p>
+            <h3>Use a narrow complexity signal</h3>
+            <p>The label lives in a consistent trailing column so paths remain visually dominant.</p>
+            <div class="signal-tree">
+              <strong>/pet</strong>
+              @for (operation of operations.slice(0, 4); track operation.method + operation.path) {
+                <button type="button" [class.is-selected]="$index === 0">
+                  <span><span class="method method--{{ operation.method.toLowerCase() }}">{{ operation.method }}</span> {{ operation.path }}</span>
+                  <span class="signal {{ bandClass(operation.band) }}"><span aria-hidden="true"></span>{{ operation.band }}</span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="scan-detail">
+            <div class="scan-detail-header">
+              <div><p class="section-kicker">Endpoint detail</p><h3>PUT /pet</h3></div>
+              <div class="headline-assessment"><strong>High</strong><span>Complete</span></div>
+            </div>
+            <p class="raw-band-note">Raw band: <strong>Very high</strong> · reduced one band by strong documentation support</p>
+            <div class="dimension-accordions">
+              @for (dimension of dimensions; track dimension.name) {
+                <details [open]="$index < 2">
+                  <summary>
+                    <span>{{ dimension.name }}</span>
+                    <span class="signal {{ bandClass(dimension.band) }}"><span aria-hidden="true"></span>{{ dimension.band }}</span>
+                  </summary>
+                  <div><strong>{{ dimension.evidence }}</strong><p>{{ dimension.detail }}</p><a href="#prototype-reasons">View source locations</a></div>
+                </details>
+              }
+            </div>
+          </div>
+        </section>
+
+        <section class="prototype-section matrix-section" id="prototype-reasons">
+          <div class="section-heading">
+            <div><p class="section-kicker">Summary</p><h3>Compare operations by dimension</h3></div>
+            <p>Ordered by document hotspot tier; ties stay tied.</p>
+          </div>
+          <div class="matrix-wrap">
+            <table class="complexity-matrix">
+              <thead>
+                <tr><th>Operation</th><th>Final</th><th><abbr title="Interaction surface">Surface</abbr></th><th>Shape</th><th>Rules</th><th>Refs</th><th>Protocol</th><th>Confidence</th></tr>
+              </thead>
+              <tbody>
+                @for (operation of operations; track operation.method + operation.path) {
+                  <tr>
+                    <td><span class="method method--{{ operation.method.toLowerCase() }}">{{ operation.method }}</span> {{ operation.path }}</td>
+                    <td><span class="signal {{ bandClass(operation.band) }}"><span aria-hidden="true"></span>{{ operation.band }}</span></td>
+                    @for (dimension of operation.dimensions; track $index) {
+                      <td><span class="matrix-cell {{ bandClass(dimension) }}" title="{{ dimension }}"><span class="visually-hidden">{{ dimension }}</span></span></td>
+                    }
+                    <td>{{ operation.confidence }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="matrix-key">Cell colour is redundant with accessible text and titles; the full implementation would provide row/column screen-reader labels.</p>
+        </section>
+      </article>
+    }
+
+    @if (variant === 'C') {
+      <article class="variant variant-c" aria-label="Variant C, explain the burden">
+        <section class="prototype-section compact-list-c">
+          <div class="section-heading">
+            <div><p class="section-kicker">Tree and list</p><h3>Prefer readable labels over status furniture</h3></div>
+            <p>Complexity stays secondary until a consumer asks for the explanation.</p>
+          </div>
+          <div class="narrative-tree">
+            <div class="narrative-path">/pet</div>
+            @for (operation of operations.slice(0, 4); track operation.method + operation.path) {
+              <button type="button">
+                <span><span class="method method--{{ operation.method.toLowerCase() }}">{{ operation.method }}</span> {{ operation.path }}</span>
+                <span class="narrative-band">Complexity: <strong>{{ operation.band }}</strong></span>
+              </button>
+            }
+          </div>
+        </section>
+
+        <section class="prototype-section story-detail">
+          <div class="story-hero">
+            <p class="section-kicker">Endpoint detail · PUT /pet</p>
+            <h3>This operation has <span>High consumer complexity</span></h3>
+            <p>Its data shape is the dominant burden. Conditional rules and a broad interaction surface reinforce it, while strong examples make the contract easier to learn.</p>
+            <div class="story-meta"><span>Assessment complete</span><span>Raw band Very high</span><span>Final band High</span></div>
+          </div>
+
+          <div class="driver-grid">
+            <article class="primary-driver">
+              <p>Primary driver</p>
+              <h4>Very high data-shape burden</h4>
+              <p>{{ dimensions[1].detail }}</p>
+              <ul><li>31 consumer-visible fields</li><li>9 levels of structural depth</li><li>Arrays and maps in both request and response roles</li></ul>
+            </article>
+            <article class="supporting-drivers">
+              <p>Supporting drivers</p>
+              @for (dimension of dimensions; track dimension.name) {
+                @if ($index !== 1) {
+                  <div><strong>{{ dimension.name }}</strong><span>{{ dimension.band }}</span><p>{{ dimension.evidence }}</p></div>
+                }
+              }
+            </article>
+            <article class="documentation-help">
+              <p>What helps</p>
+              <h4>Examples reduce the final band</h4>
+              <p>Representative request, success and error examples cover the important branches. Without them, this operation would be Very high.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="prototype-section hotspot-first">
+          <div class="hotspot-intro">
+            <p class="section-kicker">Summary</p>
+            <h3>Start with the contracts that need the most attention</h3>
+            <p>Absolute bands remain stable across documents. This ranking only identifies hotspots inside the current API.</p>
+            <div class="plain-distribution">
+              @for (item of distribution; track item.band) {
+                <span><strong>{{ item.count }}</strong> {{ item.band }}</span>
+              }
+            </div>
+          </div>
+          <ol class="ranked-hotspots">
+            @for (operation of operations.slice(0, 4); track operation.method + operation.path) {
+              <li>
+                <span class="rank">{{ $index + 1 }}</span>
+                <div><strong>{{ operation.method }} {{ operation.path }}</strong><p>{{ $index === 0 ? 'Very high data shape · High surface and conditionality' : $index === 1 ? 'High surface and conditionality · Qualified assessment' : $index === 2 ? 'Broad but predictable request and response contract' : 'Small, direct contract with no elevated dimensions' }}</p></div>
+                <span class="rank-band">{{ operation.band }}</span>
+              </li>
+            }
+          </ol>
+        </section>
+      </article>
+    }
+  </section>
+
+  <nav class="prototype-switcher" aria-label="Complexity explanation prototype variants">
+    <button type="button" (click)="cycle(-1)" aria-label="Previous prototype variant">←</button>
+    <div>
+      <span>Prototype {{ variant }} of {{ variants.length }}</span>
+      <strong>{{ currentVariantName() }}</strong>
+    </div>
+    <button type="button" (click)="cycle(1)" aria-label="Next prototype variant">→</button>
+  </nav>
+}

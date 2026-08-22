@@ -12,6 +12,7 @@ import { FileChooserComponent } from '../file-chooser/file-chooser.component';
 import { SummaryComponent } from '../summary/summary.component';
 import { UrlChooserComponent } from '../url-chooser/url-chooser.component';
 import { AppDialogComponent } from '../app-dialog/app-dialog.component';
+import { ComplexityExplanationPrototypeComponent } from '../complexity-explanation-prototype/complexity-explanation-prototype.component';
 
 interface MainSection {
   id: string;
@@ -27,6 +28,7 @@ interface MainSection {
     ApiPathTreeComponent,
     ApiTagsComponent,
     AppDialogComponent,
+    ComplexityExplanationPrototypeComponent,
     ExportComponent,
     FileChooserComponent,
     SummaryComponent,
