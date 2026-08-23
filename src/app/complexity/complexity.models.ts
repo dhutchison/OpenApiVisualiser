@@ -10,7 +10,7 @@ export type ComplexityDimension =
 export type AssessmentConfidence = 'Complete' | 'Qualified' | 'Incomplete';
 export type AssessmentAvailability = 'Pending' | 'Available' | 'Unavailable';
 export type ConsumerRole = 'request' | 'response';
-export type ReasonCategory = ComplexityDimension | 'assessment';
+export type ReasonCategory = ComplexityDimension | 'assessment' | 'documentation';
 
 export interface AssessmentSource {
   readonly sourceId: string;
@@ -93,12 +93,14 @@ export const COMPLEXITY_CAPABILITY_MANIFEST: ComplexityCapabilityManifest = {
     'discriminator selectors and viable alternative branches',
     'inherited and overridden security with OR, AND, anonymous choices, scopes, flows, and references',
     'operation server alternatives and variables, response links, and canonical callback operations',
+    'operation, parameter, media type, response, schema, and reusable examples with role-aware validation',
     'deterministic report and compact presentation lifecycle'
   ],
   unsupportedContractAffecting: [
     'unsupported callback or composition targets',
     'advanced protocol obligations not represented by the supported security, server, link, and callback facts',
-    'unsupported JSON Schema keywords for the declared OpenAPI version'
+    'unsupported JSON Schema keywords for the declared OpenAPI version',
+    'unresolvable external example values'
   ],
   knownContractAffectingExtensions: ['x-multi-segment'],
   ignoredNonSemanticExtensions: ['x-* extensions without registered contract semantics']

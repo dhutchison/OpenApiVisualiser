@@ -1142,6 +1142,160 @@ describe('assessLoadedDocument', () => {
     ['unavailable-reference', 'invalid-media-type'].forEach(code => expect(responseCodes).toContain(code));
     expect(contradiction?.blockingFaults.some(fault => fault.code === 'contradictory-composition')).toBeTrue();
   });
+
+  it('classifies representative request, success, and alternative examples as strong support', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Documented pets', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        requestBody: {content: {'application/json': {
+          schema: {type: 'object', required: ['name'], properties: {name: {type: 'string'}}},
+          example: {name: 'Milo'}
+        }}},
+        responses: {
+          '200': {description: 'Created', content: {'application/json': {
+            schema: {type: 'object', properties: {id: {type: 'integer'}}},
+            example: {id: 1}
+          }}},
+          '400': {description: 'Invalid', content: {'application/json': {
+            schema: {type: 'object', properties: {message: {type: 'string'}}},
+            example: {message: 'name is required'}
+          }}}
+        }
+      }}}
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.documentationSupport.level).toBe('Strong');
+    expect(assessment.documentationSupport.coveredRoles).toEqual([
+      'request or input', 'primary success outcome', 'alternative or error outcome'
+    ]);
+    expect(assessment.documentationSupport.missingCoverage).toEqual([]);
+    expect(assessment.documentationSupport.reasons.some(reason => reason.code === 'documentation-example')).toBeTrue();
+  });
+
+  it('keeps descriptions and incomplete example coverage partial', () => {
+    const described = assessLoadedDocument(scope({
+      openapi: '3.1.0',
+      info: {title: 'Described', version: '1.0.0'},
+      paths: {'/pets': {get: {description: 'Returns pets.', responses: {'200': {description: 'Pets'}}}}}
+    })).assessments[0];
+    const successOnly = assessLoadedDocument(scope({
+      openapi: '3.1.0',
+      info: {title: 'Success only', version: '1.0.0'},
+      paths: {'/pets': {get: {responses: {'200': {content: {'application/json': {
+        schema: {type: 'string'}, example: 'pets'
+      }}}}}}}
+    })).assessments[0];
+
+    expect(described.documentationSupport.level).toBe('Partial');
+    expect(described.documentationSupport.missingCoverage).toEqual([
+      'request or input guidance', 'primary success outcome', 'alternative or error outcome'
+    ]);
+    expect(successOnly.documentationSupport.level).toBe('Partial');
+    expect(successOnly.documentationSupport.missingCoverage).toEqual([
+      'request or input guidance', 'alternative or error outcome'
+    ]);
+  });
+
+  it('resolves reusable examples and ignores invalid or duplicate values', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Reusable examples', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        parameters: [{name: 'query', in: 'query', schema: {type: 'string'}, examples: {
+          first: {value: 'pets'}, duplicate: {value: 'pets'}, invalid: {value: 4}
+        }}],
+        responses: {
+          '200': {content: {'application/json': {schema: {type: 'string'}, examples: {
+            success: {$ref: '#/components/examples/Success'}, zduplicate: {value: 'pets'}
+          }}}},
+          '400': {content: {'application/json': {schema: {type: 'string'}, examples: {
+            error: {$ref: '#/components/examples/Error'}
+          }}}}
+        }
+      }}},
+      components: {examples: {
+        Success: {value: 'pets'},
+        Error: {value: 'invalid query'}
+      }}
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+    const examples = assessment.documentationSupport.reasons.filter(reason => reason.code === 'documentation-example');
+
+    expect(assessment.documentationSupport.level).toBe('Strong');
+    expect(examples).toHaveSize(3);
+    expect(examples.some(reason => reason.source.pointer === '/components/examples/Success/value')).toBeTrue();
+    expect(examples.some(reason => reason.source.pointer === '/components/examples/Error/value')).toBeTrue();
+  });
+
+  it('requires a valid example to select a polymorphic branch', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Polymorphic examples', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        requestBody: {content: {'application/json': {schema: {oneOf: [
+          {type: 'object', required: ['kind'], properties: {kind: {const: 'cat'}}},
+          {type: 'object', required: ['kind'], properties: {kind: {const: 'dog'}}}
+        ]}, example: {kind: 'bird'}}}},
+        responses: {
+          '200': {content: {'application/json': {schema: {type: 'string'}, example: 'ok'}}},
+          '400': {content: {'application/json': {schema: {type: 'string'}, example: 'bad'}}}
+        }
+      }}}
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.documentationSupport.level).toBe('Partial');
+    expect(assessment.documentationSupport.missingCoverage).toContain('request or input guidance');
+  });
+
+  it('mitigates an all-high cross-dimension operation by one band at most', () => {
+    const properties = Object.fromEntries(Array.from({length: 8}, (_, index) => [
+      `field${index}`, index < 7 ? {$ref: `#/components/schemas/Scalar${index}`} : {type: 'string'}
+    ]));
+    const example = Object.fromEntries(Array.from({length: 8}, (_, index) => [`field${index}`, `value-${index}`]));
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'All dimensions', version: '1.0.0'},
+      security: [{first: [], second: [], third: []}],
+      components: {
+        securitySchemes: {
+          first: {type: 'apiKey', in: 'header', name: 'X-First'},
+          second: {type: 'apiKey', in: 'header', name: 'X-Second'},
+          third: {type: 'apiKey', in: 'header', name: 'X-Third'}
+        },
+        schemas: {
+          Payload: {type: 'object', required: Object.keys(properties), properties, example},
+          ...Object.fromEntries(Array.from({length: 7}, (_, index) => [`Scalar${index}`, {type: 'string'}]))
+        }
+      },
+      paths: {'/all': {post: {
+        parameters: Array.from({length: 5}, (_, index) => ({
+          name: `parameter${index}`, in: 'query', required: true, schema: {type: 'string'}
+        })),
+        requestBody: {required: true, content: {'application/json': {
+          schema: {$ref: '#/components/schemas/Payload'}, example
+        }}},
+        responses: {
+          '200': {content: {'application/json': {schema: {$ref: '#/components/schemas/Payload'}, example}}},
+          '400': {content: {'text/plain': {schema: {type: 'string'}, example: 'bad request'}}},
+          '422': {description: 'Unprocessable'}
+        }
+      }}}
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.rawBand).toBe('Very high');
+    expect(assessment.finalBand).toBe('High');
+    expect(assessment.documentationSupport.level).toBe('Strong');
+    expect(assessment.documentationSupport.mitigation).toEqual({from: 'Very high', to: 'High'});
+    expect(assessment.reasons.some(reason => reason.code === 'field')).toBeTrue();
+  });
 });
 
 function deepSchema(): Record<string, unknown> {
