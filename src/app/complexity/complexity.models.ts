@@ -80,10 +80,10 @@ export const COMPLEXITY_CAPABILITY_MANIFEST: ComplexityCapabilityManifest = {
   version: '1.0.0',
   openApiVersions: ['3.0', '3.1'],
   supported: [
-    'operation parameters',
+    'effective path and operation parameters with overrides',
     'inline request and response bodies',
     'inline object, scalar, array, map, and tuple schemas',
-    'response cases, headers, and media types',
+    'normalized media types, response cases, headers, and bodyless responses',
     'role-projected requiredness, optionality, readOnly, writeOnly, defaults, and nullability',
     'version-appropriate OpenAPI 3.0 and 3.1 schema semantics',
     'validation families, dependent rules, and non-default parameter serialization',
@@ -91,7 +91,8 @@ export const COMPLEXITY_CAPABILITY_MANIFEST: ComplexityCapabilityManifest = {
     'reference chains, external boundaries, composition edges, and recursive schema groups',
     'allOf effective shapes, oneOf/anyOf alternatives, and dependent conditional rules',
     'discriminator selectors and viable alternative branches',
-    'security, servers, response links, and callback obligations',
+    'inherited and overridden security with OR, AND, anonymous choices, scopes, flows, and references',
+    'operation server alternatives and variables, response links, and canonical callback operations',
     'deterministic report and compact presentation lifecycle'
   ],
   unsupportedContractAffecting: [
