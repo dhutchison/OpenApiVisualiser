@@ -72,8 +72,8 @@ describe('assessLoadedDocument', () => {
     expect(assessment.dimensions.interactionSurface.level).toBe('Moderate');
     expect(assessment.dimensions.dataShape.units).toBe(12);
     expect(assessment.dimensions.dataShape.level).toBe('Moderate');
-    expect(assessment.dimensions.conditionality.units).toBe(8);
-    expect(assessment.dimensions.conditionality.level).toBe('Moderate');
+    expect(assessment.dimensions.conditionality.units).toBe(9);
+    expect(assessment.dimensions.conditionality.level).toBe('High');
     expect(assessment.rawBand).toBe('High');
     expect(assessment.finalBand).toBe('High');
   });
@@ -153,6 +153,7 @@ describe('assessLoadedDocument', () => {
 
     expect(report.assessments[0].finalBand).toBe('Unknown');
     expect(report.assessments[0].blockingFaults[0].code).toBe('known-contract-affecting-extension');
+    expect(report.capabilityManifest.knownContractAffectingExtensions).toContain('x-multi-segment');
   });
 
   it('resolves escaped JSON pointers and supplied external resources without fetching', () => {
@@ -407,6 +408,220 @@ describe('assessLoadedDocument', () => {
     expect(assessment.dimensions.protocolObligations.level).toBe('High');
     expect(assessment.reasons.some(reason => reason.code === 'callback-operation')).toBeTrue();
     expect(assessment.reasons.some(reason => reason.code === 'security-scope')).toBeTrue();
+  });
+
+  it('projects readOnly and writeOnly fields into the applicable consumer role', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Role projection', version: '1.0.0'},
+      paths: {
+        '/pets': {
+          post: {
+            requestBody: {content: {'application/json': {schema: {$ref: '#/components/schemas/Pet'}}}},
+            responses: {'200': {content: {'application/json': {schema: {$ref: '#/components/schemas/Pet'}}}}}
+          }
+        }
+      },
+      components: {schemas: {Pet: {type: 'object', required: ['id', 'name'], properties: {
+        id: {allOf: [{type: 'string', readOnly: true}]},
+        secret: {type: 'string', writeOnly: true},
+        name: {type: 'string', default: 'unknown'},
+        nickname: {type: 'string'}
+      }}}}
+    };
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+    const fields = assessment.reasons.filter(reason => reason.code === 'field');
+    const requiredness = assessment.reasons.filter(reason =>
+      reason.code === 'requiredness-obligation' || reason.code === 'optionality-obligation');
+
+    expect(fields.filter(reason => reason.consumerRole === 'request').map(reason => reason.source.pointer)).toEqual([
+      '/components/schemas/Pet/properties/name',
+      '/components/schemas/Pet/properties/nickname',
+      '/components/schemas/Pet/properties/secret'
+    ]);
+    expect(fields.filter(reason => reason.consumerRole === 'response').map(reason => reason.source.pointer)).toEqual([
+      '/components/schemas/Pet/properties/id',
+      '/components/schemas/Pet/properties/name',
+      '/components/schemas/Pet/properties/nickname'
+    ]);
+    expect(requiredness.some(reason => reason.consumerRole === 'request'
+      && reason.source.pointer.endsWith('/properties/name')
+      && reason.code === 'requiredness-obligation')).toBeTrue();
+    expect(requiredness.some(reason => reason.consumerRole === 'response'
+      && reason.source.pointer.endsWith('/properties/nickname')
+      && reason.code === 'optionality-obligation')).toBeTrue();
+  });
+
+  it('reverses callback request and response roles for the original consumer', () => {
+    const callbackOperation = {
+      requestBody: {content: {'application/json': {
+        schema: {type: 'object', properties: {callbackId: {type: 'string', readOnly: true}}}
+      }}},
+      responses: {'200': {content: {'application/json': {
+        schema: {type: 'object', properties: {ack: {type: 'string', writeOnly: true}}}
+      }}}}
+    };
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Callback roles', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        callbacks: {onPet: {'{$request.body#/callbackUrl}': {post: callbackOperation}}},
+        responses: {'202': {description: 'Accepted'}}
+      }}}
+    };
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+    const fields = assessment.reasons.filter(reason => reason.code === 'field');
+
+    expect(fields.some(reason => reason.consumerRole === 'response'
+      && reason.source.pointer.endsWith('/callbackId'))).toBeTrue();
+    expect(fields.some(reason => reason.consumerRole === 'request'
+      && reason.source.pointer.endsWith('/ack'))).toBeTrue();
+  });
+
+  it('counts optional request bodies without allowing defaults to erase obligations', () => {
+    const schema = {type: 'object', required: ['name'], properties: {name: {type: 'string', default: 'pet'}}};
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Defaults', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        requestBody: {content: {'application/json': {schema}}},
+        responses: {'204': {description: 'Accepted'}}
+      }}}
+    };
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.reasons.some(reason => reason.code === 'optionality-obligation'
+      && reason.source.pointer.endsWith('/requestBody'))).toBeTrue();
+    expect(assessment.reasons.some(reason => reason.code === 'requiredness-obligation'
+      && reason.source.pointer.endsWith('/properties/name'))).toBeTrue();
+  });
+
+  it('assesses dependent rules and version-appropriate schema semantics', () => {
+    const schema31 = {
+      type: 'object',
+      dependentRequired: {creditCard: ['billingAddress']},
+      dependentSchemas: {shipping: {required: ['address'], properties: {address: {type: 'string'}}}},
+      properties: {creditCard: {type: 'string'}, billingAddress: {type: 'string'}, shipping: {type: 'boolean'}}
+    };
+    const version31 = {
+      openapi: '3.1.0',
+      info: {title: 'Conditional schema', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        requestBody: {content: {'application/json': {schema: schema31}}},
+        responses: {'204': {description: 'Accepted'}}
+      }}}
+    };
+    const schema30 = {
+      type: 'object',
+      dependencies: {creditCard: ['billingAddress']},
+      properties: {creditCard: {type: 'string'}, billingAddress: {type: 'string'}}
+    };
+    const version30 = {
+      openapi: '3.0.3',
+      info: {title: 'Conditional schema', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        requestBody: {content: {'application/json': {schema: schema30}}},
+        responses: {'204': {description: 'Accepted'}}
+      }}}
+    };
+    const report31 = assessLoadedDocument(scope(version31));
+    const report30 = assessLoadedDocument(scope(version30));
+
+    expect(report31.assessments[0].blockingFaults).toHaveSize(0);
+    expect(report31.assessments[0].dimensions.conditionality.level).toBe('High');
+    expect(report31.assessments[0].reasons.filter(reason => reason.code === 'dependent-conditional-rule')).toHaveSize(2);
+    expect(report30.assessments[0].blockingFaults).toHaveSize(0);
+    expect(report30.assessments[0].reasons.some(reason => reason.code === 'dependent-conditional-rule')).toBeTrue();
+  });
+
+  it('keeps discriminator alternatives and reports broken mappings at the right severity', () => {
+    const schema = {
+      oneOf: [{$ref: '#/components/schemas/Cat'}, {$ref: '#/components/schemas/Dog'}],
+      discriminator: {propertyName: 'kind', mapping: {
+        cat: '#/components/schemas/Cat', dog: '#/components/schemas/Missing'
+      }}
+    };
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Discriminator', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        requestBody: {content: {'application/json': {schema}}},
+        responses: {'204': {description: 'Accepted'}}
+      }}},
+      components: {schemas: {
+        Cat: {type: 'object', properties: {kind: {const: 'cat'}}},
+        Dog: {type: 'object', properties: {kind: {const: 'dog'}}}
+      }}
+    };
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.blockingFaults).toHaveSize(0);
+    expect(assessment.warnings.some(reason => reason.code === 'broken-discriminator-mapping')).toBeTrue();
+    expect(assessment.reasons.filter(reason => reason.code === 'alternative-branch')).toHaveSize(1);
+    expect(assessment.reasons.some(reason => reason.code === 'discriminator-selector')).toBeTrue();
+  });
+
+  it('blocks contract-affecting keywords that belong to the wrong OpenAPI version', () => {
+    const schema30 = {type: 'array', prefixItems: [{type: 'string'}]};
+    const version30 = {
+      openapi: '3.0.3',
+      info: {title: 'Version boundary', version: '1.0.0'},
+      paths: {'/pets': {get: {responses: {'200': {content: {'application/json': {schema: schema30}}}}}}}
+    };
+    const schema31 = {type: ['string', 'null'], const: 'pet'};
+    const version31 = {
+      openapi: '3.1.0',
+      info: {title: 'Version boundary', version: '1.0.0'},
+      paths: {'/pets': {get: {responses: {'200': {content: {'application/json': {schema: schema31}}}}}}}
+    };
+    const report30 = assessLoadedDocument(scope(version30));
+    const report31 = assessLoadedDocument(scope(version31));
+
+    expect(report30.assessments[0].finalBand).toBe('Unknown');
+    expect(report30.assessments[0].blockingFaults.some(reason => reason.code === 'unsupported-schema-keyword'
+      && reason.values.keyword === 'prefixItems')).toBeTrue();
+    expect(report31.assessments[0].blockingFaults).toHaveSize(0);
+    expect(report31.assessments[0].reasons.some(reason => reason.code === 'validation-rule-family'
+      && reason.values.family === 'choice')).toBeTrue();
+  });
+
+  it('escalates eight alternatives and nested conditional layers', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Nested alternatives', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        requestBody: {content: {'application/json': {schema: {oneOf: [
+          {type: 'object', properties: {kind: {oneOf: [{type: 'string'}, {type: 'number'}]}}},
+          {type: 'string'}, {type: 'integer'}, {type: 'number'}, {type: 'boolean'}, {type: 'null'},
+          {type: 'array', items: {type: 'string'}}, {type: 'object'}
+        ]}}}},
+        responses: {'204': {description: 'Accepted'}}
+      }}}
+    };
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.blockingFaults).toHaveSize(0);
+    expect(assessment.dimensions.conditionality.level).toBe('Very high');
+    expect(assessment.dimensions.conditionality.escalations).toContain('eight-alternatives');
+    expect(assessment.dimensions.conditionality.escalations).toContain('nested-interacting-conditional-layers');
+  });
+
+  it('handles recursive allOf materialization and boolean unevaluatedProperties safely', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Recursive composition', version: '1.0.0'},
+      paths: {'/nodes': {get: {responses: {'200': {content: {'application/json': {schema: {
+        allOf: [{$ref: '#/components/schemas/A'}], unevaluatedProperties: false
+      }}}}}}}},
+      components: {schemas: {
+        A: {allOf: [{$ref: '#/components/schemas/B'}]},
+        B: {allOf: [{$ref: '#/components/schemas/A'}]}
+      }}
+    };
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.blockingFaults).toHaveSize(0);
+    expect(assessment.reasons.filter(reason => reason.code === 'cycle-navigation')).toHaveSize(1);
   });
 
   it('reports invalid request, response, parameter, and protocol shapes', () => {
