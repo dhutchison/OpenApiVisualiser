@@ -55,6 +55,8 @@ const SUPPORTED_SCHEMA_KEYS = new Set([
   'discriminator', 'contentMediaType', 'contentEncoding'
 ]);
 
+const COMPOSITION_KEYS = ['allOf', 'oneOf', 'anyOf', 'not', 'if', 'then', 'else', 'dependentSchemas', 'unevaluatedProperties'];
+
 export function assessLoadedDocument(scope: AssessmentScopeInput): ComplexityAssessmentReport {
   const document = scope.document as AnyRecord;
   const version = typeof document.openapi === 'string' ? document.openapi : '';
@@ -131,10 +133,12 @@ function assessOperation(
     dimensions,
     blockingFaults,
     warnings,
-    seenSchemas: {
-      request: new WeakSet<object>(),
-      response: new WeakSet<object>()
-    }
+    roles: {
+      request: createRoleState(),
+      response: createRoleState()
+    },
+    protocolEvidence: new Set<string>(),
+    callbackTargets: new Set<string>()
   };
 
   if (operation['x-multi-segment'] !== undefined) {
@@ -145,11 +149,13 @@ function assessOperation(
     context,
     operationInfo.pathItem,
     operation,
-    operationPointer
+    operationPointer,
+    scope.sourceId
   );
-  collectRequestBody(context, operation.requestBody, `${operationPointer}/requestBody`);
-  collectResponses(context, operation.responses, `${operationPointer}/responses`);
-  collectUnsupportedProtocol(context, document, operation, operationPointer);
+  collectRequestBody(context, operation.requestBody, `${operationPointer}/requestBody`, scope.sourceId);
+  collectResponses(context, operation.responses, `${operationPointer}/responses`, scope.sourceId);
+  collectProtocol(context, document, operation, operationPointer, scope.sourceId);
+  emitCycleSignals(context);
 
   const dimensionAssessments = Object.fromEntries(DIMENSIONS.map(dimension => {
     const collector = dimensions[dimension];
@@ -223,6 +229,7 @@ interface DimensionCollector {
   minimum: DimensionLevel;
   reasons: AssessmentReason[];
   escalations: Set<string>;
+  evidenceKeys: Set<string>;
 }
 
 type Collectors = Record<ComplexityDimension, DimensionCollector>;
@@ -232,7 +239,46 @@ interface AssessmentContext {
   readonly dimensions: Collectors;
   readonly blockingFaults: AssessmentReason[];
   readonly warnings: AssessmentReason[];
-  readonly seenSchemas: Record<ConsumerRole, WeakSet<object>>;
+  readonly roles: Record<ConsumerRole, RoleState>;
+  readonly protocolEvidence: Set<string>;
+  readonly callbackTargets: Set<string>;
+}
+
+interface RoleState {
+  readonly seenSchemaKeys: Set<string>;
+  readonly activeReferences: string[];
+  readonly cycleGroups: Set<string>;
+  readonly seenReferenceTargets: Set<string>;
+  readonly seenExternalBoundaries: Set<string>;
+  readonly referenceGraph: Map<string, Set<string>>;
+  readonly cycleEdges: CycleEdge[];
+}
+
+interface CycleEdge {
+  readonly source: string;
+  readonly target: string;
+  readonly pointer: string;
+  readonly sourceId: string;
+}
+
+interface ResolvedReference {
+  readonly target: AnyRecord;
+  readonly sourceId: string;
+  readonly pointer: string;
+  readonly canonicalKey: string;
+  readonly externalBoundary: boolean;
+}
+
+function createRoleState(): RoleState {
+  return {
+    seenSchemaKeys: new Set<string>(),
+    activeReferences: [],
+    cycleGroups: new Set<string>(),
+    seenReferenceTargets: new Set<string>(),
+    seenExternalBoundaries: new Set<string>(),
+    referenceGraph: new Map<string, Set<string>>(),
+    cycleEdges: []
+  };
 }
 
 function createCollectors(): Collectors {
@@ -240,7 +286,8 @@ function createCollectors(): Collectors {
     units: 0,
     minimum: 'Low',
     reasons: [],
-    escalations: new Set<string>()
+    escalations: new Set<string>(),
+    evidenceKeys: new Set<string>()
   }])) as Collectors;
 }
 
@@ -248,42 +295,44 @@ function collectParameters(
   context: AssessmentContext,
   pathItem: AnyRecord,
   operation: AnyRecord,
-  pointer: string
+  pointer: string,
+  sourceId: string
 ) {
-  const parameters = new Map<string, {parameter: AnyRecord; pointer: string}>();
+  const parameters = new Map<string, {parameter: AnyRecord; pointer: string; sourceId: string}>();
   const pathParameters = Array.isArray(pathItem.parameters) ? pathItem.parameters : [];
   const operationParameters = Array.isArray(operation.parameters) ? operation.parameters : [];
 
   [...pathParameters, ...operationParameters].forEach((parameter, index) => {
     const parameterPointer = `${pointer}/parameters/${index}`;
+    let parameterSourceId = sourceId;
     if (isReference(parameter)) {
-      addBlocking(context, 'unsupported-reference', 'assessment', parameterPointer, 'request', {
-        reference: parameter.$ref
-      });
-      return;
+      const resolved = resolveReference(context, parameter.$ref, parameterSourceId, parameterPointer, 'request', 0);
+      if (!resolved) return;
+      parameter = resolved.target;
+      parameterSourceId = resolved.sourceId;
     }
     if (!parameter || typeof parameter !== 'object' || typeof parameter.name !== 'string' || typeof parameter.in !== 'string') {
       addBlocking(context, 'invalid-parameter', 'assessment', parameterPointer, 'request', {});
       return;
     }
-    parameters.set(`${parameter.in}:${parameter.name}`, {parameter, pointer: parameterPointer});
+    parameters.set(`${parameter.in}:${parameter.name}`, {parameter, pointer: parameterPointer, sourceId: parameterSourceId});
   });
 
   [...parameters.values()]
     .sort((left, right) => `${left.parameter.in}:${left.parameter.name}`.localeCompare(`${right.parameter.in}:${right.parameter.name}`))
-    .forEach(({parameter, pointer: parameterPointer}) => {
-      addUnit(context, 'interactionSurface', 1, 'parameter', 'request', parameterPointer, {name: parameter.name, in: parameter.in});
-      addUnit(context, 'conditionality', 1, parameter.required ? 'requiredness-obligation' : 'optionality-obligation', 'request', parameterPointer, {required: !!parameter.required});
+    .forEach(({parameter, pointer: parameterPointer, sourceId: parameterSourceId}) => {
+      addUnit(context, 'interactionSurface', 1, 'parameter', 'request', parameterPointer, {name: parameter.name, in: parameter.in}, parameterSourceId);
+      addUnit(context, 'conditionality', 1, parameter.required ? 'requiredness-obligation' : 'optionality-obligation', 'request', parameterPointer, {required: !!parameter.required}, parameterSourceId);
       if (isNonDefaultSerialization(parameter)) {
-        addUnit(context, 'conditionality', 1, 'non-default-serialization', 'request', parameterPointer, {style: parameter.style ?? '', explode: !!parameter.explode});
+        addUnit(context, 'conditionality', 1, 'non-default-serialization', 'request', parameterPointer, {style: parameter.style ?? '', explode: !!parameter.explode}, parameterSourceId);
       }
 
       if (parameter.content) {
-        collectContent(context, parameter.content, `${parameterPointer}/content`, 'request');
+        collectContent(context, parameter.content, `${parameterPointer}/content`, 'request', parameterSourceId);
         return;
       }
       if (parameter.schema) {
-        collectSchema(context, parameter.schema, `${parameterPointer}/schema`, 'request', 0);
+        collectSchema(context, parameter.schema, `${parameterPointer}/schema`, 'request', 0, parameterSourceId);
         return;
       }
       addBlocking(context, 'unsupported-parameter-shape', 'assessment', parameterPointer, 'request', {name: parameter.name});
@@ -291,13 +340,15 @@ function collectParameters(
 
 }
 
-function collectRequestBody(context: AssessmentContext, requestBody: unknown, pointer: string) {
+function collectRequestBody(context: AssessmentContext, requestBody: unknown, pointer: string, sourceId: string) {
   if (!requestBody) {
     return;
   }
   if (isReference(requestBody)) {
-    addBlocking(context, 'unsupported-reference', 'assessment', pointer, 'request', {reference: requestBody.$ref});
-    return;
+    const resolved = resolveReference(context, requestBody.$ref, sourceId, pointer, 'request', 0);
+    if (!resolved) return;
+    requestBody = resolved.target;
+    sourceId = resolved.sourceId;
   }
   const requestBodyObject = requestBody as AnyRecord;
   if (typeof requestBody !== 'object' || !requestBodyObject.content || typeof requestBodyObject.content !== 'object') {
@@ -305,13 +356,13 @@ function collectRequestBody(context: AssessmentContext, requestBody: unknown, po
     return;
   }
 
-  collectContent(context, requestBodyObject.content, `${pointer}/content`, 'request');
+  collectContent(context, requestBodyObject.content, `${pointer}/content`, 'request', sourceId);
   if (requestBodyObject.required) {
-    addUnit(context, 'conditionality', 1, 'requiredness-obligation', 'request', pointer, {required: true});
+    addUnit(context, 'conditionality', 1, 'requiredness-obligation', 'request', pointer, {required: true}, sourceId);
   }
 }
 
-function collectResponses(context: AssessmentContext, responses: unknown, pointer: string) {
+function collectResponses(context: AssessmentContext, responses: unknown, pointer: string, sourceId: string) {
   if (!responses || typeof responses !== 'object') {
     addBlocking(context, 'invalid-responses', 'assessment', pointer, 'response', {});
     return;
@@ -321,10 +372,13 @@ function collectResponses(context: AssessmentContext, responses: unknown, pointe
     .sort(([left], [right]) => left.localeCompare(right))
     .forEach(([status, response], index) => {
       const responsePointer = `${pointer}/${escapeJsonPointer(status)}`;
-      addUnit(context, 'interactionSurface', 1, 'response-case', 'response', responsePointer, {status});
+      addUnit(context, 'interactionSurface', 1, 'response-case', 'response', responsePointer, {status}, sourceId);
+      let responseSourceId = sourceId;
       if (isReference(response)) {
-        addBlocking(context, 'unsupported-reference', 'assessment', responsePointer, 'response', {reference: response.$ref});
-        return;
+        const resolved = resolveReference(context, response.$ref, responseSourceId, responsePointer, 'response', 0);
+        if (!resolved) return;
+        response = resolved.target;
+        responseSourceId = resolved.sourceId;
       }
       if (!response || typeof response !== 'object') {
         addBlocking(context, 'invalid-response', 'assessment', responsePointer, 'response', {status});
@@ -333,26 +387,31 @@ function collectResponses(context: AssessmentContext, responses: unknown, pointe
 
       Object.keys(response.headers ?? {}).sort((left, right) => left.localeCompare(right)).forEach(header => {
         const headerPointer = `${responsePointer}/headers/${escapeJsonPointer(header)}`;
-        addUnit(context, 'interactionSurface', 1, 'response-header', 'response', headerPointer, {name: header});
+        addUnit(context, 'interactionSurface', 1, 'response-header', 'response', headerPointer, {name: header}, responseSourceId);
         if (isReference(response.headers[header])) {
-          addBlocking(context, 'unsupported-reference', 'assessment', headerPointer, 'response', {reference: response.headers[header].$ref});
+          const resolved = resolveReference(context, response.headers[header].$ref, responseSourceId, headerPointer, 'response', 0);
+          if (resolved?.target.schema) {
+            collectSchema(context, resolved.target.schema, `${headerPointer}/schema`, 'response', 0, resolved.sourceId);
+          } else if (resolved) {
+            collectSchema(context, resolved.target, `${headerPointer}/schema`, 'response', 0, resolved.sourceId);
+          }
         } else if (response.headers[header]?.schema) {
-          collectSchema(context, response.headers[header].schema, `${headerPointer}/schema`, 'response', 0);
+          collectSchema(context, response.headers[header].schema, `${headerPointer}/schema`, 'response', 0, responseSourceId);
         }
       });
 
       if (response.content) {
-        collectContent(context, response.content, `${responsePointer}/content`, 'response');
+        collectContent(context, response.content, `${responsePointer}/content`, 'response', responseSourceId);
       }
       if (response.links) {
-        Object.keys(response.links).sort((left, right) => left.localeCompare(right)).forEach(link => {
-          addBlocking(context, 'unsupported-link', 'protocolObligations', `${responsePointer}/links/${escapeJsonPointer(link)}`, 'response', {name: link});
+      Object.keys(response.links).sort((left, right) => left.localeCompare(right)).forEach(link => {
+          addUnit(context, 'protocolObligations', 1, 'response-link', 'response', `${responsePointer}/links/${escapeJsonPointer(link)}`, {name: link}, sourceId);
         });
       }
     });
 }
 
-function collectContent(context: AssessmentContext, content: unknown, pointer: string, role: ConsumerRole) {
+function collectContent(context: AssessmentContext, content: unknown, pointer: string, role: ConsumerRole, sourceId: string) {
   if (!content || typeof content !== 'object') {
     addBlocking(context, 'invalid-content', 'assessment', pointer, role, {});
     return;
@@ -362,17 +421,20 @@ function collectContent(context: AssessmentContext, content: unknown, pointer: s
     .sort(([left], [right]) => left.localeCompare(right))
     .forEach(([mediaType, media]) => {
       const mediaPointer = `${pointer}/${escapeJsonPointer(mediaType)}`;
-      addUnit(context, 'interactionSurface', 1, role === 'request' ? 'request-representation' : 'response-representation', role, mediaPointer, {mediaType});
+      let mediaSourceId = sourceId;
+      addUnit(context, 'interactionSurface', 1, role === 'request' ? 'request-representation' : 'response-representation', role, mediaPointer, {mediaType}, sourceId);
       if (isReference(media)) {
-        addBlocking(context, 'unsupported-reference', 'assessment', mediaPointer, role, {reference: media.$ref});
-        return;
+        const resolved = resolveReference(context, media.$ref, mediaSourceId, mediaPointer, role, 0);
+        if (!resolved) return;
+        media = resolved.target;
+        mediaSourceId = resolved.sourceId;
       }
       if (!media || typeof media !== 'object') {
         addBlocking(context, 'invalid-media-type', 'assessment', mediaPointer, role, {mediaType});
         return;
       }
       if (media.schema) {
-        collectSchema(context, media.schema, `${mediaPointer}/schema`, role, 0);
+        collectSchema(context, media.schema, `${mediaPointer}/schema`, role, 0, mediaSourceId);
       } else {
         addBlocking(context, 'missing-media-schema', 'assessment', mediaPointer, role, {mediaType});
       }
@@ -384,90 +446,127 @@ function collectSchema(
   schema: unknown,
   pointer: string,
   role: ConsumerRole,
-  depth: number
+  depth: number,
+  sourceId: string,
+  referenceDepth = 0
 ) {
   if (!schema || typeof schema !== 'object') {
     addBlocking(context, 'invalid-schema', 'assessment', pointer, role, {});
     return;
   }
   if (isReference(schema)) {
-    addBlocking(context, 'unsupported-reference', 'assessment', pointer, role, {reference: schema.$ref});
+    const resolved = resolveReference(context, schema.$ref, sourceId, pointer, role, referenceDepth);
+    if (!resolved) return;
+    const state = context.roles[role];
+    if (state.activeReferences.includes(resolved.canonicalKey)) {
+      recordStructuralDepth(context, depth);
+    } else if (!state.seenSchemaKeys.has(`ref:${resolved.canonicalKey}`)) {
+      state.seenSchemaKeys.add(`ref:${resolved.canonicalKey}`);
+      state.activeReferences.push(resolved.canonicalKey);
+      if (isReference(resolved.target)) {
+        collectSchema(context, resolved.target, resolved.pointer, role, depth, resolved.sourceId, referenceDepth + 1);
+      } else {
+        collectSchemaNode(context, resolved.target, resolved.pointer, role, depth, resolved.sourceId, referenceDepth + 1, resolved.canonicalKey);
+      }
+      state.activeReferences.pop();
+    } else {
+      recordStructuralDepth(context, depth);
+    }
     return;
   }
-  if (context.seenSchemas[role].has(schema)) {
-    return;
-  }
-  context.seenSchemas[role].add(schema);
   const schemaObject = schema as AnyRecord;
+  const inlineKey = `inline:${stableValue(schemaObject)}`;
+  if (context.roles[role].seenSchemaKeys.has(inlineKey)) {
+    recordStructuralDepth(context, depth);
+    return;
+  }
+  context.roles[role].seenSchemaKeys.add(inlineKey);
+  collectSchemaNode(context, schemaObject, pointer, role, depth, sourceId, referenceDepth);
+}
+
+function collectSchemaNode(
+  context: AssessmentContext,
+  schemaObject: AnyRecord,
+  pointer: string,
+  role: ConsumerRole,
+  depth: number,
+  sourceId: string,
+  referenceDepth: number,
+  canonicalKey?: string
+) {
+  const ownerKey = canonicalKey ?? `inline:${stableValue(schemaObject)}`;
 
   Object.keys(schemaObject)
-    .filter(key => !SUPPORTED_SCHEMA_KEYS.has(key) && !key.startsWith('x-'))
+    .filter(key => !SUPPORTED_SCHEMA_KEYS.has(key) && !COMPOSITION_KEYS.includes(key) && !key.startsWith('x-'))
     .sort((left, right) => left.localeCompare(right))
-    .forEach(key => addBlocking(context, 'unsupported-schema-keyword', 'assessment', `${pointer}/${escapeJsonPointer(key)}`, role, {keyword: key}));
+    .forEach(key => addBlocking(context, 'unsupported-schema-keyword', 'assessment', `${pointer}/${escapeJsonPointer(key)}`, role, {keyword: key}, sourceId));
 
-  ['allOf', 'oneOf', 'anyOf', 'not', 'if', 'then', 'else', 'dependentSchemas', 'unevaluatedProperties']
-    .filter(keyword => schemaObject[keyword] !== undefined)
-    .forEach(keyword => addBlocking(context, 'unsupported-schema-composition', 'conditionality', `${pointer}/${keyword}`, role, {keyword}));
+  const effectiveSchema = collectComposition(context, schemaObject, pointer, role, depth, sourceId, referenceDepth);
+  const effective = effectiveSchema ?? schemaObject;
 
-  if (schemaObject.readOnly && role === 'request' || schemaObject.writeOnly && role === 'response') {
+  if (effective.readOnly && role === 'request' || effective.writeOnly && role === 'response') {
     return;
   }
 
-  if (schemaObject['x-multi-segment'] !== undefined) {
-    addBlocking(context, 'known-contract-affecting-extension', 'assessment', `${pointer}/x-multi-segment`, role, {extension: 'x-multi-segment'});
+  if (effective['x-multi-segment'] !== undefined) {
+    addBlocking(context, 'known-contract-affecting-extension', 'assessment', `${pointer}/x-multi-segment`, role, {extension: 'x-multi-segment'}, sourceId);
   }
 
-  if (schemaObject.nullable || (Array.isArray(schemaObject.type) && schemaObject.type.includes('null'))) {
-    addUnit(context, 'conditionality', 1, 'nullable-value', role, pointer, {});
+  if (effective.nullable || (Array.isArray(effective.type) && effective.type.includes('null'))) {
+    addUnit(context, 'conditionality', 1, 'nullable-value', role, pointer, {}, sourceId);
+  }
+
+  if (effective.discriminator) {
+    addUnit(context, 'conditionality', 1, 'discriminator-selector', role, `${pointer}/discriminator`, {}, sourceId);
   }
 
   const validationFamilies = new Set<string>();
-  if (schemaObject.minimum !== undefined || schemaObject.maximum !== undefined || schemaObject.exclusiveMinimum !== undefined || schemaObject.exclusiveMaximum !== undefined) {
+  if (effective.minimum !== undefined || effective.maximum !== undefined || effective.exclusiveMinimum !== undefined || effective.exclusiveMaximum !== undefined) {
     validationFamilies.add('range');
   }
-  if (schemaObject.multipleOf !== undefined) validationFamilies.add('multiple');
-  if (schemaObject.minLength !== undefined || schemaObject.maxLength !== undefined) validationFamilies.add('length');
-  if (schemaObject.pattern !== undefined) validationFamilies.add('pattern');
-  if (schemaObject.minItems !== undefined || schemaObject.maxItems !== undefined || schemaObject.uniqueItems !== undefined) validationFamilies.add('items');
-  if (schemaObject.minProperties !== undefined || schemaObject.maxProperties !== undefined) validationFamilies.add('properties');
-  if (schemaObject.enum !== undefined || schemaObject.const !== undefined) validationFamilies.add('choice');
-  validationFamilies.forEach(family => addUnit(context, 'conditionality', 1, 'validation-rule-family', role, pointer, {family}));
+  if (effective.multipleOf !== undefined) validationFamilies.add('multiple');
+  if (effective.minLength !== undefined || effective.maxLength !== undefined) validationFamilies.add('length');
+  if (effective.pattern !== undefined) validationFamilies.add('pattern');
+  if (effective.minItems !== undefined || effective.maxItems !== undefined || effective.uniqueItems !== undefined) validationFamilies.add('items');
+  if (effective.minProperties !== undefined || effective.maxProperties !== undefined) validationFamilies.add('properties');
+  if (effective.enum !== undefined || effective.const !== undefined) validationFamilies.add('choice');
+  validationFamilies.forEach(family => addUnit(context, 'conditionality', 1, 'validation-rule-family', role, pointer, {family}, sourceId));
 
-  const type = Array.isArray(schemaObject.type) ? schemaObject.type.find((value: unknown) => value !== 'null') : schemaObject.type;
-  if (type === 'object' || schemaObject.properties || schemaObject.additionalProperties !== undefined) {
-    const properties = schemaObject.properties && typeof schemaObject.properties === 'object' ? schemaObject.properties : {};
-    const required = new Set<string>(Array.isArray(schemaObject.required) ? schemaObject.required : []);
+  const type = Array.isArray(effective.type) ? effective.type.find((value: unknown) => value !== 'null') : effective.type;
+  if (type === 'object' || effective.properties || effective.additionalProperties !== undefined) {
+    const properties = effective.properties && typeof effective.properties === 'object' ? effective.properties : {};
+    const required = new Set<string>(Array.isArray(effective.required) ? effective.required : []);
     Object.keys(properties).sort((left, right) => left.localeCompare(right)).forEach(property => {
       const propertySchema = properties[property];
       if (isReadOnlyForRole(propertySchema, role)) {
         return;
       }
       const propertyPointer = `${pointer}/properties/${escapeJsonPointer(property)}`;
-      addUnit(context, 'dataShape', 1, 'field', role, propertyPointer, {name: property});
-      addUnit(context, 'dataShape', 1, 'nesting-transition', role, propertyPointer, {depth: depth + 1});
-      addUnit(context, 'conditionality', 1, required.has(property) ? 'requiredness-obligation' : 'optionality-obligation', role, propertyPointer, {required: required.has(property)});
-      collectSchema(context, propertySchema, propertyPointer, role, depth + 1);
+      addUnit(context, 'dataShape', 1, 'field', role, propertyPointer, {name: property}, sourceId, `${ownerKey}|field|${property}`);
+      addUnit(context, 'dataShape', 1, 'nesting-transition', role, propertyPointer, {depth: depth + 1}, sourceId, `${ownerKey}|nesting|${property}`);
+      addUnit(context, 'conditionality', 1, required.has(property) ? 'requiredness-obligation' : 'optionality-obligation', role, propertyPointer, {required: required.has(property)}, sourceId, `${ownerKey}|requiredness|${property}`);
+      collectSchema(context, propertySchema, propertyPointer, role, depth + 1, sourceId, referenceDepth);
     });
-    if (schemaObject.additionalProperties && typeof schemaObject.additionalProperties === 'object') {
-      addUnit(context, 'dataShape', 2, 'map-boundary', role, `${pointer}/additionalProperties`, {});
-      addUnit(context, 'dataShape', 1, 'nesting-transition', role, `${pointer}/additionalProperties`, {depth: depth + 1});
-      collectSchema(context, schemaObject.additionalProperties, `${pointer}/additionalProperties`, role, depth + 1);
-    } else if (schemaObject.additionalProperties === true) {
-      addBlocking(context, 'unsupported-untyped-map', 'assessment', `${pointer}/additionalProperties`, role, {});
+    if (effective.additionalProperties && typeof effective.additionalProperties === 'object') {
+      addUnit(context, 'dataShape', 2, 'map-boundary', role, `${pointer}/additionalProperties`, {}, sourceId, `${ownerKey}|map`);
+      addUnit(context, 'dataShape', 1, 'nesting-transition', role, `${pointer}/additionalProperties`, {depth: depth + 1}, sourceId, `${ownerKey}|map-nesting`);
+      collectSchema(context, effective.additionalProperties, `${pointer}/additionalProperties`, role, depth + 1, sourceId, referenceDepth);
+    } else if (effective.additionalProperties === true) {
+      addBlocking(context, 'unsupported-untyped-map', 'assessment', `${pointer}/additionalProperties`, role, {}, sourceId);
     }
   }
 
-  if (type === 'array' || schemaObject.items !== undefined || schemaObject.prefixItems !== undefined) {
-    addUnit(context, 'dataShape', 2, 'collection-boundary', role, pointer, {kind: 'array'});
-    if (Array.isArray(schemaObject.prefixItems)) {
-      schemaObject.prefixItems.forEach((item: unknown, index: number) => {
-        addUnit(context, 'dataShape', 1, 'tuple-position', role, `${pointer}/prefixItems/${index}`, {index});
-        addUnit(context, 'dataShape', 1, 'nesting-transition', role, `${pointer}/prefixItems/${index}`, {depth: depth + 1});
-        collectSchema(context, item, `${pointer}/prefixItems/${index}`, role, depth + 1);
+  if (type === 'array' || effective.items !== undefined || effective.prefixItems !== undefined) {
+    addUnit(context, 'dataShape', 2, 'collection-boundary', role, pointer, {kind: 'array'}, sourceId, `${ownerKey}|array`);
+    if (Array.isArray(effective.prefixItems)) {
+      effective.prefixItems.forEach((item: unknown, index: number) => {
+        addUnit(context, 'dataShape', 1, 'tuple-position', role, `${pointer}/prefixItems/${index}`, {index}, sourceId, `${ownerKey}|tuple|${index}`);
+        addUnit(context, 'dataShape', 1, 'nesting-transition', role, `${pointer}/prefixItems/${index}`, {depth: depth + 1}, sourceId, `${ownerKey}|tuple-nesting|${index}`);
+        collectSchema(context, item, `${pointer}/prefixItems/${index}`, role, depth + 1, sourceId, referenceDepth);
       });
-    } else if (schemaObject.items) {
-      addUnit(context, 'dataShape', 1, 'nesting-transition', role, `${pointer}/items`, {depth: depth + 1});
-      collectSchema(context, schemaObject.items, `${pointer}/items`, role, depth + 1);
+    } else if (effective.items) {
+      addUnit(context, 'dataShape', 1, 'nesting-transition', role, `${pointer}/items`, {depth: depth + 1}, sourceId, `${ownerKey}|items`);
+      collectSchema(context, effective.items, `${pointer}/items`, role, depth + 1, sourceId, referenceDepth);
     }
   }
 
@@ -479,20 +578,427 @@ function collectSchema(
   }
 }
 
-function collectUnsupportedProtocol(context: AssessmentContext, document: AnyRecord, operation: AnyRecord, pointer: string) {
+function recordStructuralDepth(context: AssessmentContext, depth: number) {
+  if (depth >= 8) setMinimum(context, 'dataShape', 'High', 'structural-depth-high');
+  if (depth >= 12) setMinimum(context, 'dataShape', 'Very high', 'structural-depth-very-high');
+}
+
+function emitCycleSignals(context: AssessmentContext) {
+  (Object.keys(context.roles) as ConsumerRole[]).forEach(role => {
+    const state = context.roles[role];
+    const components = stronglyConnectedComponents(state.referenceGraph);
+    components.forEach(component => {
+      const members = new Set(component);
+      const cycle = component.length > 1 || state.cycleEdges.some(edge => edge.source === edge.target && edge.source === component[0]);
+      if (!cycle) return;
+      const group = [...component].sort((left, right) => left.localeCompare(right)).join('|');
+      if (state.cycleGroups.has(group)) return;
+      const edge = state.cycleEdges
+        .filter(candidate => members.has(candidate.source) && members.has(candidate.target))
+        .sort((left, right) => left.pointer.localeCompare(right.pointer))[0];
+      if (!edge) return;
+      state.cycleGroups.add(group);
+      addUnit(context, 'dataShape', 1, 'recursive-structure', role, edge.pointer, {group}, edge.sourceId);
+      setMinimum(context, 'dataShape', 'High', 'recursive-structure');
+      addUnit(context, 'indirection', 3, 'cycle-navigation', role, edge.pointer, {group}, edge.sourceId);
+      setMinimum(context, 'indirection', 'High', 'recursive-cycle');
+    });
+  });
+}
+
+function stronglyConnectedComponents(graph: Map<string, Set<string>>): string[][] {
+  let index = 0;
+  const indexes = new Map<string, number>();
+  const lowLinks = new Map<string, number>();
+  const stack: string[] = [];
+  const onStack = new Set<string>();
+  const components: string[][] = [];
+
+  const visit = (node: string) => {
+    indexes.set(node, index);
+    lowLinks.set(node, index);
+    index++;
+    stack.push(node);
+    onStack.add(node);
+    [...(graph.get(node) ?? [])].sort((left, right) => left.localeCompare(right)).forEach(next => {
+      if (!indexes.has(next)) {
+        visit(next);
+        lowLinks.set(node, Math.min(lowLinks.get(node)!, lowLinks.get(next)!));
+      } else if (onStack.has(next)) {
+        lowLinks.set(node, Math.min(lowLinks.get(node)!, indexes.get(next)!));
+      }
+    });
+    if (lowLinks.get(node) !== indexes.get(node)) return;
+    const component: string[] = [];
+    let current: string;
+    do {
+      current = stack.pop()!;
+      onStack.delete(current);
+      component.push(current);
+    } while (current !== node);
+    components.push(component.sort((left, right) => left.localeCompare(right)));
+  };
+
+  [...graph.keys()].sort((left, right) => left.localeCompare(right)).forEach(node => {
+    if (!indexes.has(node)) visit(node);
+  });
+  return components;
+}
+
+function collectComposition(
+  context: AssessmentContext,
+  schema: AnyRecord,
+  pointer: string,
+  role: ConsumerRole,
+  depth: number,
+  sourceId: string,
+  referenceDepth: number
+): AnyRecord | undefined {
+  let effective: AnyRecord | undefined;
+  if (Array.isArray(schema.allOf)) {
+    effective = {...schema};
+    delete effective.allOf;
+    schema.allOf.forEach((branch: unknown, index: number) => {
+      const branchPointer = `${pointer}/allOf/${index}`;
+      addUnit(context, 'indirection', 1, 'composition-edge', role, branchPointer, {kind: 'allOf', index}, sourceId);
+      const merged = materializeCompositionBranch(context, branch, branchPointer, role, depth, sourceId, referenceDepth);
+      if (merged) {
+        if (schemasContradict(effective as AnyRecord, merged)) {
+          addBlocking(context, 'contradictory-composition', 'assessment', branchPointer, role, {kind: 'allOf'}, sourceId);
+        }
+        effective = mergeSchemas(effective as AnyRecord, merged);
+      } else {
+        collectSchema(context, branch, branchPointer, role, depth, sourceId, referenceDepth);
+      }
+    });
+  }
+
+  const current = effective ?? schema;
+  ['oneOf', 'anyOf'].forEach(keyword => {
+    if (!Array.isArray(current[keyword])) return;
+    const branches = current[keyword] as unknown[];
+    const extraUnits = keyword === 'oneOf' ? 2 : 3;
+    branches.forEach((branch, branchIndex) => {
+      if (branchIndex > 0) {
+        addUnit(context, 'conditionality', extraUnits, 'alternative-branch', role, `${pointer}/${keyword}/${branchIndex}`, {kind: keyword, index: branchIndex}, sourceId);
+        addUnit(context, 'indirection', 1, 'composition-edge', role, `${pointer}/${keyword}/${branchIndex}`, {kind: keyword, index: branchIndex}, sourceId);
+      }
+      collectSchema(context, branch, `${pointer}/${keyword}/${branchIndex}`, role, depth, sourceId, referenceDepth);
+    });
+    if (branches.length > 0) {
+      setMinimum(context, 'conditionality', 'Moderate', `${keyword}-alternative`);
+      if (branches.length >= 4) setMinimum(context, 'conditionality', 'High', 'four-alternatives');
+      if (branches.length >= 8) setMinimum(context, 'conditionality', 'Very high', 'eight-alternatives');
+    }
+  });
+
+  ['not', 'if', 'then', 'else', 'dependentSchemas', 'unevaluatedProperties'].forEach(keyword => {
+    if (current[keyword] === undefined) return;
+    addUnit(context, 'conditionality', 3, 'dependent-conditional-rule', role, `${pointer}/${keyword}`, {keyword}, sourceId);
+    setMinimum(context, 'conditionality', 'Moderate', 'dependent-conditional-rule');
+    if (keyword === 'if' || keyword === 'then' || keyword === 'else' || keyword === 'not') {
+      collectSchema(context, current[keyword], `${pointer}/${keyword}`, role, depth, sourceId, referenceDepth);
+    } else if (current[keyword] && typeof current[keyword] === 'object') {
+      Object.keys(current[keyword]).sort((left, right) => left.localeCompare(right)).forEach(key => collectSchema(context, current[keyword][key], `${pointer}/${keyword}/${escapeJsonPointer(key)}`, role, depth, sourceId, referenceDepth));
+    }
+  });
+
+  if (effective) {
+    ['oneOf', 'anyOf', 'not', 'if', 'then', 'else', 'dependentSchemas', 'unevaluatedProperties'].forEach(key => delete effective![key]);
+    return effective;
+  }
+  return undefined;
+}
+
+function mergeInlineObject(value: unknown): AnyRecord | undefined {
+  if (!value || typeof value !== 'object' || isReference(value)) return undefined;
+  const object = value as AnyRecord;
+  if (object.oneOf !== undefined || object.anyOf !== undefined) return undefined;
+  if (!object.properties || typeof object.properties !== 'object') return {...object};
+  return {...object, properties: {...object.properties}};
+}
+
+function materializeCompositionBranch(
+  context: AssessmentContext,
+  value: unknown,
+  pointer: string,
+  role: ConsumerRole,
+  depth: number,
+  sourceId: string,
+  referenceDepth: number
+): AnyRecord | undefined {
+  if (isReference(value)) {
+    const resolved = resolveReference(context, value.$ref, sourceId, pointer, role, referenceDepth);
+    if (!resolved) return undefined;
+    context.roles[role].seenSchemaKeys.add(`ref:${resolved.canonicalKey}`);
+    if (isReference(resolved.target)) {
+      return materializeCompositionBranch(context, resolved.target, resolved.pointer, role, depth, resolved.sourceId, referenceDepth + 1);
+    }
+    return materializeCompositionObject(context, resolved.target, resolved.pointer, role, depth, resolved.sourceId, referenceDepth + 1);
+  }
+  return materializeCompositionObject(context, value, pointer, role, depth, sourceId, referenceDepth);
+}
+
+function materializeCompositionObject(
+  context: AssessmentContext,
+  value: unknown,
+  pointer: string,
+  role: ConsumerRole,
+  depth: number,
+  sourceId: string,
+  referenceDepth: number
+): AnyRecord | undefined {
+  const object = mergeInlineObject(value);
+  if (!object) return undefined;
+  if (!Array.isArray(object.allOf)) return object;
+  const effective = {...object};
+  delete effective.allOf;
+  object.allOf.forEach((branch: unknown, index: number) => {
+    const branchPointer = `${pointer}/allOf/${index}`;
+    addUnit(context, 'indirection', 1, 'composition-edge', role, branchPointer, {kind: 'allOf', index}, sourceId);
+    const merged = materializeCompositionBranch(context, branch, branchPointer, role, depth, sourceId, referenceDepth);
+    if (merged) Object.assign(effective, mergeSchemas(effective, merged));
+  });
+  return effective;
+}
+
+function mergeSchemas(left: AnyRecord, right: AnyRecord): AnyRecord {
+  const properties = {...(left.properties ?? {}), ...(right.properties ?? {})};
+  const required = [...new Set([...(Array.isArray(left.required) ? left.required : []), ...(Array.isArray(right.required) ? right.required : [])])].sort((a, b) => a.localeCompare(b));
+  return {
+    ...left,
+    ...right,
+    ...(Object.keys(properties).length > 0 ? {properties} : {}),
+    ...(required.length > 0 ? {required} : {})
+  };
+}
+
+function schemasContradict(left: AnyRecord, right: AnyRecord): boolean {
+  const leftType = Array.isArray(left.type) ? left.type.filter(value => value !== 'null').join('|') : left.type;
+  const rightType = Array.isArray(right.type) ? right.type.filter(value => value !== 'null').join('|') : right.type;
+  if (leftType && rightType && leftType !== rightType) return true;
+  const leftProperties = left.properties && typeof left.properties === 'object' ? left.properties : {};
+  const rightProperties = right.properties && typeof right.properties === 'object' ? right.properties : {};
+  return Object.keys(leftProperties).some(property => {
+    const leftProperty = leftProperties[property] as AnyRecord;
+    const rightProperty = rightProperties[property] as AnyRecord | undefined;
+    if (!rightProperty || typeof leftProperty !== 'object' || typeof rightProperty !== 'object') return false;
+    const leftPropertyType = Array.isArray(leftProperty.type) ? leftProperty.type.join('|') : leftProperty.type;
+    const rightPropertyType = Array.isArray(rightProperty.type) ? rightProperty.type.join('|') : rightProperty.type;
+    return !!leftPropertyType && !!rightPropertyType && leftPropertyType !== rightPropertyType;
+  });
+}
+
+function collectProtocol(context: AssessmentContext, document: AnyRecord, operation: AnyRecord, pointer: string, sourceId: string) {
   const security = operation.security === undefined ? document.security : operation.security;
-  if (Array.isArray(security) && security.length > 0) {
-    addBlocking(context, 'unsupported-protocol-obligations', 'protocolObligations', `${pointer}/security`, undefined, {construct: 'security'});
+  if (Array.isArray(security)) {
+    security.forEach((requirement: unknown, alternative: number) => {
+      if (!requirement || typeof requirement !== 'object') return;
+      const schemes = Object.entries(requirement as AnyRecord).sort(([left], [right]) => left.localeCompare(right));
+      if (schemes.length === 0 && security.length > 1) {
+        addProtocolUnit(context, 1, 'anonymous-auth-choice', `${pointer}/security/${alternative}`, {alternative}, sourceId);
+      }
+      if (alternative > 0) addProtocolUnit(context, 1, 'security-or-alternative', `${pointer}/security/${alternative}`, {alternative}, sourceId);
+      if (schemes.length >= 3) setMinimum(context, 'protocolObligations', 'High', 'three-required-security-schemes');
+      schemes.forEach(([name, scopes], index) => {
+        addProtocolUnit(context, 1, 'security-scheme', `${pointer}/security/${alternative}/${escapeJsonPointer(name)}`, {name}, sourceId, `scheme:${name}`);
+        if (index > 0) addProtocolUnit(context, 1, 'security-and-scheme', `${pointer}/security/${alternative}/${escapeJsonPointer(name)}`, {name}, sourceId);
+        const scopeValues = Array.isArray(scopes) ? scopes : [];
+        scopeValues.forEach(scopeName => addProtocolUnit(context, 1, 'security-scope', `${pointer}/security/${alternative}/${escapeJsonPointer(name)}`, {name, scope: String(scopeName)}, sourceId, `scope:${name}:${String(scopeName)}`));
+        const securityScheme = document.components && typeof document.components === 'object'
+          ? (document.components as AnyRecord).securitySchemes?.[name] as AnyRecord | undefined
+          : undefined;
+        if (securityScheme?.flows && typeof securityScheme.flows === 'object') {
+          Object.keys(securityScheme.flows).sort((left, right) => left.localeCompare(right)).forEach(flow => addProtocolUnit(context, 1, 'security-flow', `${pointer}/security/${alternative}/${escapeJsonPointer(name)}`, {name, flow}, sourceId, `flow:${name}:${flow}`));
+        }
+      });
+    });
   }
 
   if (Array.isArray(operation.servers)) {
-    addBlocking(context, 'unsupported-protocol-obligations', 'protocolObligations', `${pointer}/servers`, undefined, {construct: 'servers'});
+    operation.servers.forEach((server: unknown, index: number) => {
+      if (index > 0) addProtocolUnit(context, 1, 'server-alternative', `${pointer}/servers/${index}`, {index}, sourceId);
+      const serverObject = server as AnyRecord;
+      if (server && typeof server === 'object' && serverObject.variables) {
+        Object.keys(serverObject.variables).sort((left, right) => left.localeCompare(right)).forEach(variable => addProtocolUnit(context, 1, 'server-variable', `${pointer}/servers/${index}/variables/${escapeJsonPointer(variable)}`, {variable}, sourceId));
+      }
+    });
   }
   if (operation.callbacks) {
     Object.keys(operation.callbacks).sort((left, right) => left.localeCompare(right)).forEach(callback => {
-      addBlocking(context, 'unsupported-callback', 'protocolObligations', `${pointer}/callbacks/${escapeJsonPointer(callback)}`, undefined, {name: callback});
+      const callbackPointer = `${pointer}/callbacks/${escapeJsonPointer(callback)}`;
+      const callbackValue = operation.callbacks[callback];
+      if (isReference(callbackValue)) {
+        const resolved = resolveReference(context, callbackValue.$ref, sourceId, callbackPointer, 'request', 0);
+        if (!resolved) return;
+        collectCallback(context, resolved.target, resolved.canonicalKey, callbackPointer, resolved.sourceId);
+      } else {
+        collectCallback(context, callbackValue, `inline-callback:${callbackPointer}`, callbackPointer, sourceId);
+      }
     });
   }
+}
+
+function collectCallback(
+  context: AssessmentContext,
+  callback: unknown,
+  callbackKey: string,
+  pointer: string,
+  sourceId: string
+) {
+  if (context.callbackTargets.has(callbackKey)) return;
+  context.callbackTargets.add(callbackKey);
+  addProtocolUnit(context, 4, 'callback-operation', pointer, {target: callbackKey}, sourceId, `callback:${callbackKey}`);
+  setMinimum(context, 'protocolObligations', 'High', 'callback-obligation');
+  if (!callback || typeof callback !== 'object') {
+    addBlocking(context, 'unavailable-callback', 'assessment', pointer, undefined, {target: callbackKey}, sourceId);
+    return;
+  }
+
+  Object.entries(callback as AnyRecord).sort(([left], [right]) => left.localeCompare(right)).forEach(([expression, pathItem]) => {
+    if (!pathItem || typeof pathItem !== 'object') {
+      addBlocking(context, 'invalid-callback', 'assessment', `${pointer}/${escapeJsonPointer(expression)}`, undefined, {}, sourceId);
+      return;
+    }
+    const callbackPath = `${pointer}/${escapeJsonPointer(expression)}`;
+    HTTP_METHODS.filter(method => pathItem[method] && typeof pathItem[method] === 'object').forEach(method => {
+      const operation = pathItem[method] as AnyRecord;
+      const operationPointer = `${callbackPath}/${method}`;
+      collectParameters(context, pathItem as AnyRecord, operation, operationPointer, sourceId);
+      collectRequestBody(context, operation.requestBody, `${operationPointer}/requestBody`, sourceId);
+      collectResponses(context, operation.responses, `${operationPointer}/responses`, sourceId);
+      collectProtocol(context, {}, operation, operationPointer, sourceId);
+    });
+  });
+}
+
+function addProtocolUnit(
+  context: AssessmentContext,
+  units: number,
+  code: string,
+  pointer: string,
+  values: Record<string, AssessmentValue>,
+  sourceId: string,
+  evidenceKey?: string
+) {
+  const key = evidenceKey ? `${code}:${evidenceKey}` : undefined;
+  if (key && context.protocolEvidence.has(key)) return;
+  if (key) context.protocolEvidence.add(key);
+  addUnit(context, 'protocolObligations', units, code, undefined, pointer, values, sourceId);
+}
+
+function resolveReference(
+  context: AssessmentContext,
+  reference: string,
+  fromSourceId: string,
+  pointer: string,
+  role: ConsumerRole,
+  referenceDepth: number
+): ResolvedReference | undefined {
+  const fromResource = context.scope.resourceSet.find(entry => entry.sourceId === fromSourceId);
+  const fromUri = canonicalDocumentUri(fromResource?.baseUri ?? fromSourceId, context.scope.baseUri);
+  const hashIndex = reference.indexOf('#');
+  const uriPart = hashIndex >= 0 ? reference.slice(0, hashIndex) : reference;
+  const fragment = hashIndex >= 0 ? reference.slice(hashIndex + 1) : '';
+  let targetUri: string;
+  try {
+    targetUri = canonicalDocumentUri(uriPart || fromUri, fromUri);
+  } catch {
+    addBlocking(context, 'unavailable-reference', 'assessment', pointer, role, {reference}, fromSourceId);
+    return undefined;
+  }
+  const resource = context.scope.resourceSet.find(entry => {
+    try {
+      return canonicalDocumentUri(entry.sourceId, entry.baseUri) === targetUri
+        || canonicalDocumentUri(entry.baseUri, entry.baseUri) === targetUri;
+    } catch {
+      return entry.sourceId === targetUri || entry.baseUri === targetUri;
+    }
+  });
+  if (!resource) {
+    addBlocking(context, 'unavailable-reference', 'assessment', pointer, role, {reference, target: targetUri}, fromSourceId);
+    return undefined;
+  }
+
+  const pointerTokens = decodeReferencePointer(fragment);
+  const target = pointerTokens.reduce<unknown>((current, token) => {
+    if (!current || typeof current !== 'object') return undefined;
+    return (current as AnyRecord)[token];
+  }, resource.document);
+  if (!target || typeof target !== 'object') {
+    addBlocking(context, 'unavailable-reference', 'assessment', pointer, role, {reference, target: targetUri, jsonPointer: fragment}, fromSourceId);
+    return undefined;
+  }
+
+  const normalizedPointer = pointerTokens.length === 0 ? '' : `/${pointerTokens.map(escapeJsonPointer).join('/')}`;
+  const canonicalKey = `${targetUri}#${normalizedPointer}`;
+  const state = context.roles[role];
+  const sourceKey = state.activeReferences[state.activeReferences.length - 1];
+  if (sourceKey) {
+    if (!state.referenceGraph.has(sourceKey)) state.referenceGraph.set(sourceKey, new Set<string>());
+    state.referenceGraph.get(sourceKey)!.add(canonicalKey);
+    if (!state.referenceGraph.has(canonicalKey)) state.referenceGraph.set(canonicalKey, new Set<string>());
+    state.cycleEdges.push({source: sourceKey, target: canonicalKey, pointer, sourceId: fromSourceId});
+  }
+  const externalBoundary = targetUri !== fromUri;
+  if (externalBoundary) {
+    const boundaryKey = `${fromUri}->${targetUri}`;
+    if (!state.seenExternalBoundaries.has(boundaryKey)) {
+      state.seenExternalBoundaries.add(boundaryKey);
+      addUnit(context, 'indirection', 2, 'external-document-boundary', role, pointer, {from: fromUri, to: targetUri}, fromSourceId);
+    }
+  }
+  if (!state.seenReferenceTargets.has(canonicalKey)) {
+    state.seenReferenceTargets.add(canonicalKey);
+    addUnit(context, 'indirection', 1, 'reference-target', role, pointer, {target: canonicalKey}, fromSourceId);
+    if (referenceDepth + 1 > 1) {
+      addUnit(context, 'indirection', 1, 'reference-chain-hop', role, pointer, {depth: referenceDepth + 1, target: canonicalKey}, fromSourceId);
+    }
+  }
+  if (referenceDepth + 1 >= 6) setMinimum(context, 'indirection', 'High', 'reference-chain-depth-high');
+  if (referenceDepth + 1 >= 10) setMinimum(context, 'indirection', 'Very high', 'reference-chain-depth-very-high');
+
+  return {
+    target: target as AnyRecord,
+    sourceId: resource.sourceId,
+    pointer: normalizedPointer || '/',
+    canonicalKey,
+    externalBoundary: targetUri !== fromUri
+  };
+}
+
+function canonicalDocumentUri(value: string, baseUri: string): string {
+  const uri = new URL(value, baseUri).href;
+  const normalized = new URL(uri);
+  normalized.hash = '';
+  return normalized.href;
+}
+
+function decodeReferencePointer(fragment: string): string[] {
+  if (!fragment) return [];
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(fragment);
+  } catch {
+    return ['\u0000invalid-pointer'];
+  }
+  if (!decoded.startsWith('/')) return ['\u0000invalid-pointer'];
+  return decoded.slice(1).split('/').map(token => token.replace(/~1/g, '/').replace(/~0/g, '~'));
+}
+
+function stableValue(value: unknown): string {
+  const normalize = (current: unknown): unknown => {
+    if (Array.isArray(current)) return current.map(normalize);
+    if (!current || typeof current !== 'object') return current;
+    const ignored = new Set(['description', 'title', 'example', 'examples', 'externalDocs', 'xml', '$schema']);
+    return Object.keys(current as AnyRecord).sort((left, right) => left.localeCompare(right))
+      .filter(key => !ignored.has(key))
+      .reduce<Record<string, unknown>>((result, key) => {
+        result[key] = normalize((current as AnyRecord)[key]);
+        return result;
+      }, {});
+  };
+  return JSON.stringify(normalize(value));
 }
 
 function isReadOnlyForRole(schema: unknown, role: ConsumerRole): boolean {
@@ -519,11 +1025,16 @@ function addUnit(
   code: string,
   role: ConsumerRole | undefined,
   pointer: string,
-  values: Record<string, AssessmentValue>
+  values: Record<string, AssessmentValue>,
+  sourceId = context.scope.sourceId,
+  dedupeKey?: string
 ) {
   const collector = context.dimensions[dimension];
+  const evidence = dedupeKey ? `${dimension}:${role ?? 'operation'}:${dedupeKey}` : undefined;
+  if (evidence && collector.evidenceKeys.has(evidence)) return;
+  if (evidence) collector.evidenceKeys.add(evidence);
   collector.units += units;
-  collector.reasons.push(reason(code, dimension, context.scope, pointer, values, role));
+  collector.reasons.push(reason(code, dimension, context.scope, pointer, values, role, sourceId));
 }
 
 function setMinimum(context: AssessmentContext, dimension: ComplexityDimension, minimum: DimensionLevel, escalation: string) {
@@ -540,9 +1051,10 @@ function addBlocking(
   category: ComplexityDimension | 'assessment',
   pointer: string,
   role: ConsumerRole | undefined,
-  values: Record<string, AssessmentValue>
+  values: Record<string, AssessmentValue>,
+  sourceId = context.scope.sourceId
 ) {
-  const fault = reason(code, category, context.scope, pointer, values, role);
+  const fault = reason(code, category, context.scope, pointer, values, role, sourceId);
   context.blockingFaults.push(fault);
   if (category !== 'assessment' && category in context.dimensions) {
     context.dimensions[category as ComplexityDimension].reasons.push(fault);
@@ -555,13 +1067,14 @@ function reason(
   scope: AssessmentScopeInput,
   pointer: string,
   values: Record<string, AssessmentValue>,
-  consumerRole?: ConsumerRole
+  consumerRole?: ConsumerRole,
+  sourceId = scope.sourceId
 ): AssessmentReason {
   return {
     code,
     category,
     ...(consumerRole ? {consumerRole} : {}),
-    source: {sourceId: scope.sourceId, pointer},
+    source: {sourceId, pointer},
     values
   };
 }
