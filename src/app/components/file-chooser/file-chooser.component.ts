@@ -44,16 +44,18 @@ export class FileChooserComponent {
     }
 
 
-    /* Process all the selected files. */
-    fileArray.forEach(file => {
+    const supportedFiles = fileArray.filter(file => {
       if (!file.name.match(this.yamlFilenamePattern) &&
             !file.name.match(this.jsonFilenamePattern)) {
         alert(`You are trying to upload an unsupported file extension (${file.name}). Please choose either a .yaml, .yml, or .json file.`);
-        return;
+        return false;
       }
 
-      this.fileReaderService.loadFile(file);
+      return true;
     });
+
+    /* Read the complete selection as one resource set. */
+    this.fileReaderService.loadFiles(supportedFiles);
 
     /* Allow choosing the same file again after it has been processed. */
     if (nativeInput) {

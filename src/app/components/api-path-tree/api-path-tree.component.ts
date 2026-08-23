@@ -172,13 +172,15 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
   ngOnInit() {
     this.fileReaderService.apiChanged.subscribe(value => {
       /* Add this specification to our current state */
-      this.openApiConverterService.addApiSpecification(value);
+      this.openApiConverterService.addApiSpecification(value.document);
     });
 
     this.fileReaderService.resetFiles.subscribe(v => {
       /* Reset the service which holds our current state */
       this.openApiConverterService.reset();
       this.selectedTagFilters = [];
+      this.selectedOperationNode = undefined;
+      this.endpointDialogVisible = false;
     });
 
     this.openApiConverterService.treeNodesChanged.subscribe(value => {

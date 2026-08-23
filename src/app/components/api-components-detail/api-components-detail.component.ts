@@ -53,16 +53,17 @@ export class ApiComponentsDetailComponent implements OnInit {
   ngOnInit() {
     this.fileReaderService.apiChanged.subscribe(value => {
       /* Add this specification to our current state */
-      this.apiSpec = value;
-      this.schemas = value.components?.schemas ?? {};
+      this.apiSpec = value.document;
+      this.schemas = value.document.components?.schemas ?? {};
       this.items = Object.keys(this.schemas);
-      this.componentSections = this.createComponentSections(value.components);
+      this.componentSections = this.createComponentSections(value.document.components);
       this.expandedSchemas = [];
       this.expandedComponentSections = [];
     });
 
     this.fileReaderService.resetFiles.subscribe(v => {
       /* Clear any held state */
+      this.apiSpec = undefined;
       this.schemas = {};
       this.items = [];
       this.componentSections = [];
