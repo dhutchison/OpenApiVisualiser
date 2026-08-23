@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { FileReaderService } from '../../services/file-reader.service';
+import { createLoadedDocument } from '../../models/loaded-document.models';
 
 describe('ExportComponent', () => {
   let component: ExportComponent;
@@ -60,6 +61,18 @@ describe('ExportComponent', () => {
 
     component.apiDefinitions.push({info: {title: 'Second API'}} as any);
     expect(component.buttonEnabled).toBeFalse();
+  });
+
+  it('migrates loaded-document envelopes into export definitions', () => {
+    const api = {
+      openapi: '3.1.0',
+      info: {title: 'Loaded API', version: '1.0.0'},
+      paths: {}
+    } as any;
+
+    fileReaderService.apiChanged.next(createLoadedDocument(api));
+
+    expect(component.apiDefinitions).toEqual([api]);
   });
 
   it('exports YAML and JSON files with the API title and payload', async () => {

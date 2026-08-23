@@ -67,7 +67,7 @@ export class ExportComponent implements OnInit {
   ngOnInit() {
     this.fileReaderService.apiChanged.subscribe(value => {
       /* Add this specification to our current state */
-      this.apiDefinitions.push(value);
+      this.apiDefinitions.push(value.document);
 
       console.log(value);
     });

@@ -10,7 +10,7 @@ describe('FileChooserComponent', () => {
   let fixture: ComponentFixture<FileChooserComponent>;
 
   let fileReaderService: FileReaderService;
-  let loadFileSpy: jasmine.Spy;
+  let loadFilesSpy: jasmine.Spy;
 
   beforeEach(waitForAsync(() => {
 
@@ -27,7 +27,7 @@ describe('FileChooserComponent', () => {
 
     // fileReaderServiceSpy = TestBed.get(FileReaderService);
     fileReaderService = TestBed.inject(FileReaderService);
-    loadFileSpy = spyOn(fileReaderService, 'loadFile');
+    loadFilesSpy = spyOn(fileReaderService, 'loadFiles');
 
   }));
 
@@ -60,7 +60,8 @@ describe('FileChooserComponent', () => {
           files: testFiles
         });
 
-      expect(loadFileSpy.calls.count()).toBe(1, 'spy method was called once');
+      expect(loadFilesSpy.calls.count()).toBe(1);
+      expect(loadFilesSpy.calls.mostRecent().args[0]).toEqual(testFiles);
     });
 
     it('YAML file extension accepted, as a target', () => {
@@ -72,7 +73,8 @@ describe('FileChooserComponent', () => {
           }
         });
 
-      expect(loadFileSpy.calls.count()).toBe(1, 'spy method was called once');
+      expect(loadFilesSpy.calls.count()).toBe(1);
+      expect(loadFilesSpy.calls.mostRecent().args[0]).toEqual(testFiles);
     });
 
     it('YAML "yml" file extension accepted, as a target', () => {
@@ -84,7 +86,8 @@ describe('FileChooserComponent', () => {
           }
         });
 
-      expect(loadFileSpy.calls.count()).toBe(1, 'spy method was called once');
+      expect(loadFilesSpy.calls.count()).toBe(1);
+      expect(loadFilesSpy.calls.mostRecent().args[0]).toEqual(testFiles);
     });
 
     it('Multiple files accepted', () => {
@@ -94,7 +97,8 @@ describe('FileChooserComponent', () => {
       ];
       component.loadFile({files: testFiles});
 
-      expect(loadFileSpy.calls.count()).toBe(2, 'spy method was called twice');
+      expect(loadFilesSpy.calls.count()).toBe(1);
+      expect(loadFilesSpy.calls.mostRecent().args[0]).toEqual(testFiles);
     });
   });
 
@@ -107,7 +111,7 @@ describe('FileChooserComponent', () => {
           files: testFiles
         });
 
-      expect(loadFileSpy.calls.count()).toBe(0, 'spy method was not called');
+      expect(loadFilesSpy.calls.count()).toBe(0, 'spy method was not called');
       expect(globalThis.alert).toHaveBeenCalled();
     });
 
@@ -120,7 +124,8 @@ describe('FileChooserComponent', () => {
 
       component.loadFile({files: testFiles});
 
-      expect(loadFileSpy.calls.count()).toBe(1);
+      expect(loadFilesSpy.calls.count()).toBe(1);
+      expect(loadFilesSpy.calls.mostRecent().args[0]).toEqual([testFiles[1]]);
       expect(globalThis.alert).toHaveBeenCalledWith(
         'You are trying to upload an unsupported file extension (input.txt). Please choose either a .yaml, .yml, or .json file.'
       );

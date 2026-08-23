@@ -3,6 +3,7 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { FileReaderService } from './file-reader.service';
+import { createLoadedDocument } from '../models/loaded-document.models';
 
 const PETSTORE_YAML = `openapi: "3.0.0"
 info:
@@ -318,8 +319,10 @@ describe('FileReaderService', () => {
     describe('URL based tests', () => {
       it('YAML file should be loaded', (done: DoneFn) => {
         service.apiChanged.subscribe(value => {
-          // TODO: Check contents
-          expect(value).toBeTruthy();
+          expect(value.document.info.title).toBe('Swagger Petstore');
+          expect(value.baseUri).toBe('http://localhost/petstore.yaml');
+          expect(value.scopeId).toBe('assessment-scope:http://localhost/petstore.yaml');
+          expect(value.resourceSet.resolve('../petstore.yaml', value.baseUri)?.document).toBe(value.document);
           done();
         });
 
@@ -333,8 +336,8 @@ describe('FileReaderService', () => {
 
       it('JSON file should be loaded', (done: DoneFn) => {
         service.apiChanged.subscribe(value => {
-          // TODO: Check contents
-          expect(value).toBeTruthy();
+          expect(value.document.info.title).toBe('Swagger Petstore');
+          expect(value.baseUri).toBe('http://localhost/petstore.json');
           done();
         });
 
@@ -369,8 +372,8 @@ describe('FileReaderService', () => {
     describe('File based tests', () => {
       it('YAML file should be loaded', (done: DoneFn) => {
         service.apiChanged.subscribe(value => {
-          // TODO: Check contents
-          expect(value).toBeTruthy();
+          expect(value.document.info.title).toBe('Swagger Petstore');
+          expect(value.baseUri).toBe('file:///openapi/petstore.yaml');
           done();
         });
 
@@ -380,13 +383,80 @@ describe('FileReaderService', () => {
 
       it('JSON file should be loaded', (done: DoneFn) => {
         service.apiChanged.subscribe(value => {
-          // TODO: Check contents
-          expect(value).toBeTruthy();
+          expect(value.document.info.title).toBe('Swagger Petstore');
+          expect(value.baseUri).toBe('file:///openapi/petstore.json');
           done();
         });
 
         const file = new File([PETSTORE_JSON], 'petstore.json');
         service.loadFile(file);
+      });
+
+      it('publishes every root with the complete batch resource set', (done: DoneFn) => {
+        const first = new File([JSON.stringify({openapi: '3.0.0', info: {title: 'First'}, paths: {}})], 'apis/first.json');
+        const second = new File([JSON.stringify({openapi: '3.0.0', info: {title: 'Second'}, paths: {}})], 'apis/second.json');
+        const loaded: string[] = [];
+
+        service.apiChanged.subscribe(value => {
+          loaded.push(value.document.info.title);
+          expect(value.resourceSet.entries).toHaveSize(2);
+          expect(value.resourceSet.resolve('./second.json', value.baseUri)?.document.info.title).toBe('Second');
+          if (loaded.length === 2) {
+            expect(loaded).toEqual(['First', 'Second']);
+            done();
+          }
+        });
+
+        service.loadFiles([first, second]);
+      });
+
+      it('reports duplicate canonical file identities without overwriting the registry', (done: DoneFn) => {
+        const first = new File([JSON.stringify({openapi: '3.0.0', info: {title: 'First'}, paths: {}})], 'duplicate.json');
+        const second = new File([JSON.stringify({openapi: '3.0.0', info: {title: 'Second'}, paths: {}})], 'duplicate.json');
+
+        service.apiChanged.subscribe(value => {
+          expect(value.resourceSet.entries).toHaveSize(2);
+          expect(value.resourceSet.resolve('duplicate.json', value.baseUri)?.document.info.title).toBe('First');
+          expect(value.diagnostics.some(diagnostic => diagnostic.code === 'duplicate-source-identity')).toBeTrue();
+          expect(value.document.info.title).toBe('First');
+          expect(value.scopeId).toBe('assessment-scope:file:///openapi/duplicate.json');
+          done();
+        });
+
+        service.loadFiles([first, second]);
+      });
+
+      it('reports parse failures without publishing a malformed root', (done: DoneFn) => {
+        const failure = 'Could not load the API definition from file:///openapi/broken.json.';
+        service.loadDiagnostics.subscribe(diagnostic => {
+          expect(diagnostic.code).toBe('parse-failed');
+          expect(diagnostic.sourceId).toBe('file:///openapi/broken.json');
+        });
+        service.loadFailed.subscribe(message => {
+          expect(message).toContain(failure);
+          done();
+        });
+
+        service.apiChanged.subscribe(() => fail('Malformed documents must not be published'));
+        service.loadFile(new File(['{not json'], 'broken.json'));
+      });
+
+      it('does not replay a root after reset', () => {
+        const document = {
+          openapi: '3.0.0',
+          info: {title: 'Reset me'},
+          paths: {}
+        } as any;
+        const loaded: unknown[] = [];
+        service.apiChanged.subscribe(value => loaded.push(value));
+
+        service.apiChanged.next(createLoadedDocument(document));
+        service.resetFiles.next();
+
+        expect(loaded).toHaveSize(1);
+        let replayed = false;
+        service.apiChanged.subscribe(() => replayed = true);
+        expect(replayed).toBeFalse();
       });
     });
 

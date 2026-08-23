@@ -8,6 +8,7 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { PipesModule } from '../../pipes/pipes.module';
 import { FileReaderService } from '../../services/file-reader.service';
+import { createLoadedDocument } from '../../models/loaded-document.models';
 
 describe('ApiComponentsDetailComponent', () => {
   let component: ApiComponentsDetailComponent;
@@ -67,7 +68,7 @@ describe('ApiComponentsDetailComponent', () => {
       }
     };
 
-    fileReaderService.apiChanged.next(apiSpec);
+    fileReaderService.apiChanged.next(createLoadedDocument(apiSpec));
     fixture.componentRef.changeDetectorRef.markForCheck();
     fixture.detectChanges(false);
     await fixture.whenStable();
@@ -81,7 +82,7 @@ describe('ApiComponentsDetailComponent', () => {
   });
 
   it('should toggle schema details open and closed', async () => {
-    fileReaderService.apiChanged.next({
+    fileReaderService.apiChanged.next(createLoadedDocument({
       openapi: '3.1.0',
       info: {
         title: 'Test API',
@@ -96,7 +97,7 @@ describe('ApiComponentsDetailComponent', () => {
           }
         }
       }
-    });
+    }));
     fixture.componentRef.changeDetectorRef.markForCheck();
     fixture.detectChanges(false);
     await fixture.whenStable();
@@ -124,7 +125,7 @@ describe('ApiComponentsDetailComponent', () => {
   });
 
   it('renders every populated component section and its descriptions', async () => {
-    fileReaderService.apiChanged.next({
+    fileReaderService.apiChanged.next(createLoadedDocument({
       openapi: '3.1.0',
       info: {title: 'Test API', version: '1.0.0'},
       paths: {},
@@ -138,7 +139,7 @@ describe('ApiComponentsDetailComponent', () => {
         links: {Pet: {description: 'Pet link', operationId: 'getPet'}},
         callbacks: {Pet: {'{$request.query.callbackUrl}': {}}}
       }
-    });
+    }));
     fixture.componentRef.changeDetectorRef.markForCheck();
     fixture.detectChanges(false);
     await fixture.whenStable();
@@ -213,12 +214,12 @@ describe('ApiComponentsDetailComponent', () => {
   });
 
   it('resets schemas and sections when files are reset', async () => {
-    fileReaderService.apiChanged.next({
+    fileReaderService.apiChanged.next(createLoadedDocument({
       openapi: '3.1.0',
       info: {title: 'Test API', version: '1.0.0'},
       paths: {},
       components: {schemas: {Pet: {type: 'object'}}}
-    });
+    }));
     fixture.componentRef.changeDetectorRef.markForCheck();
     fixture.detectChanges(false);
     await fixture.whenStable();
@@ -232,6 +233,7 @@ describe('ApiComponentsDetailComponent', () => {
     fixture.detectChanges(false);
 
     expect(component.schemas).toEqual({});
+    expect(component.apiSpec).toBeUndefined();
     expect(component.items).toEqual([]);
     expect(component.componentSections).toEqual([]);
     expect(component.expandedSchemas).toEqual([]);
