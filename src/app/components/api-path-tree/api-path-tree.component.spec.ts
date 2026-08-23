@@ -42,7 +42,7 @@ describe('ApiPathTreeComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('migrates a loaded-document envelope into the existing path tree', () => {
+  it('migrates a loaded-document envelope into the existing path tree', async () => {
     const fileReaderService = TestBed.inject(FileReaderService);
     fileReaderService.apiChanged.next(createLoadedDocument({
       openapi: '3.1.0',
@@ -56,7 +56,10 @@ describe('ApiPathTreeComponent', () => {
         }
       }
     } as any));
-    fixture.detectChanges();
+    fixture.componentRef.changeDetectorRef.markForCheck();
+    fixture.detectChanges(false);
+    await fixture.whenStable();
+    fixture.detectChanges(false);
 
     expect(fixture.nativeElement.textContent).toContain('/pets');
   });
