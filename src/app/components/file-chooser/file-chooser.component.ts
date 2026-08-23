@@ -55,7 +55,9 @@ export class FileChooserComponent {
     });
 
     /* Read the complete selection as one resource set. */
-    this.fileReaderService.loadFiles(supportedFiles);
+    if (supportedFiles.length > 0) {
+      this.fileReaderService.loadFiles(supportedFiles);
+    }
 
     /* Allow choosing the same file again after it has been processed. */
     if (nativeInput) {
