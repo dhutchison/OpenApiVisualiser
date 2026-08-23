@@ -49,7 +49,10 @@ describe('ApiPathTreeComponent', () => {
       info: {title: 'Pets', version: '1.0.0'},
       paths: {
         '/pets': {
-          get: {summary: 'List pets'}
+          get: {
+            summary: 'List pets',
+            responses: {}
+          }
         }
       }
     } as any));
