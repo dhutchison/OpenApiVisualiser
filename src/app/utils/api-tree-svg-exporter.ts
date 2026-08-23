@@ -1,4 +1,5 @@
 import { ApiPathTreeNode, isApiOperationNode } from '../models/hierarchy.models';
+import { formatComplexityStatus } from '../complexity/complexity-presentation';
 
 interface SvgExportNode {
   children: SvgExportNode[];
@@ -93,7 +94,9 @@ function getSvgExportSourceNodes(nodes: ApiPathTreeNode[]): ApiPathTreeNode[] {
 
 function createSvgExportNode(treeNode: ApiPathTreeNode, options: ApiTreeSvgExportOptions): SvgExportNode {
   const isOperation = isApiOperationNode(treeNode);
-  const label = treeNode.label;
+  const label = isOperation
+    ? `${treeNode.label} — ${formatComplexityStatus(treeNode.assessmentState, treeNode.assessment?.finalBand)}`
+    : treeNode.label;
   const measuredWidth = measureSvgText(label, options) + (SVG_EXPORT_LAYOUT.nodePaddingX * 2);
   const width = Math.max(Math.ceil(measuredWidth), isOperation ? 86 : 96);
   const height = Math.ceil(SVG_EXPORT_LAYOUT.lineHeight + (SVG_EXPORT_LAYOUT.nodePaddingY * 2));

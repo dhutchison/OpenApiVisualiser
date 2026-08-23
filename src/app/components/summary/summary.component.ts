@@ -45,7 +45,7 @@ export class SummaryComponent implements OnInit {
      *
      * @param parent nodes to be flattened
      */
-    flatten(parent: ApiPathTreeNode[]): ApiOperationNode[] {
+  flatten(parent: ApiPathTreeNode[]): ApiOperationNode[] {
       let paths: ApiOperationNode[] = [];
 
       for (const child of parent) {
@@ -58,6 +58,16 @@ export class SummaryComponent implements OnInit {
         paths = paths.concat(children);
       }
       return paths;
+  }
+
+  getComplexityAssessmentStatus(): string | undefined {
+    if (this.apiPathNodes.some(node => node.assessmentState === 'Pending')) {
+      return 'Assessing operation complexity…';
     }
+    if (this.apiPathNodes.some(node => node.assessmentState === 'Unavailable')) {
+      return 'Complexity assessment unavailable';
+    }
+    return undefined;
+  }
 
 }

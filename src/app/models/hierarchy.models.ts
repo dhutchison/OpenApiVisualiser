@@ -1,4 +1,5 @@
 import { OpenAPIObject, OperationObject, ReferenceObject, SchemaObject } from 'openapi3-ts/oas31';
+import { ComplexityAssessmentState, OperationAssessment } from '../complexity/complexity.models';
 
 /** A branch in the application-owned API path hierarchy. */
 export interface ApiPathNode {
@@ -22,7 +23,10 @@ export interface ApiOperationNode {
   path: string;
   operation: OperationObject;
   apiDefinition: OpenAPIObject;
-  complexity: number;
+  scopeId: string;
+  assessmentKey: string;
+  assessmentState: ComplexityAssessmentState['status'];
+  assessment?: OperationAssessment;
 }
 
 export type ApiPathTreeNode = ApiPathNode | ApiOperationNode;

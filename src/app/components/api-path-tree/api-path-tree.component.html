@@ -60,6 +60,15 @@
   </div>
 
   <div>
+    @if (getAssessmentStatus(); as assessmentStatus) {
+      <div
+        class="complexity-assessment-status"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true">
+        {{ assessmentStatus }}
+      </div>
+    }
     <div class="tree-view" #treeView>
       <cdk-tree
         [dataSource]="apiPathNodes"
@@ -83,7 +92,10 @@
                 class="operation-node"
                 [appTooltip]="node.tooltip"
                 [id]="node.id ? node.id + '-node' : null"
-                (click)="openEndpointDetail(node)">{{ node.label }}</button>
+                (click)="openEndpointDetail(node)">
+                <span>{{ node.label }}</span>
+                <span class="operation-complexity"> ({{ getComplexityLabel(node) }})</span>
+              </button>
             } @else {
               <button
                 type="button"

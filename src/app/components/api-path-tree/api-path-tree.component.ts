@@ -15,6 +15,7 @@ import {
   LucideNetwork
 } from '@lucide/angular';
 import { FileReaderService } from '../../services/file-reader.service';
+import { ComplexityAssessmentService } from '../../services/complexity-assessment.service';
 import { OpenapiTreenodeConverterService } from '../../services/openapi-treenode-converter.service';
 import { UserPreferenceControllerService } from '../../controllers/user-preference-controller.service';
 import { createApiTreeSvg } from '../../utils/api-tree-svg-exporter';
@@ -23,6 +24,7 @@ import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.c
 import { AppDialogComponent } from '../app-dialog/app-dialog.component';
 import { SegmentedControlComponent, SegmentedControlOption } from '../segmented-control/segmented-control.component';
 import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
+import { formatComplexityStatus } from '../../complexity/complexity-presentation';
 
 const UNTAGGED_FILTER_VALUE = '__untagged__';
 type ApiPathSortOrder = 'default' | 'asc' | 'desc';
@@ -48,6 +50,7 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
 
   private readonly preferenceService = inject(UserPreferenceControllerService);
   private readonly fileReaderService = inject(FileReaderService);
+  private readonly complexityAssessmentService = inject(ComplexityAssessmentService);
   private readonly openApiConverterService = inject(OpenapiTreenodeConverterService);
 
   /* DOM element holding the API tree view */
@@ -172,11 +175,17 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
   ngOnInit() {
     this.fileReaderService.apiChanged.subscribe(value => {
       /* Add this specification to our current state */
-      this.openApiConverterService.addApiSpecification(value.document);
+      this.openApiConverterService.addApiSpecification(value);
+      this.complexityAssessmentService.assess(value);
+    });
+
+    this.complexityAssessmentService.assessmentChanged.subscribe(state => {
+      this.openApiConverterService.setAssessmentState(state);
     });
 
     this.fileReaderService.resetFiles.subscribe(v => {
       /* Reset the service which holds our current state */
+      this.complexityAssessmentService.reset();
       this.openApiConverterService.reset();
       this.selectedTagFilters = [];
       this.selectedOperationNode = undefined;
@@ -190,6 +199,25 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
         .filter(tagFilter => this.tagFilterOptions.some(option => option.value === tagFilter));
       this.setTreeNodes();
     });
+  }
+
+  getComplexityLabel(node: ApiOperationNode): string {
+    return formatComplexityStatus(node.assessmentState, node.assessment?.finalBand);
+  }
+
+  getAssessmentStatus(): string | undefined {
+    let hasPending = false;
+    let hasUnavailable = false;
+    this.visitOperationNodes(this.apiPathNodesOrig, node => {
+      hasPending ||= node.assessmentState === 'Pending';
+      hasUnavailable ||= node.assessmentState === 'Unavailable';
+    });
+
+    return hasPending
+      ? 'Assessing operation complexity…'
+      : hasUnavailable
+        ? 'Complexity assessment unavailable'
+        : undefined;
   }
 
   ngAfterViewInit() {

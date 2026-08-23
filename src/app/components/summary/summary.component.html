@@ -1,4 +1,7 @@
 <div>
+  @if (getComplexityAssessmentStatus(); as assessmentStatus) {
+    <p role="status" aria-live="polite" aria-atomic="true">{{ assessmentStatus }}</p>
+  }
   <table id="method-summary">
     <caption>HTTP methods in use</caption>
     <colgroup>
