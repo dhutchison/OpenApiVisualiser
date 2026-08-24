@@ -21,6 +21,7 @@ import { UserPreferenceControllerService } from '../../controllers/user-preferen
 import { createApiTreeSvg } from '../../utils/api-tree-svg-exporter';
 import { ApiOperationNode, ApiPathTreeNode, isApiOperationNode } from '../../models/hierarchy.models';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
+import { ComplexityExplanationComponent } from '../complexity-explanation/complexity-explanation.component';
 import { AppDialogComponent } from '../app-dialog/app-dialog.component';
 import { SegmentedControlComponent, SegmentedControlOption } from '../segmented-control/segmented-control.component';
 import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
@@ -35,6 +36,7 @@ type ApiPathSortOrder = 'default' | 'asc' | 'desc';
     AppDialogComponent,
     AppTooltipDirective,
     CdkTreeModule,
+    ComplexityExplanationComponent,
     EndpointSwaggerComponent,
     SegmentedControlComponent,
     LucideChevronRight,
@@ -326,6 +328,20 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
 
     if (this.sortOrder !== 'default') {
       this.sortTreeNodes(this.apiPathNodes);
+    }
+
+    if (this.selectedOperationNode) {
+      const selectedAssessmentKey = this.selectedOperationNode.assessmentKey;
+      let updatedSelectedNode: ApiOperationNode | undefined;
+      this.visitOperationNodes(this.apiPathNodes, node => {
+        if (node.assessmentKey === selectedAssessmentKey) {
+          updatedSelectedNode = node;
+        }
+      });
+      this.selectedOperationNode = updatedSelectedNode;
+      if (!updatedSelectedNode) {
+        this.endpointDialogVisible = false;
+      }
     }
 
     this.schedulePathTreeMeasurement();

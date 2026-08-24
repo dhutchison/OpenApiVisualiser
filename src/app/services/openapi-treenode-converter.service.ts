@@ -121,6 +121,7 @@ export class OpenapiTreenodeConverterService {
 
       node.assessmentState = state.status;
       node.assessment = state.report?.assessments.find(assessment => assessment.identity.key === node.assessmentKey);
+      node.assessmentFailure = state.report?.failure;
     });
 
     this.treeNodesChanged.next(this.apiPathNodes);

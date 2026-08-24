@@ -336,6 +336,18 @@ describe('The Home Page', () => {
 
       cy.get('#listPets-node').click()
       dialogByName('GET /pets').should('be.visible')
+      cy.get('#listPets-node .operation-complexity').invoke('text').then((compactLabel) => {
+        const finalBand = compactLabel.replace('Complexity:', '').replace(/[()]/g, '').trim()
+
+        dialogByName('GET /pets').find('.complexity-explanation')
+          .should('contain.text', finalBand)
+          .then(($explanation) => {
+            const swagger = $explanation.closest('dialog')[0].querySelector('.endpoint-swagger')
+
+            expect(swagger).to.exist
+            expect($explanation[0].compareDocumentPosition(swagger)).to.eq(Node.DOCUMENT_POSITION_FOLLOWING)
+          })
+      })
       cy.get('.swagger-ui', { timeout: 20000 })
           .should('exist')
           .contains('List all pets')
@@ -423,12 +435,13 @@ describe('The Home Page', () => {
 
       dialogByName('GET /pets').should('be.visible')
 
-      cy.get('.endpoint-swagger-warning', { timeout: 20000 })
+      dialogByName('GET /pets').find('.endpoint-swagger-warning', { timeout: 20000 })
+          .scrollIntoView()
           .should('be.visible')
           .and('contain.text', 'browser-based "Try it out" requests only work with HTTP or HTTPS servers')
           .and('contain.text', 'generated cURL command')
 
-      cy.get('.endpoint-swagger-warning')
+      dialogByName('GET /pets').find('.endpoint-swagger-warning')
           .next('.endpoint-swagger')
           .find('.swagger-ui')
           .should('exist')
@@ -666,5 +679,38 @@ describe('The Home Page', () => {
           expect($entries.text()).to.contain('Pet')
           expect($entries.text()).to.contain('UserArray')
         })
+    })
+
+    it('Explains a known operation from the uploaded Petstore sample', () => {
+      cy.visit('/')
+
+      cy.readFile('sample_openapi/petstore3.json').then((data) => {
+        cy.get('#file-input').selectFile({
+          contents: Cypress.Buffer.from(JSON.stringify(data)),
+          fileName: 'petstore3.json',
+          mimeType: 'application/json'
+        }, {force: true})
+      })
+
+      accordionHeader('API Paths').click()
+      cy.get('#updatePet-node').should('be.visible').click()
+      dialogByName('PUT /pet').should('be.visible')
+
+      cy.get('#updatePet-node .operation-complexity')
+        .should('not.contain.text', 'assessing')
+        .invoke('text').then((compactLabel) => {
+        const finalBand = compactLabel.replace('Complexity:', '').replace(/[()]/g, '').trim()
+
+        dialogByName('PUT /pet').find('.complexity-explanation')
+          .should('contain.text', finalBand)
+          .then(($explanation) => {
+            const swagger = $explanation.closest('dialog')[0].querySelector('.endpoint-swagger')
+
+            expect(swagger).to.exist
+            expect($explanation[0].compareDocumentPosition(swagger)).to.eq(Node.DOCUMENT_POSITION_FOLLOWING)
+          })
+      })
+      dialogByName('PUT /pet').find('.swagger-ui', {timeout: 20000})
+        .should('contain.text', 'Update an existing pet.')
     })
   })
