@@ -335,16 +335,16 @@ const S9: CalibrationFamily = {
     }),
     fixture('S9', 'S9-all-high', 'All five dimensions high', {
       parameters: Array.from({length: 8}, (_, index) => ({name: `param${index}`, in: 'query', required: true, schema: scalar})),
-      requestBody: {content: {'application/json': {schema: {type: 'object', properties: Object.fromEntries(
-        Array.from({length: 16}, (_, index) => [`field${index}`, scalar])
+      requestBody: {required: true, content: {'application/json': {schema: {type: 'object', required: Array.from({length: 16}, (_, index) => `field${index}`), properties: Object.fromEntries(
+        Array.from({length: 16}, (_, index) => [`field${index}`, {$ref: `#/components/schemas/Scalar${index}`}])
       )}}}},
       security: [{one: [], two: [], three: []}],
       responses: Object.fromEntries(Array.from({length: 8}, (_, index) => [String(200 + index), {description: 'Outcome'}]))
     }),
     fixture('S9', 'S9-all-high-strong-docs', 'All-high with strong support', {
       parameters: Array.from({length: 8}, (_, index) => ({name: `param${index}`, in: 'query', required: true, schema: scalar})),
-      requestBody: {content: {'application/json': {schema: {type: 'object', properties: Object.fromEntries(
-        Array.from({length: 16}, (_, index) => [`field${index}`, scalar])
+      requestBody: {required: true, content: {'application/json': {schema: {type: 'object', required: Array.from({length: 16}, (_, index) => `field${index}`), properties: Object.fromEntries(
+        Array.from({length: 16}, (_, index) => [`field${index}`, {$ref: `#/components/schemas/Scalar${index}`}])
       )}, example: Object.fromEntries(Array.from({length: 16}, (_, index) => [`field${index}`, `value-${index}`]))}}},
       security: [{one: [], two: [], three: []}],
       responses: {
@@ -361,6 +361,11 @@ const S9: CalibrationFamily = {
     ? {...entry, document: {...entry.document, components: {securitySchemes: {
       one: {type: 'apiKey', in: 'header', name: 'X-One'}, two: {type: 'apiKey', in: 'header', name: 'X-Two'}, three: {type: 'apiKey', in: 'header', name: 'X-Three'}
     }, ...(entry.document.components ?? {})}}}
+    : entry).map(entry => entry.id.startsWith('S9-all-high')
+    ? {...entry, document: {...entry.document, components: {
+      ...(entry.document.components ?? {}),
+      schemas: Object.fromEntries(Array.from({length: 16}, (_, index) => [`Scalar${index}`, scalar]))
+    }}}
     : entry)
 };
 

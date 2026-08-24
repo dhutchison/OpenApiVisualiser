@@ -160,6 +160,11 @@ function assessOperation(
       extension: 'x-prose-defined-language'
     });
   }
+  if (proseDefinesLanguage(operation)) {
+    addWarning(context, 'prose-defined-language', 'assessment', operationPointer, undefined, {
+      source: 'operation description'
+    });
+  }
 
   collectParameters(
     context,
@@ -993,6 +998,18 @@ function schemaTypes(schema: AnyRecord): Set<string> | undefined {
 function isValidSchemaType(value: unknown): boolean {
   return typeof value === 'string'
     || (Array.isArray(value) && value.length > 0 && value.every(entry => typeof entry === 'string'));
+}
+
+function proseDefinesLanguage(operation: AnyRecord): boolean {
+  const descriptions = [operation.description, operation.summary, ...Object.values(operation.parameters ?? {})]
+    .flatMap(value => {
+      if (!value || typeof value !== 'object') return [];
+      const item = value as AnyRecord;
+      return [item.description, item.schema?.description];
+    })
+    .concat(operation.description, operation.summary)
+    .filter((value): value is string => typeof value === 'string');
+  return descriptions.some(description => /\b(?:lucene|solr)\b.*\b(?:syntax|query|language)\b/i.test(description));
 }
 
 function collectProtocol(context: AssessmentContext, document: AnyRecord, operation: AnyRecord, pointer: string, sourceId: string) {

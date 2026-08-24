@@ -138,10 +138,15 @@ describe('operation-contract-complexity/1.0.0 calibration corpus', () => {
   });
 
   it('serializes equivalent reports byte-for-byte', () => {
-    const first = assessCalibrationFixture(CALIBRATION_REAL_ANCHORS[0]);
-    const second = assessCalibrationFixture({...CALIBRATION_REAL_ANCHORS[0], document: {
-      ...CALIBRATION_REAL_ANCHORS[0].document,
-      paths: Object.fromEntries(Object.entries(CALIBRATION_REAL_ANCHORS[0].document.paths).reverse())
+    const fixture = CALIBRATION_FAMILIES[0].fixtures[0];
+    const document = {...fixture.document, paths: {
+      '/z': fixture.document.paths['/calibration'],
+      '/a': fixture.document.paths['/calibration']
+    }};
+    const first = assessCalibrationFixture({...fixture, document});
+    const second = assessCalibrationFixture({...fixture, document: {
+      ...document,
+      paths: Object.fromEntries(Object.entries(document.paths).reverse())
     }});
     expect(serializeComplexityReport(first)).toBe(serializeComplexityReport(second));
   });

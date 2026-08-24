@@ -8,6 +8,7 @@ import {CALIBRATION_MODEL, serializeComplexityReport} from '../src/app/complexit
 
 const PINNED_GITHUB_REVISION = 'd77b7dde24f7b3a52b3532b1337d4be8a60fb34d';
 const WATCHDOG_MS = 60_000;
+const BAND_ORDER = ['Low', 'Moderate', 'High', 'Very high', 'Unknown'];
 
 interface CorpusEntry {
   readonly id: string;
@@ -50,11 +51,40 @@ function assessmentProfile(assessment: ComplexityAssessmentReport['assessments']
   return profile;
 }
 
+function findAssessment(entry: CorpusEntry, path: string, method: string): CorpusEntry['report']['assessments'][number] {
+  const assessment = entry.report.assessments.find(candidate => candidate.identity.path === path && candidate.identity.method === method);
+  if (!assessment) throw new Error(`${entry.id} is missing ${method.toUpperCase()} ${path}.`);
+  return assessment;
+}
+
+function assertDimensionOrdering(entry: CorpusEntry, lower: [string, string], higher: [string, string]): void {
+  const left = findAssessment(entry, lower[0], lower[1]);
+  const right = findAssessment(entry, higher[0], higher[1]);
+  if (left.dimensions.interactionSurface.units >= right.dimensions.interactionSurface.units) {
+    throw new Error(`${entry.id} does not preserve ${lower[1].toUpperCase()} ${lower[0]} < ${higher[1].toUpperCase()} ${higher[0]}.`);
+  }
+}
+
+function assertBandOrdering(entry: CorpusEntry, lower: [string, string], higher: [string, string]): void {
+  const left = findAssessment(entry, lower[0], lower[1]);
+  const right = findAssessment(entry, higher[0], higher[1]);
+  if (BAND_ORDER.indexOf(left.rawBand) >= BAND_ORDER.indexOf(right.rawBand)) {
+    throw new Error(`${entry.id} does not preserve raw ${lower[1].toUpperCase()} ${lower[0]} < ${higher[1].toUpperCase()} ${higher[0]}.`);
+  }
+}
+
 function main(): void {
   const args = process.argv.slice(2);
   const githubIndex = args.indexOf('--github');
   const githubFilename = githubIndex >= 0 ? args[githubIndex + 1] : undefined;
+  const dereferencedIndex = args.indexOf('--github-dereferenced');
+  const dereferencedFilename = dereferencedIndex >= 0 ? args[dereferencedIndex + 1] : undefined;
+  const revisionIndex = args.indexOf('--github-revision');
+  const suppliedRevision = revisionIndex >= 0 ? args[revisionIndex + 1] : PINNED_GITHUB_REVISION;
   if (githubIndex >= 0 && !githubFilename) throw new Error('--github requires a file path.');
+  if (dereferencedIndex >= 0 && !dereferencedFilename) throw new Error('--github-dereferenced requires a file path.');
+  if (dereferencedFilename && !githubFilename) throw new Error('--github-dereferenced requires --github.');
+  if (suppliedRevision !== PINNED_GITHUB_REVISION) throw new Error(`Expected GitHub revision ${PINNED_GITHUB_REVISION}.`);
 
   const started = performance.now();
   const entries: CorpusEntry[] = [
@@ -63,6 +93,19 @@ function main(): void {
   ];
   if (githubFilename) {
     entries.push(assess('corpus:github', githubFilename, parseDocument(githubFilename)));
+  }
+  if (dereferencedFilename) {
+    entries.push(assess('corpus:github:dereferenced', dereferencedFilename, parseDocument(dereferencedFilename)));
+  }
+
+  const petstore = entries.find(entry => entry.id === 'corpus:petstore')!;
+  const uspto = entries.find(entry => entry.id === 'corpus:uspto')!;
+  assertDimensionOrdering(petstore, ['/user/logout', 'get'], ['/store/inventory', 'get']);
+  assertDimensionOrdering(petstore, ['/store/inventory', 'get'], ['/pet/findByStatus', 'get']);
+  assertDimensionOrdering(petstore, ['/pet/findByStatus', 'get'], ['/pet', 'put']);
+  assertBandOrdering(uspto, ['/{dataset}/{version}/fields', 'get'], ['/{dataset}/{version}/records', 'post']);
+  if (findAssessment(uspto, '/{dataset}/{version}/records', 'post').confidence !== 'Qualified') {
+    throw new Error('USPTO records must retain Qualified confidence for its prose-defined query language.');
   }
 
   entries.forEach(entry => {
@@ -88,6 +131,28 @@ function main(): void {
         .find(assessment => assessment.identity.path === '/meta');
       assertEquivalent('GitHub /meta unrelated-path isolation', assessmentProfile(meta), isolated && assessmentProfile(isolated));
     }
+
+    ['/meta', '/repos/{owner}/{repo}', '/repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches',
+      '/repos/{owner}/{repo}/pulls', '/repos/{owner}/{repo}/contents/{path}', '/repos/{owner}/{repo}/issues',
+      '/user/repos', '/orgs/{org}/dependabot/alerts'].forEach(path => {
+      const method = path === '/repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches'
+        || path === '/repos/{owner}/{repo}/pulls' || path === '/user/repos' ? 'post' : 'get';
+      findAssessment(githubEntry, path, method);
+    });
+    const multiSegment = githubEntry.report.assessments.find(assessment => assessment.identity.path === '/repos/{owner}/{repo}/contents/{path}');
+    if (multiSegment && multiSegment.finalBand !== 'Unknown') throw new Error('GitHub x-multi-segment must remain Unknown.');
+  }
+
+  const dereferenced = entries.find(entry => entry.id === 'corpus:github:dereferenced');
+  if (githubEntry && dereferenced) {
+    const bundledMeta = findAssessment(githubEntry, '/meta', 'get');
+    const dereferencedMeta = findAssessment(dereferenced, '/meta', 'get');
+    const bundledDimensions = {...bundledMeta.dimensions, indirection: undefined};
+    const dereferencedDimensions = {...dereferencedMeta.dimensions, indirection: undefined};
+    assertEquivalent('GitHub bundled/dereferenced non-indirection profile', bundledDimensions, dereferencedDimensions);
+    if (BAND_ORDER.indexOf(dereferencedMeta.finalBand) > BAND_ORDER.indexOf(bundledMeta.finalBand) + 1) {
+      throw new Error('GitHub dereferencing materially inflated the final band.');
+    }
   }
 
   const elapsedMs = performance.now() - started;
@@ -96,7 +161,7 @@ function main(): void {
   const sourceBytes = entries.reduce((total, entry) => total + statSync(entry.source).size, 0);
   console.log(JSON.stringify({
     modelVersion: CALIBRATION_MODEL,
-    githubRevision: githubFilename ? PINNED_GITHUB_REVISION : null,
+    githubRevision: githubFilename ? suppliedRevision : null,
     sources: entries.map(entry => ({id: entry.id, source: entry.source, operations: entry.report.coverage.totalOperations})),
     operationCount: entries.reduce((total, entry) => total + entry.report.coverage.totalOperations, 0),
     sourceBytes,
