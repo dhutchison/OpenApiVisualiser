@@ -51,6 +51,12 @@ Pending is labelled `Assessing operation complexity…`; Unavailable shows the s
 
 The retained prototype screenshots remain available for future reconsideration in the [Variant A screenshot](https://github.com/dhutchison/OpenApiVisualiser/blob/25ad283cc0949f135858bdaed7fd6c2eb68f3bbd/.codex/wayfinder-235-prototype/src/app/components/complexity-explanation-prototype/screenshots/variant-a.png), [Variant B screenshot](https://github.com/dhutchison/OpenApiVisualiser/blob/25ad283cc0949f135858bdaed7fd6c2eb68f3bbd/.codex/wayfinder-235-prototype/src/app/components/complexity-explanation-prototype/screenshots/variant-b.png), and [Variant C screenshot](https://github.com/dhutchison/OpenApiVisualiser/blob/25ad283cc0949f135858bdaed7fd6c2eb68f3bbd/.codex/wayfinder-235-prototype/src/app/components/complexity-explanation-prototype/screenshots/variant-c.png).
 
+## Summary presentation
+
+The Summary section renders one complexity scope for every loaded OpenAPI root. Scope lifecycle state is independent: Pending shows `Assessing operation complexity…`, Available renders its own coverage, absolute final-band distribution, dense hotspot list, and Needs assessment group, and Unavailable keeps the ordinary API summary visible while showing the assessment diagnostic.
+
+The first ten known hotspot entries are shown in document-relative order. A native `Show all` button reveals the remaining entries. When the tenth entry shares a dense tier with later entries, the summary reports the exact number of additional operations in that tier; no method or path is presented as lower-ranked merely because it appears later in the display order. Incomplete operations appear only under Needs assessment. Summary copy explicitly distinguishes these relative tiers from stable absolute bands and never uses percentile labels.
+
 ## Evolution
 
 Patch versions restore specified behaviour. Minor versions add supported semantics that can classify previously unknown contracts. Major versions may change contributions, thresholds, aggregation, mitigation, or band meanings. The decision history and acceptance criteria are recorded in GitHub issues [#231](https://github.com/dhutchison/OpenApiVisualiser/issues/231), [#234](https://github.com/dhutchison/OpenApiVisualiser/issues/234), [#236](https://github.com/dhutchison/OpenApiVisualiser/issues/236), [#242](https://github.com/dhutchison/OpenApiVisualiser/issues/242), and [#243](https://github.com/dhutchison/OpenApiVisualiser/issues/243).
