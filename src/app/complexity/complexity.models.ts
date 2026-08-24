@@ -102,7 +102,7 @@ export const COMPLEXITY_CAPABILITY_MANIFEST: ComplexityCapabilityManifest = {
     'unsupported JSON Schema keywords for the declared OpenAPI version',
     'unresolvable external example values'
   ],
-  knownContractAffectingExtensions: ['x-multi-segment'],
+  knownContractAffectingExtensions: ['x-multi-segment', 'x-prose-defined-language'],
   ignoredNonSemanticExtensions: ['x-* extensions without registered contract semantics']
 };
 

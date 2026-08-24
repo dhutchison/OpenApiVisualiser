@@ -21,6 +21,7 @@
     "cy:open": "env -u ELECTRON_RUN_AS_NODE cypress open",
     "e2e": "concurrently \"ng serve --host 127.0.0.1\" \"wait-on http-get://127.0.0.1:4200 && npm run cy:run\" --kill-others --success first",
     "test:all": "run-s -n test-headless-container e2e coverage:verify",
+    "complexity:corpus": "ts-node --compiler-options '{\"module\":\"commonjs\",\"moduleResolution\":\"node\",\"types\":[\"node\"]}' scripts/complexity-corpus.ts",
     "sonar": "sonar-scanner -Dsonar.projectVersion=$(cat ./package.json | jq -r .version)"
   },
   "private": true,
