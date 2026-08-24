@@ -489,7 +489,15 @@ export function assessCalibrationFixture(fixture: CalibrationFixture): Complexit
 }
 
 export function serializeComplexityReport(report: ComplexityAssessmentReport): string {
-  return JSON.stringify(report);
+  const canonicalize = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(canonicalize);
+    if (!value || typeof value !== 'object') return value;
+    return Object.keys(value as Record<string, unknown>).sort().reduce<Record<string, unknown>>((result, key) => {
+      result[key] = canonicalize((value as Record<string, unknown>)[key]);
+      return result;
+    }, {});
+  };
+  return JSON.stringify(canonicalize(report));
 }
 
 export const CALIBRATION_MODEL = COMPLEXITY_MODEL_VERSION;

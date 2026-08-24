@@ -66,6 +66,17 @@ describe('operation-contract-complexity/1.0.0 calibration corpus', () => {
     expect(reference.dimensions.indirection.units).toBeGreaterThan(inline.dimensions.indirection.units);
   });
 
+  it('keeps S3 conditionality and S5 protocol relationships non-decreasing', () => {
+    const conditionality = CALIBRATION_FAMILIES[3].fixtures.map(assessCalibrationFixture)
+      .map(report => report.assessments[0].dimensions.conditionality.units);
+    const protocols = CALIBRATION_FAMILIES[5].fixtures.map(assessCalibrationFixture)
+      .map(report => report.assessments[0].dimensions.protocolObligations.units);
+    expect(conditionality).toEqual([1, 1, 3, 7, 10]);
+    expect(protocols).toEqual([0, 1, 3, 5, 5, 4]);
+    expect(protocols.slice(0, 5)).toEqual([0, 1, 3, 5, 5]);
+    expect(CALIBRATION_FAMILIES[5].fixtures.slice(-1).map(assessCalibrationFixture)[0].assessments[0].finalBand).toBe('High');
+  });
+
   it('keeps S6 support coverage separate from structural burden', () => {
     const none = assessCalibrationFixture(CALIBRATION_FAMILIES[6].fixtures[0]).assessments[0];
     const described = assessCalibrationFixture(CALIBRATION_FAMILIES[6].fixtures[1]).assessments[0];
@@ -109,6 +120,9 @@ describe('operation-contract-complexity/1.0.0 calibration corpus', () => {
     expect(deep.confidence).toBe('Complete');
     expect(allHigh.rawBand).toBe('Very high');
     expect(allHigh.finalBand).toBe('Very high');
+    Object.values(allHigh.dimensions).forEach(dimension => {
+      expect(['High', 'Very high']).toContain(dimension.level);
+    });
     expect(supported.rawBand).toBe('Very high');
     expect(supported.finalBand).toBe('High');
   });
@@ -125,6 +139,11 @@ describe('operation-contract-complexity/1.0.0 calibration corpus', () => {
     expect(byId.get('R9')?.warnings.some(warning => warning.code === 'prose-defined-language')).toBeTrue();
     expect(interaction('U1')).toBeLessThan(interaction('U2'));
     expect(interaction('U2')).toBeLessThan(interaction('U3'));
+    const expectedBands: Record<string, string> = {
+      R1: 'Low', R2: 'Low', R3: 'Low', R4: 'Moderate', R5: 'High', R6: 'High', R7: 'High', R8: 'High', R9: 'High',
+      U1: 'Low', U2: 'High', U3: 'High'
+    };
+    Object.entries(expectedBands).forEach(([id, band]) => expect(byId.get(id)?.finalBand).withContext(id).toBe(band));
   });
 
   it('keeps GitHub anchors partial-orderable and x-multi-segment explicitly incomplete', () => {
@@ -135,6 +154,10 @@ describe('operation-contract-complexity/1.0.0 calibration corpus', () => {
     expect(assessments.get('G5')?.confidence).toBe('Incomplete');
     expect(assessments.get('G5')?.finalBand).toBe('Unknown');
     expect(assessments.get('G5')?.blockingFaults.some(fault => fault.code === 'known-contract-affecting-extension')).toBeTrue();
+    const expectedBands: Record<string, string> = {
+      G1: 'Low', G2: 'High', G3: 'High', G4: 'High', G5: 'Unknown', G6: 'Very high', G7: 'Very high', G8: 'Very high'
+    };
+    Object.entries(expectedBands).forEach(([id, band]) => expect(assessments.get(id)?.finalBand).withContext(id).toBe(band));
   });
 
   it('serializes equivalent reports byte-for-byte', () => {
