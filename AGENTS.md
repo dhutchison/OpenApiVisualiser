@@ -21,3 +21,10 @@ This is a single-context repository. Read `CONTEXT.md` and relevant ADRs before 
 - Treat a ticket as blocked by its declared dependencies unless the user explicitly instructs us to continue.
 - We may continue with an instructed blocked ticket when the blocker already has an open PR.
 - In that case, branch from the blocker's PR branch and create a stacked PR whose base is the blocker's branch. Keep the dependent changes separate so the stacked PR can be retargeted after the blocker merges.
+
+## Feature integration branches
+
+- For a feature developed across multiple tickets, create one feature-level integration branch from `master` before opening the ticket PRs. Use a `feat/<feature-name>` name, such as `feat/improve-complexity-scoring`.
+- The first ticket PR targets the feature integration branch, not `master`. Later ticket PRs may remain stacked on the preceding ticket branches so each PR stays focused, but the stack must ultimately merge into the feature integration branch.
+- Do not merge any ticket PR directly into `master` while the feature is in progress. When the complete feature is ready, open one final PR from the feature integration branch to `master`; that is the point at which the feature should reach `master` and trigger the normal deployment flow.
+- When applying this workflow to an existing stack, create the integration branch from `master`, retarget the root PR to it, and preserve the existing dependent PR bases unless a later retarget is needed as the stack is merged.
