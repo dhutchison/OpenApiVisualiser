@@ -10,24 +10,36 @@ interface AssessmentWorkerRequest {
 const workerScope = globalThis as typeof globalThis & {
   postMessage: (message: unknown) => void;
   addEventListener: (type: string, listener: (event: MessageEvent<AssessmentWorkerRequest>) => void) => void;
+  origin: string;
 };
 
-workerScope.addEventListener('message', (event) => {
+export function handleAssessmentMessage(
+  event: MessageEvent<AssessmentWorkerRequest>,
+  postMessage: (message: unknown) => void,
+  workerOrigin: string
+) {
+  if (event.origin !== workerOrigin) {
+    return;
+  }
   if (event.data.type !== 'assess') {
     return;
   }
 
   try {
-    workerScope.postMessage({
+    postMessage({
       type: 'complete',
       requestId: event.data.requestId,
       report: assessLoadedDocument(event.data.scope)
     });
   } catch (error) {
-    workerScope.postMessage({
+    postMessage({
       type: 'failure',
       requestId: event.data.requestId,
       message: error instanceof Error ? error.message : String(error)
     });
   }
+}
+
+workerScope.addEventListener('message', event => {
+  handleAssessmentMessage(event, message => workerScope.postMessage(message), workerScope.origin);
 });
