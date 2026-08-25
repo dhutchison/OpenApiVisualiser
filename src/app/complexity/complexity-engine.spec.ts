@@ -154,7 +154,150 @@ describe('assessLoadedDocument', () => {
     expect(report.assessments[0].finalBand).toBe('Unknown');
     expect(report.assessments[0].blockingFaults[0].code).toBe('known-contract-affecting-extension');
   });
+
+  it('reports invalid request, response, parameter, and protocol shapes', () => {
+    const report = assessLoadedDocument(scope({
+      openapi: '3.1.0',
+      info: {title: 'Invalid shapes', version: '1.0.0'},
+      security: [{}],
+      paths: {
+        '/invalid': {
+          servers: [{}],
+          get: {
+            parameters: [
+              {$ref: '#/components/parameters/Id'},
+              {},
+              {name: 'query', in: 'query'},
+              {name: 'content', in: 'query', content: {'application/json': {schema: {type: 'string'}}}},
+              {name: 'schema', in: 'query', schema: {type: 'string'}}
+            ],
+            requestBody: {$ref: '#/components/requestBodies/Body'},
+            responses: {
+              '200': {
+                headers: {
+                  Link: {$ref: '#/components/headers/Link'},
+                  Trace: {schema: {type: 'string'}}
+                },
+                content: {
+                  'application/json': {},
+                  'text/plain': {$ref: '#/components/schemas/Text'}
+                },
+                links: {next: {}}
+              }
+            },
+            callbacks: {changed: {}},
+            servers: [{}]
+          }
+        },
+        '/invalid-body': {
+          get: {
+            requestBody: {},
+            responses: {'204': {description: 'No content'}}
+          }
+        }
+      }
+    }));
+
+    const codes = report.assessments.flatMap(assessment => assessment.blockingFaults.map(fault => fault.code));
+    expect(codes).toContain('unsupported-reference');
+    expect(codes).toContain('invalid-parameter');
+    expect(codes).toContain('unsupported-parameter-shape');
+    expect(codes).toContain('unsupported-request-body');
+    expect(codes).toContain('missing-media-schema');
+    expect(codes).toContain('unsupported-link');
+    expect(codes).toContain('unsupported-protocol-obligations');
+    expect(codes).toContain('unsupported-callback');
+  });
+
+  it('covers schema validation, collections, maps, roles, and structural depth', () => {
+    const readOnly = {type: 'string', readOnly: true};
+    const writeOnly = {type: 'string', writeOnly: true};
+    const report = assessLoadedDocument(scope({
+      openapi: '3.1.0',
+      info: {title: 'Schema shapes', version: '1.0.0'},
+      paths: {
+        '/schema': {
+          post: {
+            requestBody: {
+              required: true,
+              content: {'application/json': {schema: {
+                type: ['object', 'null'],
+                nullable: true,
+                minimum: 1,
+                multipleOf: 2,
+                minLength: 1,
+                pattern: 'x',
+                minItems: 1,
+                minProperties: 1,
+                enum: ['one'],
+                properties: {
+                  readOnly,
+                  nested: {type: 'array', prefixItems: [{type: 'string'}, {type: 'number'}]},
+                  map: {type: 'object', additionalProperties: {type: 'string'}},
+                  unknownMap: {type: 'object', additionalProperties: true},
+                  composed: {allOf: [{type: 'string'}]},
+                  extension: {'x-multi-segment': true},
+                  deep: deepSchema()
+                },
+                required: ['nested']
+              }}}
+            },
+            responses: {
+              '200': {
+                content: {'application/json': {schema: {
+                  type: 'object',
+                  properties: {writeOnly, array: {type: 'array', items: {type: 'string'}}}
+                }}}
+              }
+            }
+          }
+        }
+      }
+    }));
+
+    const assessment = report.assessments[0];
+    const codes = assessment.blockingFaults.map(fault => fault.code);
+    expect(codes).toContain('unsupported-untyped-map');
+    expect(codes).toContain('unsupported-schema-composition');
+    expect(codes).toContain('known-contract-affecting-extension');
+    expect(assessment.dimensions.dataShape.escalations).toContain('structural-depth-very-high');
+    expect(assessment.dimensions.conditionality.units).toBeGreaterThan(0);
+  });
+
+  it('creates stable hotspot tiers for equal and different assessments', () => {
+    const report = assessLoadedDocument(scope({
+      openapi: '3.1.0',
+      info: {title: 'Hotspots', version: '1.0.0'},
+      paths: {
+        '/a': {get: {responses: {'200': {description: 'A'}}}},
+        '/b': {get: {responses: {'200': {description: 'B'}}}},
+        '/c': {post: {
+          requestBody: {content: {'application/json': {schema: {type: 'string'}}}},
+          responses: {
+            '200': {description: 'C'},
+            '201': {description: 'Created'},
+            '202': {description: 'Accepted'},
+            default: {description: 'Error'}
+          }
+        }}
+      }
+    }));
+
+    expect(report.hotspots).toHaveSize(3);
+    const equalHotspots = report.hotspots.filter(hotspot => hotspot.identity.path === '/a' || hotspot.identity.path === '/b');
+    const differentHotspot = report.hotspots.find(hotspot => hotspot.identity.path === '/c');
+    expect(equalHotspots[0].tier).toBe(equalHotspots[1].tier);
+    expect(differentHotspot?.tier).not.toBe(equalHotspots[0].tier);
+  });
 });
+
+function deepSchema(): Record<string, unknown> {
+  let schema: Record<string, unknown> = {type: 'string'};
+  for (let depth = 0; depth < 13; depth++) {
+    schema = {type: 'object', properties: {next: schema}};
+  }
+  return schema;
+}
 
 function scope(document: Record<string, unknown>): AssessmentScopeInput {
   return {
