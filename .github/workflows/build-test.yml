@@ -2,11 +2,10 @@
 
 name: Build and Test
 
-# Controls when the action will run. Triggers the workflow on pull request
-# events but only for the master branch
+# Controls when the action will run. Pull-request checks must also run for
+# feature-integration branches used as the trunk of a stacked PR.
 on:
   pull_request:
-    branches: [ master ]
     types: [opened, synchronize, reopened]
 
 permissions:
