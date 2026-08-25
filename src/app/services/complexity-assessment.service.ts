@@ -145,6 +145,17 @@ function createFailureReason(loadedDocument: LoadedDocument, error: unknown): As
     code: 'assessment-failed',
     category: 'assessment',
     source: {sourceId: loadedDocument.sourceId, pointer: '/'},
-    values: {message: error instanceof Error ? error.message : String(error)}
+    values: {message: describeError(error)}
   };
+}
+
+function describeError(error: unknown): string {
+  if (error instanceof Error || typeof error === 'string') {
+    return error instanceof Error ? error.message : error;
+  }
+  try {
+    return JSON.stringify(error) ?? 'Unknown assessment failure';
+  } catch {
+    return 'Unknown assessment failure';
+  }
 }

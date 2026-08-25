@@ -41,5 +41,8 @@ export function handleAssessmentMessage(
 }
 
 workerScope.addEventListener('message', event => {
+  if (event.origin !== workerScope.origin) {
+    return;
+  }
   handleAssessmentMessage(event, message => workerScope.postMessage(message), workerScope.origin);
 });

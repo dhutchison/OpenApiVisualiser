@@ -45,12 +45,12 @@ export class OpenapiTreenodeConverterService {
   /**
    * Object hoilding the tree nodes to display
    */
-  private apiPathNodes: ApiPathTreeNode[] = [];
+  private readonly apiPathNodes: ApiPathTreeNode[] = [];
 
   /* Map of the absolute path to the node definition */
-  private treeNodes = new Map<string, ApiPathNode>();
+  private readonly treeNodes = new Map<string, ApiPathNode>();
 
-  private operationNodes = new Map<string, ApiOperationNode>();
+  private readonly operationNodes = new Map<string, ApiOperationNode>();
 
   constructor() {
     this.reset();
@@ -61,8 +61,8 @@ export class OpenapiTreenodeConverterService {
    * for display.
    */
   reset() {
-    this.apiPathNodes = [];
-    this.treeNodes = new Map<string, ApiPathNode>();
+    this.apiPathNodes.length = 0;
+    this.treeNodes.clear();
     this.operationNodes.clear();
 
     /* Setup the initial root node */

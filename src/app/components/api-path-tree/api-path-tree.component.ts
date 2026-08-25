@@ -213,11 +213,13 @@ export class ApiPathTreeComponent implements AfterViewInit, OnDestroy, OnInit {
       hasUnavailable ||= node.assessmentState === 'Unavailable';
     });
 
-    return hasPending
-      ? 'Assessing operation complexity…'
-      : hasUnavailable
-        ? 'Complexity assessment unavailable'
-        : undefined;
+    if (hasPending) {
+      return 'Assessing operation complexity…';
+    }
+    if (hasUnavailable) {
+      return 'Complexity assessment unavailable';
+    }
+    return undefined;
   }
 
   ngAfterViewInit() {

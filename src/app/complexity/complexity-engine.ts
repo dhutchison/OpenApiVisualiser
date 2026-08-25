@@ -16,6 +16,7 @@ import {
 
 type AnyRecord = Record<string, any>;
 type DimensionLevel = Exclude<ComplexityBand, 'Unknown'>;
+type AssessmentValue = boolean | number | string | readonly string[];
 
 const HTTP_METHODS = ['delete', 'get', 'head', 'options', 'patch', 'post', 'put', 'trace'];
 const DIMENSIONS: ComplexityDimension[] = [
@@ -58,7 +59,7 @@ export function assessLoadedDocument(scope: AssessmentScopeInput): ComplexityAss
   const document = scope.document as AnyRecord;
   const version = typeof document.openapi === 'string' ? document.openapi : '';
 
-  if (!/^3\.(0|1)(?:\.\d+)?$/.test(version)) {
+  if (!/^3\.[01](?:\.\d+)?$/.test(version)) {
     return createUnavailableReport(scope, reason(
       'unsupported-openapi-version',
       'assessment',
@@ -156,7 +157,7 @@ function assessOperation(
       units: collector.units,
       level: classifyDimension(dimension, collector.units, collector.minimum),
       reasons: sortReasons(collector.reasons),
-      escalations: [...collector.escalations].sort()
+      escalations: [...collector.escalations].sort((left, right) => left.localeCompare(right))
     } satisfies DimensionAssessment];
   })) as unknown as Record<ComplexityDimension, DimensionAssessment>;
 
@@ -168,10 +169,17 @@ function assessOperation(
   const finalBand = rawBand;
   const dominantDimension = incomplete ? undefined : findDominantDimension(dimensionAssessments);
 
+  let confidence: OperationAssessment['confidence'] = 'Complete';
+  if (incomplete) {
+    confidence = 'Incomplete';
+  } else if (warnings.length > 0) {
+    confidence = 'Qualified';
+  }
+
   return {
     identity,
     modelVersion: COMPLEXITY_MODEL_VERSION,
-    confidence: incomplete ? 'Incomplete' : warnings.length > 0 ? 'Qualified' : 'Complete',
+    confidence,
     dimensions: dimensionAssessments,
     rawBand,
     documentationSupport,
@@ -323,7 +331,7 @@ function collectResponses(context: AssessmentContext, responses: unknown, pointe
         return;
       }
 
-      Object.keys(response.headers ?? {}).sort().forEach(header => {
+      Object.keys(response.headers ?? {}).sort((left, right) => left.localeCompare(right)).forEach(header => {
         const headerPointer = `${responsePointer}/headers/${escapeJsonPointer(header)}`;
         addUnit(context, 'interactionSurface', 1, 'response-header', 'response', headerPointer, {name: header});
         if (isReference(response.headers[header])) {
@@ -337,11 +345,10 @@ function collectResponses(context: AssessmentContext, responses: unknown, pointe
         collectContent(context, response.content, `${responsePointer}/content`, 'response');
       }
       if (response.links) {
-        Object.keys(response.links).sort().forEach(link => {
+        Object.keys(response.links).sort((left, right) => left.localeCompare(right)).forEach(link => {
           addBlocking(context, 'unsupported-link', 'protocolObligations', `${responsePointer}/links/${escapeJsonPointer(link)}`, 'response', {name: link});
         });
       }
-      void index;
     });
 }
 
@@ -353,7 +360,7 @@ function collectContent(context: AssessmentContext, content: unknown, pointer: s
 
   Object.entries(content as AnyRecord)
     .sort(([left], [right]) => left.localeCompare(right))
-    .forEach(([mediaType, media], index) => {
+    .forEach(([mediaType, media]) => {
       const mediaPointer = `${pointer}/${escapeJsonPointer(mediaType)}`;
       addUnit(context, 'interactionSurface', 1, role === 'request' ? 'request-representation' : 'response-representation', role, mediaPointer, {mediaType});
       if (isReference(media)) {
@@ -369,7 +376,6 @@ function collectContent(context: AssessmentContext, content: unknown, pointer: s
       } else {
         addBlocking(context, 'missing-media-schema', 'assessment', mediaPointer, role, {mediaType});
       }
-      void index;
     });
 }
 
@@ -396,7 +402,7 @@ function collectSchema(
 
   Object.keys(schemaObject)
     .filter(key => !SUPPORTED_SCHEMA_KEYS.has(key) && !key.startsWith('x-'))
-    .sort()
+    .sort((left, right) => left.localeCompare(right))
     .forEach(key => addBlocking(context, 'unsupported-schema-keyword', 'assessment', `${pointer}/${escapeJsonPointer(key)}`, role, {keyword: key}));
 
   ['allOf', 'oneOf', 'anyOf', 'not', 'if', 'then', 'else', 'dependentSchemas', 'unevaluatedProperties']
@@ -431,7 +437,7 @@ function collectSchema(
   if (type === 'object' || schemaObject.properties || schemaObject.additionalProperties !== undefined) {
     const properties = schemaObject.properties && typeof schemaObject.properties === 'object' ? schemaObject.properties : {};
     const required = new Set<string>(Array.isArray(schemaObject.required) ? schemaObject.required : []);
-    Object.keys(properties).sort().forEach(property => {
+    Object.keys(properties).sort((left, right) => left.localeCompare(right)).forEach(property => {
       const propertySchema = properties[property];
       if (isReadOnlyForRole(propertySchema, role)) {
         return;
@@ -483,7 +489,7 @@ function collectUnsupportedProtocol(context: AssessmentContext, document: AnyRec
     addBlocking(context, 'unsupported-protocol-obligations', 'protocolObligations', `${pointer}/servers`, undefined, {construct: 'servers'});
   }
   if (operation.callbacks) {
-    Object.keys(operation.callbacks).sort().forEach(callback => {
+    Object.keys(operation.callbacks).sort((left, right) => left.localeCompare(right)).forEach(callback => {
       addBlocking(context, 'unsupported-callback', 'protocolObligations', `${pointer}/callbacks/${escapeJsonPointer(callback)}`, undefined, {name: callback});
     });
   }
@@ -513,7 +519,7 @@ function addUnit(
   code: string,
   role: ConsumerRole | undefined,
   pointer: string,
-  values: Record<string, boolean | number | string | readonly string[]>
+  values: Record<string, AssessmentValue>
 ) {
   const collector = context.dimensions[dimension];
   collector.units += units;
@@ -534,7 +540,7 @@ function addBlocking(
   category: ComplexityDimension | 'assessment',
   pointer: string,
   role: ConsumerRole | undefined,
-  values: Record<string, boolean | number | string | readonly string[]>
+  values: Record<string, AssessmentValue>
 ) {
   const fault = reason(code, category, context.scope, pointer, values, role);
   context.blockingFaults.push(fault);
@@ -548,7 +554,7 @@ function reason(
   category: AssessmentReason['category'],
   scope: AssessmentScopeInput,
   pointer: string,
-  values: Record<string, boolean | number | string | readonly string[]>,
+  values: Record<string, AssessmentValue>,
   consumerRole?: ConsumerRole
 ): AssessmentReason {
   return {
@@ -562,7 +568,14 @@ function reason(
 
 function classifyDimension(dimension: ComplexityDimension, units: number, minimum: DimensionLevel): DimensionLevel {
   const threshold = LEVEL_THRESHOLDS[dimension];
-  const level = units >= threshold.veryHigh ? 'Very high' : units >= threshold.high ? 'High' : units >= threshold.moderate ? 'Moderate' : 'Low';
+  let level: DimensionLevel = 'Low';
+  if (units >= threshold.veryHigh) {
+    level = 'Very high';
+  } else if (units >= threshold.high) {
+    level = 'High';
+  } else if (units >= threshold.moderate) {
+    level = 'Moderate';
+  }
   return BAND_ORDER.indexOf(level) >= BAND_ORDER.indexOf(minimum) ? level : minimum;
 }
 
@@ -672,5 +685,5 @@ function isReference(value: unknown): value is {$ref: string} {
 }
 
 function escapeJsonPointer(value: string): string {
-  return value.replace(/~/g, '~0').replace(/\//g, '~1');
+  return value.replaceAll('~', '~0').replaceAll('/', '~1');
 }

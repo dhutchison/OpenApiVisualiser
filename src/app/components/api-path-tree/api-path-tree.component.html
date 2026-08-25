@@ -61,13 +61,12 @@
 
   <div>
     @if (getAssessmentStatus(); as assessmentStatus) {
-      <div
+      <output
         class="complexity-assessment-status"
-        role="status"
         aria-live="polite"
         aria-atomic="true">
         {{ assessmentStatus }}
-      </div>
+      </output>
     }
     <div class="tree-view" #treeView>
       <cdk-tree
