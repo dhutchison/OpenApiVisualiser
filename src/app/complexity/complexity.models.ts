@@ -84,12 +84,15 @@ export const COMPLEXITY_CAPABILITY_MANIFEST: ComplexityCapabilityManifest = {
     'inline object, scalar, array, map, and tuple schemas',
     'response cases, headers, and media types',
     'requiredness, nullability, and validation families',
+    'local and supplied external references with canonical resource-set resolution',
+    'reference chains, external boundaries, composition edges, and recursive schema groups',
+    'allOf effective shapes, oneOf/anyOf alternatives, and dependent conditional rules',
+    'security, servers, response links, and callback obligations',
     'deterministic report and compact presentation lifecycle'
   ],
   unsupportedContractAffecting: [
-    '$ref and external references',
-    'allOf, oneOf, anyOf, not, and conditional schemas',
-    'callbacks, links, and advanced protocol obligations',
+    'unsupported callback or composition targets',
+    'advanced protocol obligations not represented by the supported security, server, link, and callback facts',
     'unsupported JSON Schema keywords'
   ],
   ignoredNonSemanticExtensions: ['x-* extensions without registered contract semantics']
