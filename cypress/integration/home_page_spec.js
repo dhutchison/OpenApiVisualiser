@@ -240,7 +240,12 @@ describe('The Home Page', () => {
       })
 
       accordionHeader('API Paths').click()
-      cy.get('#perform-search-node').should('be.visible').trigger('mouseenter')
+      cy.get('#perform-search-node').should('be.visible')
+        .find('.operation-complexity', {timeout: 20000})
+        .should(($label) => {
+          expect($label.text()).not.to.contain('assessing')
+        })
+      cy.get('#perform-search-node').trigger('mouseenter')
 
       cy.get('.app-tooltip:not([hidden])').then(($tooltip) => {
         const tooltipRect = $tooltip[0].getBoundingClientRect()
