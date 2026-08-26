@@ -826,6 +826,89 @@ describe('assessLoadedDocument', () => {
     expect(roles?.reasons.some(reason => reason.source.pointer.endsWith('/properties/id'))).toBeFalse();
     expect(roles?.reasons.some(reason => reason.source.pointer.endsWith('/properties/secret'))).toBeFalse();
   });
+
+  it('keeps malformed containers and nested composition paths diagnosable', () => {
+    const emptyPathsReport = assessLoadedDocument(scope({
+      openapi: '3.1.0',
+      info: {title: 'Missing paths', version: '1.0.0'},
+      paths: null as unknown as Record<string, unknown>
+    }));
+    expect(emptyPathsReport.assessments).toHaveSize(0);
+
+    const report = assessLoadedDocument(scope({
+      openapi: '3.1.0',
+      info: {title: 'Malformed containers', version: '1.0.0'},
+      paths: {
+        '/ignored': null,
+        '/invalid': {
+          get: {
+            parameters: [
+              {$ref: '#/components/parameters/Missing'},
+              {name: 'content', in: 'query', content: 'invalid'},
+              {name: 'schema', in: 'query', schema: 'invalid'}
+            ],
+            requestBody: {content: 'invalid'},
+            responses: null,
+            servers: [{variables: {region: {default: 'uk'}}}, {}],
+            callbacks: {missing: {$ref: '#/components/callbacks/Missing'}, broken: null}
+          }
+        },
+        '/responses': {
+          get: {
+            responses: {
+              '200': {$ref: '#/components/responses/Missing'},
+              '201': {$ref: '%'},
+              '202': {content: {'application/json': {$ref: '#/components/schemas/Missing'}}},
+              '203': {content: {'application/json': null}},
+              '204': {headers: {Trace: {$ref: '#/components/headers/Missing'}}}
+            }
+          }
+        },
+        '/composition': {
+          post: {
+            requestBody: {content: {'application/json': {schema: {
+              allOf: [
+                null,
+                {$ref: '#/components/schemas/Alias'},
+                {enum: [1]},
+                {minItems: 5}
+              ],
+              oneOf: [{type: 'string'}],
+              dependencies: [],
+              if: {properties: {kind: {const: 'a'}}},
+              then: {required: ['value']},
+              unevaluatedProperties: {type: 'string'}
+            }}}},
+            responses: {'204': {description: 'Accepted'}}
+          }
+        },
+        '/contradiction': {
+          post: {
+            requestBody: {content: {'application/json': {schema: {
+              allOf: [{enum: [1]}, {enum: [2]}, {minItems: 5}, {maxItems: 2}]
+            }}}},
+            responses: {'204': {description: 'Accepted'}}
+          }
+        }
+      },
+      components: {
+        schemas: {
+          Alias: {$ref: '#/components/schemas/Text'},
+          Text: {type: 'string'}
+        }
+      }
+    }));
+
+    const invalid = report.assessments.find(item => item.identity.path === '/invalid');
+    const responses = report.assessments.find(item => item.identity.path === '/responses');
+    const contradiction = report.assessments.find(item => item.identity.path === '/contradiction');
+    const invalidCodes = invalid?.blockingFaults.map(fault => fault.code) ?? [];
+    ['unavailable-reference', 'invalid-schema', 'unsupported-request-body', 'invalid-responses', 'unavailable-callback']
+      .forEach(code => expect(invalidCodes).toContain(code));
+    const responseCodes = responses?.blockingFaults.map(fault => fault.code) ?? [];
+    ['unavailable-reference', 'invalid-media-type'].forEach(code => expect(responseCodes).toContain(code));
+    expect(contradiction?.blockingFaults.some(fault => fault.code === 'contradictory-composition')).toBeTrue();
+  });
 });
 
 function deepSchema(): Record<string, unknown> {
