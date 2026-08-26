@@ -72,6 +72,7 @@ export interface ComplexityCapabilityManifest {
   readonly openApiVersions: readonly ['3.0', '3.1'];
   readonly supported: readonly string[];
   readonly unsupportedContractAffecting: readonly string[];
+  readonly knownContractAffectingExtensions: readonly string[];
   readonly ignoredNonSemanticExtensions: readonly string[];
 }
 
@@ -83,18 +84,22 @@ export const COMPLEXITY_CAPABILITY_MANIFEST: ComplexityCapabilityManifest = {
     'inline request and response bodies',
     'inline object, scalar, array, map, and tuple schemas',
     'response cases, headers, and media types',
-    'requiredness, nullability, and validation families',
+    'role-projected requiredness, optionality, readOnly, writeOnly, defaults, and nullability',
+    'version-appropriate OpenAPI 3.0 and 3.1 schema semantics',
+    'validation families, dependent rules, and non-default parameter serialization',
     'local and supplied external references with canonical resource-set resolution',
     'reference chains, external boundaries, composition edges, and recursive schema groups',
     'allOf effective shapes, oneOf/anyOf alternatives, and dependent conditional rules',
+    'discriminator selectors and viable alternative branches',
     'security, servers, response links, and callback obligations',
     'deterministic report and compact presentation lifecycle'
   ],
   unsupportedContractAffecting: [
     'unsupported callback or composition targets',
     'advanced protocol obligations not represented by the supported security, server, link, and callback facts',
-    'unsupported JSON Schema keywords'
+    'unsupported JSON Schema keywords for the declared OpenAPI version'
   ],
+  knownContractAffectingExtensions: ['x-multi-segment'],
   ignoredNonSemanticExtensions: ['x-* extensions without registered contract semantics']
 };
 

@@ -17,6 +17,7 @@ import {
 type AnyRecord = Record<string, any>;
 type DimensionLevel = Exclude<ComplexityBand, 'Unknown'>;
 type AssessmentValue = boolean | number | string | readonly string[];
+type OpenApiSchemaVersion = '3.0' | '3.1';
 
 const HTTP_METHODS = ['delete', 'get', 'head', 'options', 'patch', 'post', 'put', 'trace'];
 const DIMENSIONS: ComplexityDimension[] = [
@@ -46,16 +47,22 @@ const CATEGORY_ORDER: Record<string, number> = {
   assessment: 5
 };
 
-const SUPPORTED_SCHEMA_KEYS = new Set([
-  '$schema', 'type', 'title', 'description', 'format', 'default', 'example', 'examples',
-  'deprecated', 'readOnly', 'writeOnly', 'nullable', 'enum', 'const', 'properties',
-  'required', 'items', 'prefixItems', 'additionalProperties', 'minProperties', 'maxProperties',
-  'minItems', 'maxItems', 'uniqueItems', 'minLength', 'maxLength', 'pattern', 'minimum',
-  'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf', 'xml', 'externalDocs',
-  'discriminator', 'contentMediaType', 'contentEncoding'
-]);
-
-const COMPOSITION_KEYS = ['allOf', 'oneOf', 'anyOf', 'not', 'if', 'then', 'else', 'dependentSchemas', 'unevaluatedProperties'];
+const COMMON_SUPPORTED_SCHEMA_KEYS = [
+  'type', 'title', 'description', 'format', 'default', 'example', 'examples',
+  'deprecated', 'readOnly', 'writeOnly', 'enum', 'properties', 'required', 'items',
+  'additionalProperties', 'minProperties', 'maxProperties', 'minItems', 'maxItems',
+  'uniqueItems', 'minLength', 'maxLength', 'pattern', 'minimum', 'maximum',
+  'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf', 'xml', 'externalDocs',
+  'discriminator'
+];
+const SUPPORTED_SCHEMA_KEYS: Record<OpenApiSchemaVersion, Set<string>> = {
+  '3.0': new Set([...COMMON_SUPPORTED_SCHEMA_KEYS, 'nullable', 'dependencies']),
+  '3.1': new Set([
+    ...COMMON_SUPPORTED_SCHEMA_KEYS,
+    '$schema', 'const', 'prefixItems', 'contentMediaType', 'contentEncoding',
+    'dependentRequired', 'dependentSchemas', 'unevaluatedProperties'
+  ])
+};
 
 export function assessLoadedDocument(scope: AssessmentScopeInput): ComplexityAssessmentReport {
   const document = scope.document as AnyRecord;
@@ -138,7 +145,10 @@ function assessOperation(
       response: createRoleState()
     },
     protocolEvidence: new Set<string>(),
-    callbackTargets: new Set<string>()
+    callbackTargets: new Set<string>(),
+    openApiVersion: typeof document.openapi === 'string' && document.openapi.startsWith('3.1') ? '3.1' : '3.0',
+    conditionalNesting: 0,
+    maximumConditionalNesting: 0
   };
 
   if (operation['x-multi-segment'] !== undefined) {
@@ -155,6 +165,9 @@ function assessOperation(
   collectRequestBody(context, operation.requestBody, `${operationPointer}/requestBody`, scope.sourceId);
   collectResponses(context, operation.responses, `${operationPointer}/responses`, scope.sourceId);
   collectProtocol(context, document, operation, operationPointer, scope.sourceId);
+  if (context.maximumConditionalNesting >= 2) {
+    setMinimum(context, 'conditionality', 'Very high', 'nested-interacting-conditional-layers');
+  }
   emitCycleSignals(context);
 
   const dimensionAssessments = Object.fromEntries(DIMENSIONS.map(dimension => {
@@ -242,6 +255,9 @@ interface AssessmentContext {
   readonly roles: Record<ConsumerRole, RoleState>;
   readonly protocolEvidence: Set<string>;
   readonly callbackTargets: Set<string>;
+  readonly openApiVersion: OpenApiSchemaVersion;
+  conditionalNesting: number;
+  maximumConditionalNesting: number;
 }
 
 interface RoleState {
@@ -252,6 +268,7 @@ interface RoleState {
   readonly seenExternalBoundaries: Set<string>;
   readonly referenceGraph: Map<string, Set<string>>;
   readonly cycleEdges: CycleEdge[];
+  readonly activeCompositionReferences: Set<string>;
 }
 
 interface CycleEdge {
@@ -277,7 +294,8 @@ function createRoleState(): RoleState {
     seenReferenceTargets: new Set<string>(),
     seenExternalBoundaries: new Set<string>(),
     referenceGraph: new Map<string, Set<string>>(),
-    cycleEdges: []
+    cycleEdges: [],
+    activeCompositionReferences: new Set<string>()
   };
 }
 
@@ -296,7 +314,8 @@ function collectParameters(
   pathItem: AnyRecord,
   operation: AnyRecord,
   pointer: string,
-  sourceId: string
+  sourceId: string,
+  role: ConsumerRole = 'request'
 ) {
   const parameters = new Map<string, {parameter: AnyRecord; pointer: string; sourceId: string}>();
   const pathParameters = Array.isArray(pathItem.parameters) ? pathItem.parameters : [];
@@ -306,7 +325,7 @@ function collectParameters(
     const parameterPointer = `${pointer}/parameters/${index}`;
     let parameterSourceId = sourceId;
     if (isReference(parameter)) {
-      const resolved = resolveReference(context, parameter.$ref, parameterSourceId, parameterPointer, 'request', 0);
+      const resolved = resolveReference(context, parameter.$ref, parameterSourceId, parameterPointer, role, 0);
       if (!resolved) return;
       parameter = resolved.target;
       parameterSourceId = resolved.sourceId;
@@ -321,18 +340,18 @@ function collectParameters(
   [...parameters.values()]
     .sort((left, right) => `${left.parameter.in}:${left.parameter.name}`.localeCompare(`${right.parameter.in}:${right.parameter.name}`))
     .forEach(({parameter, pointer: parameterPointer, sourceId: parameterSourceId}) => {
-      addUnit(context, 'interactionSurface', 1, 'parameter', 'request', parameterPointer, {name: parameter.name, in: parameter.in}, parameterSourceId);
-      addUnit(context, 'conditionality', 1, parameter.required ? 'requiredness-obligation' : 'optionality-obligation', 'request', parameterPointer, {required: !!parameter.required}, parameterSourceId);
+      addUnit(context, 'interactionSurface', 1, 'parameter', role, parameterPointer, {name: parameter.name, in: parameter.in}, parameterSourceId);
+      addUnit(context, 'conditionality', 1, parameter.required ? 'requiredness-obligation' : 'optionality-obligation', role, parameterPointer, {required: !!parameter.required}, parameterSourceId);
       if (isNonDefaultSerialization(parameter)) {
-        addUnit(context, 'conditionality', 1, 'non-default-serialization', 'request', parameterPointer, {style: parameter.style ?? '', explode: !!parameter.explode}, parameterSourceId);
+        addUnit(context, 'conditionality', 1, 'non-default-serialization', role, parameterPointer, {style: parameter.style ?? '', explode: !!parameter.explode}, parameterSourceId);
       }
 
       if (parameter.content) {
-        collectContent(context, parameter.content, `${parameterPointer}/content`, 'request', parameterSourceId);
+        collectContent(context, parameter.content, `${parameterPointer}/content`, role, parameterSourceId);
         return;
       }
       if (parameter.schema) {
-        collectSchema(context, parameter.schema, `${parameterPointer}/schema`, 'request', 0, parameterSourceId);
+        collectSchema(context, parameter.schema, `${parameterPointer}/schema`, role, 0, parameterSourceId);
         return;
       }
       addBlocking(context, 'unsupported-parameter-shape', 'assessment', parameterPointer, 'request', {name: parameter.name});
@@ -340,31 +359,50 @@ function collectParameters(
 
 }
 
-function collectRequestBody(context: AssessmentContext, requestBody: unknown, pointer: string, sourceId: string) {
+function collectRequestBody(
+  context: AssessmentContext,
+  requestBody: unknown,
+  pointer: string,
+  sourceId: string,
+  role: ConsumerRole = 'request'
+) {
   if (!requestBody) {
     return;
   }
   if (isReference(requestBody)) {
-    const resolved = resolveReference(context, requestBody.$ref, sourceId, pointer, 'request', 0);
+    const resolved = resolveReference(context, requestBody.$ref, sourceId, pointer, role, 0);
     if (!resolved) return;
     requestBody = resolved.target;
     sourceId = resolved.sourceId;
   }
   const requestBodyObject = requestBody as AnyRecord;
   if (typeof requestBody !== 'object' || !requestBodyObject.content || typeof requestBodyObject.content !== 'object') {
-    addBlocking(context, 'unsupported-request-body', 'assessment', pointer, 'request', {});
+    addBlocking(context, 'unsupported-request-body', 'assessment', pointer, role, {});
     return;
   }
 
-  collectContent(context, requestBodyObject.content, `${pointer}/content`, 'request', sourceId);
-  if (requestBodyObject.required) {
-    addUnit(context, 'conditionality', 1, 'requiredness-obligation', 'request', pointer, {required: true}, sourceId);
-  }
+  collectContent(context, requestBodyObject.content, `${pointer}/content`, role, sourceId);
+  addUnit(
+    context,
+    'conditionality',
+    1,
+    requestBodyObject.required ? 'requiredness-obligation' : 'optionality-obligation',
+    role,
+    pointer,
+    {required: !!requestBodyObject.required},
+    sourceId
+  );
 }
 
-function collectResponses(context: AssessmentContext, responses: unknown, pointer: string, sourceId: string) {
+function collectResponses(
+  context: AssessmentContext,
+  responses: unknown,
+  pointer: string,
+  sourceId: string,
+  role: ConsumerRole = 'response'
+) {
   if (!responses || typeof responses !== 'object') {
-    addBlocking(context, 'invalid-responses', 'assessment', pointer, 'response', {});
+    addBlocking(context, 'invalid-responses', 'assessment', pointer, role, {});
     return;
   }
 
@@ -372,40 +410,40 @@ function collectResponses(context: AssessmentContext, responses: unknown, pointe
     .sort(([left], [right]) => left.localeCompare(right))
     .forEach(([status, response], index) => {
       const responsePointer = `${pointer}/${escapeJsonPointer(status)}`;
-      addUnit(context, 'interactionSurface', 1, 'response-case', 'response', responsePointer, {status}, sourceId);
+      addUnit(context, 'interactionSurface', 1, 'response-case', role, responsePointer, {status}, sourceId);
       let responseSourceId = sourceId;
       if (isReference(response)) {
-        const resolved = resolveReference(context, response.$ref, responseSourceId, responsePointer, 'response', 0);
+        const resolved = resolveReference(context, response.$ref, responseSourceId, responsePointer, role, 0);
         if (!resolved) return;
         response = resolved.target;
         responseSourceId = resolved.sourceId;
       }
       if (!response || typeof response !== 'object') {
-        addBlocking(context, 'invalid-response', 'assessment', responsePointer, 'response', {status});
+        addBlocking(context, 'invalid-response', 'assessment', responsePointer, role, {status});
         return;
       }
 
       Object.keys(response.headers ?? {}).sort((left, right) => left.localeCompare(right)).forEach(header => {
         const headerPointer = `${responsePointer}/headers/${escapeJsonPointer(header)}`;
-        addUnit(context, 'interactionSurface', 1, 'response-header', 'response', headerPointer, {name: header}, responseSourceId);
+        addUnit(context, 'interactionSurface', 1, 'response-header', role, headerPointer, {name: header}, responseSourceId);
         if (isReference(response.headers[header])) {
-          const resolved = resolveReference(context, response.headers[header].$ref, responseSourceId, headerPointer, 'response', 0);
+          const resolved = resolveReference(context, response.headers[header].$ref, responseSourceId, headerPointer, role, 0);
           if (resolved?.target.schema) {
-            collectSchema(context, resolved.target.schema, `${headerPointer}/schema`, 'response', 0, resolved.sourceId);
+            collectSchema(context, resolved.target.schema, `${headerPointer}/schema`, role, 0, resolved.sourceId);
           } else if (resolved) {
-            collectSchema(context, resolved.target, `${headerPointer}/schema`, 'response', 0, resolved.sourceId);
+            collectSchema(context, resolved.target, `${headerPointer}/schema`, role, 0, resolved.sourceId);
           }
         } else if (response.headers[header]?.schema) {
-          collectSchema(context, response.headers[header].schema, `${headerPointer}/schema`, 'response', 0, responseSourceId);
+          collectSchema(context, response.headers[header].schema, `${headerPointer}/schema`, role, 0, responseSourceId);
         }
       });
 
       if (response.content) {
-        collectContent(context, response.content, `${responsePointer}/content`, 'response', responseSourceId);
+        collectContent(context, response.content, `${responsePointer}/content`, role, responseSourceId);
       }
       if (response.links) {
       Object.keys(response.links).sort((left, right) => left.localeCompare(right)).forEach(link => {
-          addUnit(context, 'protocolObligations', 1, 'response-link', 'response', `${responsePointer}/links/${escapeJsonPointer(link)}`, {name: link}, sourceId);
+          addUnit(context, 'protocolObligations', 1, 'response-link', role, `${responsePointer}/links/${escapeJsonPointer(link)}`, {name: link}, sourceId);
         });
       }
     });
@@ -497,12 +535,16 @@ function collectSchemaNode(
   const ownerKey = canonicalKey ?? `inline:${stableValue(schemaObject)}`;
 
   Object.keys(schemaObject)
-    .filter(key => !SUPPORTED_SCHEMA_KEYS.has(key) && !COMPOSITION_KEYS.includes(key) && !key.startsWith('x-'))
+    .filter(key => !isSupportedSchemaKey(context.openApiVersion, key) && !key.startsWith('x-'))
     .sort((left, right) => left.localeCompare(right))
     .forEach(key => addBlocking(context, 'unsupported-schema-keyword', 'assessment', `${pointer}/${escapeJsonPointer(key)}`, role, {keyword: key}, sourceId));
 
   const effectiveSchema = collectComposition(context, schemaObject, pointer, role, depth, sourceId, referenceDepth);
   const effective = effectiveSchema ?? schemaObject;
+
+  if (context.openApiVersion === '3.0' && Array.isArray(schemaObject.type)) {
+    addBlocking(context, 'unsupported-schema-keyword', 'assessment', `${pointer}/type`, role, {keyword: 'type'}, sourceId);
+  }
 
   if (effective.readOnly && role === 'request' || effective.writeOnly && role === 'response') {
     return;
@@ -518,6 +560,7 @@ function collectSchemaNode(
 
   if (effective.discriminator) {
     addUnit(context, 'conditionality', 1, 'discriminator-selector', role, `${pointer}/discriminator`, {}, sourceId);
+    assessDiscriminator(context, effective.discriminator, pointer, role, sourceId, schemaObject, effective);
   }
 
   const validationFamilies = new Set<string>();
@@ -530,7 +573,17 @@ function collectSchemaNode(
   if (effective.minItems !== undefined || effective.maxItems !== undefined || effective.uniqueItems !== undefined) validationFamilies.add('items');
   if (effective.minProperties !== undefined || effective.maxProperties !== undefined) validationFamilies.add('properties');
   if (effective.enum !== undefined || effective.const !== undefined) validationFamilies.add('choice');
-  validationFamilies.forEach(family => addUnit(context, 'conditionality', 1, 'validation-rule-family', role, pointer, {family}, sourceId));
+  validationFamilies.forEach(family => addUnit(
+    context,
+    'conditionality',
+    1,
+    'validation-rule-family',
+    role,
+    pointer,
+    {family},
+    sourceId,
+    `${ownerKey}|validation|${family}`
+  ));
 
   const type = Array.isArray(effective.type) ? effective.type.find((value: unknown) => value !== 'null') : effective.type;
   if (type === 'object' || effective.properties || effective.additionalProperties !== undefined) {
@@ -538,7 +591,7 @@ function collectSchemaNode(
     const required = new Set<string>(Array.isArray(effective.required) ? effective.required : []);
     Object.keys(properties).sort((left, right) => left.localeCompare(right)).forEach(property => {
       const propertySchema = properties[property];
-      if (isReadOnlyForRole(propertySchema, role)) {
+      if (isReadOnlyForRole(context, propertySchema, role, sourceId)) {
         return;
       }
       const propertyPointer = `${pointer}/properties/${escapeJsonPointer(property)}`;
@@ -645,6 +698,58 @@ function stronglyConnectedComponents(graph: Map<string, Set<string>>): string[][
   return components;
 }
 
+function isSupportedSchemaKey(version: OpenApiSchemaVersion, key: string): boolean {
+  if (SUPPORTED_SCHEMA_KEYS[version].has(key)) return true;
+  if (['allOf', 'oneOf', 'anyOf'].includes(key)) return true;
+  return version === '3.1' && ['not', 'if', 'then', 'else'].includes(key);
+}
+
+function assessDiscriminator(
+  context: AssessmentContext,
+  discriminator: unknown,
+  pointer: string,
+  role: ConsumerRole,
+  sourceId: string,
+  originalSchema: AnyRecord,
+  effectiveSchema: AnyRecord
+) {
+  if (!discriminator || typeof discriminator !== 'object' || typeof (discriminator as AnyRecord).propertyName !== 'string') {
+    addBlocking(context, 'invalid-discriminator', 'assessment', `${pointer}/discriminator`, role, {}, sourceId);
+    return;
+  }
+  const mapping = (discriminator as AnyRecord).mapping;
+  if (mapping === undefined) return;
+  if (!mapping || typeof mapping !== 'object' || Array.isArray(mapping)) {
+    addBlocking(context, 'invalid-discriminator-mapping', 'assessment', `${pointer}/discriminator/mapping`, role, {}, sourceId);
+    return;
+  }
+
+  const alternatives = [
+    ...(Array.isArray(originalSchema.oneOf) ? originalSchema.oneOf : []),
+    ...(Array.isArray(originalSchema.anyOf) ? originalSchema.anyOf : []),
+    ...(Array.isArray(effectiveSchema.oneOf) ? effectiveSchema.oneOf : []),
+    ...(Array.isArray(effectiveSchema.anyOf) ? effectiveSchema.anyOf : [])
+  ];
+  const hasViableAlternative = alternatives.some(value => isViableAlternative(context, value, sourceId));
+  Object.entries(mapping as AnyRecord).sort(([left], [right]) => left.localeCompare(right)).forEach(([key, target]) => {
+    const mappingPointer = `${pointer}/discriminator/mapping/${escapeJsonPointer(key)}`;
+    const targetAvailable = typeof target === 'string' && !!resolveRawSchemaReference(context, target, sourceId);
+    if (targetAvailable) return;
+    const values = {key, target: typeof target === 'string' ? target : ''};
+    if (hasViableAlternative) {
+      addWarning(context, 'broken-discriminator-mapping', 'assessment', mappingPointer, role, values, sourceId);
+    } else {
+      addBlocking(context, 'broken-discriminator-mapping', 'assessment', mappingPointer, role, values, sourceId);
+    }
+  });
+}
+
+function isViableAlternative(context: AssessmentContext, value: unknown, sourceId: string): boolean {
+  if (!value || typeof value !== 'object') return false;
+  if (isReference(value)) return !!resolveRawSchemaReference(context, value.$ref, sourceId);
+  return true;
+}
+
 function collectComposition(
   context: AssessmentContext,
   schema: AnyRecord,
@@ -678,6 +783,8 @@ function collectComposition(
     if (!Array.isArray(current[keyword])) return;
     const branches = current[keyword] as unknown[];
     const extraUnits = keyword === 'oneOf' ? 2 : 3;
+    context.conditionalNesting++;
+    context.maximumConditionalNesting = Math.max(context.maximumConditionalNesting, context.conditionalNesting);
     branches.forEach((branch, branchIndex) => {
       if (branchIndex > 0) {
         addUnit(context, 'conditionality', extraUnits, 'alternative-branch', role, `${pointer}/${keyword}/${branchIndex}`, {kind: keyword, index: branchIndex}, sourceId);
@@ -685,6 +792,7 @@ function collectComposition(
       }
       collectSchema(context, branch, `${pointer}/${keyword}/${branchIndex}`, role, depth, sourceId, referenceDepth);
     });
+    context.conditionalNesting--;
     if (branches.length > 0) {
       setMinimum(context, 'conditionality', 'Moderate', `${keyword}-alternative`);
       if (branches.length >= 4) setMinimum(context, 'conditionality', 'High', 'four-alternatives');
@@ -692,15 +800,37 @@ function collectComposition(
     }
   });
 
-  ['not', 'if', 'then', 'else', 'dependentSchemas', 'unevaluatedProperties'].forEach(keyword => {
+  ['not', 'if', 'then', 'else', 'dependencies', 'dependentRequired', 'dependentSchemas', 'unevaluatedProperties'].forEach(keyword => {
     if (current[keyword] === undefined) return;
-    addUnit(context, 'conditionality', 3, 'dependent-conditional-rule', role, `${pointer}/${keyword}`, {keyword}, sourceId);
-    setMinimum(context, 'conditionality', 'Moderate', 'dependent-conditional-rule');
-    if (keyword === 'if' || keyword === 'then' || keyword === 'else' || keyword === 'not') {
-      collectSchema(context, current[keyword], `${pointer}/${keyword}`, role, depth, sourceId, referenceDepth);
-    } else if (current[keyword] && typeof current[keyword] === 'object') {
+    if (!isSupportedSchemaKey(context.openApiVersion, keyword)) return;
+    context.conditionalNesting++;
+    context.maximumConditionalNesting = Math.max(context.maximumConditionalNesting, context.conditionalNesting);
+    if (keyword === 'dependencies' || keyword === 'dependentRequired' || keyword === 'dependentSchemas') {
+      if (current[keyword] && typeof current[keyword] === 'object' && !Array.isArray(current[keyword])) {
+        Object.keys(current[keyword]).sort((left, right) => left.localeCompare(right)).forEach(key => {
+          const dependentPointer = `${pointer}/${keyword}/${escapeJsonPointer(key)}`;
+          addUnit(context, 'conditionality', 3, 'dependent-conditional-rule', role, dependentPointer, {keyword, property: key}, sourceId);
+          if (keyword === 'dependentSchemas' || (keyword === 'dependencies' && current[keyword][key] && typeof current[keyword][key] === 'object' && !Array.isArray(current[keyword][key]))) {
+            collectSchema(context, current[keyword][key], dependentPointer, role, depth, sourceId, referenceDepth);
+          }
+        });
+      } else {
+        addUnit(context, 'conditionality', 3, 'dependent-conditional-rule', role, `${pointer}/${keyword}`, {keyword}, sourceId);
+      }
+    } else {
+      addUnit(context, 'conditionality', 3, 'dependent-conditional-rule', role, `${pointer}/${keyword}`, {keyword}, sourceId);
+      if (keyword === 'unevaluatedProperties') {
+        if (current[keyword] && typeof current[keyword] === 'object') {
+          collectSchema(context, current[keyword], `${pointer}/${keyword}`, role, depth, sourceId, referenceDepth);
+        }
+      } else if (keyword === 'if' || keyword === 'then' || keyword === 'else' || keyword === 'not') {
+        collectSchema(context, current[keyword], `${pointer}/${keyword}`, role, depth, sourceId, referenceDepth);
+      } else if (current[keyword] && typeof current[keyword] === 'object') {
       Object.keys(current[keyword]).sort((left, right) => left.localeCompare(right)).forEach(key => collectSchema(context, current[keyword][key], `${pointer}/${keyword}/${escapeJsonPointer(key)}`, role, depth, sourceId, referenceDepth));
+      }
     }
+    context.conditionalNesting--;
+    setMinimum(context, 'conditionality', 'High', 'dependent-conditional-rule');
   });
 
   if (effective) {
@@ -730,11 +860,20 @@ function materializeCompositionBranch(
   if (isReference(value)) {
     const resolved = resolveReference(context, value.$ref, sourceId, pointer, role, referenceDepth);
     if (!resolved) return undefined;
-    context.roles[role].seenSchemaKeys.add(`ref:${resolved.canonicalKey}`);
-    if (isReference(resolved.target)) {
-      return materializeCompositionBranch(context, resolved.target, resolved.pointer, role, depth, resolved.sourceId, referenceDepth + 1);
+    const active = context.roles[role].activeCompositionReferences;
+    if (active.has(resolved.canonicalKey)) return undefined;
+    active.add(resolved.canonicalKey);
+    const referenceStack = context.roles[role].activeReferences;
+    referenceStack.push(resolved.canonicalKey);
+    try {
+      if (isReference(resolved.target)) {
+        return materializeCompositionBranch(context, resolved.target, resolved.pointer, role, depth, resolved.sourceId, referenceDepth + 1);
+      }
+      return materializeCompositionObject(context, resolved.target, resolved.pointer, role, depth, resolved.sourceId, referenceDepth + 1);
+    } finally {
+      referenceStack.pop();
+      active.delete(resolved.canonicalKey);
     }
-    return materializeCompositionObject(context, resolved.target, resolved.pointer, role, depth, resolved.sourceId, referenceDepth + 1);
   }
   return materializeCompositionObject(context, value, pointer, role, depth, sourceId, referenceDepth);
 }
@@ -774,19 +913,44 @@ function mergeSchemas(left: AnyRecord, right: AnyRecord): AnyRecord {
 }
 
 function schemasContradict(left: AnyRecord, right: AnyRecord): boolean {
-  const leftType = Array.isArray(left.type) ? left.type.filter(value => value !== 'null').join('|') : left.type;
-  const rightType = Array.isArray(right.type) ? right.type.filter(value => value !== 'null').join('|') : right.type;
-  if (leftType && rightType && leftType !== rightType) return true;
+  const leftTypes = schemaTypes(left);
+  const rightTypes = schemaTypes(right);
+  if (leftTypes && rightTypes && ![...leftTypes].some(type => rightTypes.has(type))) return true;
+  if (left.const !== undefined && right.const !== undefined && !Object.is(left.const, right.const)) return true;
+  if (left.const !== undefined && Array.isArray(right.enum) && !right.enum.some((value: unknown) => Object.is(value, left.const))) return true;
+  if (right.const !== undefined && Array.isArray(left.enum) && !left.enum.some((value: unknown) => Object.is(value, right.const))) return true;
+  if (Array.isArray(left.enum) && Array.isArray(right.enum)
+    && !left.enum.some((value: unknown) => right.enum.some((candidate: unknown) => Object.is(candidate, value)))) return true;
+  if (boundsContradict(left, right, 'minimum', 'maximum')
+    || boundsContradict(left, right, 'minLength', 'maxLength')
+    || boundsContradict(left, right, 'minItems', 'maxItems')
+    || boundsContradict(left, right, 'minProperties', 'maxProperties')) return true;
   const leftProperties = left.properties && typeof left.properties === 'object' ? left.properties : {};
   const rightProperties = right.properties && typeof right.properties === 'object' ? right.properties : {};
   return Object.keys(leftProperties).some(property => {
     const leftProperty = leftProperties[property] as AnyRecord;
     const rightProperty = rightProperties[property] as AnyRecord | undefined;
     if (!rightProperty || typeof leftProperty !== 'object' || typeof rightProperty !== 'object') return false;
-    const leftPropertyType = Array.isArray(leftProperty.type) ? leftProperty.type.join('|') : leftProperty.type;
-    const rightPropertyType = Array.isArray(rightProperty.type) ? rightProperty.type.join('|') : rightProperty.type;
-    return !!leftPropertyType && !!rightPropertyType && leftPropertyType !== rightPropertyType;
+    return schemasContradict(leftProperty, rightProperty);
   });
+}
+
+function boundsContradict(left: AnyRecord, right: AnyRecord, minimum: string, maximum: string): boolean {
+  const lower = Math.max(
+    typeof left[minimum] === 'number' ? left[minimum] : Number.NEGATIVE_INFINITY,
+    typeof right[minimum] === 'number' ? right[minimum] : Number.NEGATIVE_INFINITY
+  );
+  const upper = Math.min(
+    typeof left[maximum] === 'number' ? left[maximum] : Number.POSITIVE_INFINITY,
+    typeof right[maximum] === 'number' ? right[maximum] : Number.POSITIVE_INFINITY
+  );
+  return lower > upper;
+}
+
+function schemaTypes(schema: AnyRecord): Set<string> | undefined {
+  if (schema.type === undefined) return undefined;
+  const values = Array.isArray(schema.type) ? schema.type : [schema.type];
+  return new Set(values.filter((value): value is string => typeof value === 'string' && value !== 'null'));
 }
 
 function collectProtocol(context: AssessmentContext, document: AnyRecord, operation: AnyRecord, pointer: string, sourceId: string) {
@@ -864,9 +1028,9 @@ function collectCallback(
     HTTP_METHODS.filter(method => pathItem[method] && typeof pathItem[method] === 'object').forEach(method => {
       const operation = pathItem[method] as AnyRecord;
       const operationPointer = `${callbackPath}/${method}`;
-      collectParameters(context, pathItem as AnyRecord, operation, operationPointer, sourceId);
-      collectRequestBody(context, operation.requestBody, `${operationPointer}/requestBody`, sourceId);
-      collectResponses(context, operation.responses, `${operationPointer}/responses`, sourceId);
+      collectParameters(context, pathItem as AnyRecord, operation, operationPointer, sourceId, 'response');
+      collectRequestBody(context, operation.requestBody, `${operationPointer}/requestBody`, sourceId, 'response');
+      collectResponses(context, operation.responses, `${operationPointer}/responses`, sourceId, 'request');
       collectProtocol(context, {}, operation, operationPointer, sourceId);
     });
   });
@@ -1001,8 +1165,57 @@ function stableValue(value: unknown): string {
   return JSON.stringify(normalize(value));
 }
 
-function isReadOnlyForRole(schema: unknown, role: ConsumerRole): boolean {
-  return !!schema && typeof schema === 'object' && ((schema as AnyRecord).readOnly && role === 'request' || (schema as AnyRecord).writeOnly && role === 'response');
+function isReadOnlyForRole(
+  context: AssessmentContext,
+  schema: unknown,
+  role: ConsumerRole,
+  sourceId: string
+): boolean {
+  const inspect = (current: unknown, visited: Set<string>): boolean => {
+    if (!current || typeof current !== 'object') return false;
+    const object = current as AnyRecord;
+    if ((object.readOnly && role === 'request') || (object.writeOnly && role === 'response')) return true;
+    if (isReference(current)) {
+      if (visited.has(current.$ref)) return false;
+      const nextVisited = new Set(visited).add(current.$ref);
+      return inspect(resolveRawSchemaReference(context, current.$ref, sourceId), nextVisited);
+    }
+    return ['allOf', 'oneOf', 'anyOf'].some(keyword =>
+      Array.isArray(object[keyword]) && object[keyword].some((branch: unknown) => inspect(branch, new Set(visited))));
+  };
+  return inspect(schema, new Set<string>());
+}
+
+function resolveRawSchemaReference(
+  context: AssessmentContext,
+  reference: string,
+  fromSourceId: string
+): AnyRecord | undefined {
+  const fromResource = context.scope.resourceSet.find(entry => entry.sourceId === fromSourceId);
+  const fromUri = canonicalDocumentUri(fromResource?.baseUri ?? fromSourceId, context.scope.baseUri);
+  const hashIndex = reference.indexOf('#');
+  const uriPart = hashIndex >= 0 ? reference.slice(0, hashIndex) : reference;
+  const fragment = hashIndex >= 0 ? reference.slice(hashIndex + 1) : '';
+  let targetUri: string;
+  try {
+    targetUri = canonicalDocumentUri(uriPart || fromUri, fromUri);
+  } catch {
+    return undefined;
+  }
+  const resource = context.scope.resourceSet.find(entry => {
+    try {
+      return canonicalDocumentUri(entry.sourceId, entry.baseUri) === targetUri
+        || canonicalDocumentUri(entry.baseUri, entry.baseUri) === targetUri;
+    } catch {
+      return entry.sourceId === targetUri || entry.baseUri === targetUri;
+    }
+  });
+  if (!resource) return undefined;
+  const target = decodeReferencePointer(fragment).reduce<unknown>((current, token) => {
+    if (!current || typeof current !== 'object') return undefined;
+    return (current as AnyRecord)[token];
+  }, resource.document);
+  return target && typeof target === 'object' ? target as AnyRecord : undefined;
 }
 
 function isNonDefaultSerialization(parameter: AnyRecord): boolean {
@@ -1058,6 +1271,22 @@ function addBlocking(
   context.blockingFaults.push(fault);
   if (category !== 'assessment' && category in context.dimensions) {
     context.dimensions[category as ComplexityDimension].reasons.push(fault);
+  }
+}
+
+function addWarning(
+  context: AssessmentContext,
+  code: string,
+  category: ComplexityDimension | 'assessment',
+  pointer: string,
+  role: ConsumerRole | undefined,
+  values: Record<string, AssessmentValue>,
+  sourceId = context.scope.sourceId
+) {
+  const warning = reason(code, category, context.scope, pointer, values, role, sourceId);
+  context.warnings.push(warning);
+  if (category !== 'assessment' && category in context.dimensions) {
+    context.dimensions[category as ComplexityDimension].reasons.push(warning);
   }
 }
 
