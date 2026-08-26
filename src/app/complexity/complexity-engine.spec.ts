@@ -413,10 +413,10 @@ describe('assessLoadedDocument', () => {
     const report = assessLoadedDocument(scope({
       openapi: '3.1.0',
       info: {title: 'Invalid shapes', version: '1.0.0'},
-      security: [{}],
+      security: [{}, {}],
       paths: {
         '/invalid': {
-          servers: [{}],
+          servers: [{}, {}],
           get: {
             parameters: [
               {$ref: '#/components/parameters/Id'},
@@ -452,15 +452,18 @@ describe('assessLoadedDocument', () => {
       }
     }));
 
-    const codes = report.assessments.flatMap(assessment => assessment.blockingFaults.map(fault => fault.code));
-    expect(codes).toContain('unsupported-reference');
-    expect(codes).toContain('invalid-parameter');
-    expect(codes).toContain('unsupported-parameter-shape');
-    expect(codes).toContain('unsupported-request-body');
-    expect(codes).toContain('missing-media-schema');
-    expect(codes).toContain('unsupported-link');
-    expect(codes).toContain('unsupported-protocol-obligations');
-    expect(codes).toContain('unsupported-callback');
+    const assessment = report.assessments.find(item => item.identity.path === '/invalid');
+    const blockingCodes = report.assessments.flatMap(item => item.blockingFaults.map(fault => fault.code));
+    const evidenceCodes = assessment?.reasons.map(reason => reason.code) ?? [];
+    expect(blockingCodes).toContain('unavailable-reference');
+    expect(blockingCodes).toContain('invalid-parameter');
+    expect(blockingCodes).toContain('unsupported-parameter-shape');
+    expect(blockingCodes).toContain('unsupported-request-body');
+    expect(blockingCodes).toContain('missing-media-schema');
+    expect(evidenceCodes).toContain('response-link');
+    expect(evidenceCodes).toContain('anonymous-auth-choice');
+    expect(evidenceCodes).toContain('server-alternative');
+    expect(evidenceCodes).toContain('callback-operation');
   });
 
   it('covers schema validation, collections, maps, roles, and structural depth', () => {
@@ -512,7 +515,7 @@ describe('assessLoadedDocument', () => {
     const assessment = report.assessments[0];
     const codes = assessment.blockingFaults.map(fault => fault.code);
     expect(codes).toContain('unsupported-untyped-map');
-    expect(codes).toContain('unsupported-schema-composition');
+    expect(assessment.reasons.map(reason => reason.code)).toContain('composition-edge');
     expect(codes).toContain('known-contract-affecting-extension');
     expect(assessment.dimensions.dataShape.escalations).toContain('structural-depth-very-high');
     expect(assessment.dimensions.conditionality.units).toBeGreaterThan(0);
