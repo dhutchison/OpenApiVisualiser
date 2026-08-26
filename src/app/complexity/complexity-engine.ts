@@ -44,7 +44,8 @@ const CATEGORY_ORDER: Record<string, number> = {
   conditionality: 2,
   indirection: 3,
   protocolObligations: 4,
-  assessment: 5
+  documentation: 5,
+  assessment: 6
 };
 
 const COMMON_SUPPORTED_SCHEMA_KEYS = [
@@ -181,12 +182,12 @@ function assessOperation(
     } satisfies DimensionAssessment];
   })) as unknown as Record<ComplexityDimension, DimensionAssessment>;
 
-  const allReasons = sortReasons(DIMENSIONS.flatMap(dimension => dimensionAssessments[dimension].reasons)
-    .concat(blockingFaults.filter(fault => fault.category === 'assessment'), warnings));
   const incomplete = blockingFaults.length > 0;
   const rawBand = incomplete ? 'Unknown' : aggregateRawBand(dimensionAssessments);
-  const documentationSupport = createDocumentationSupport();
-  const finalBand = rawBand;
+  const documentationSupport = assessDocumentationSupport(context, operationInfo, rawBand);
+  const finalBand = mitigateBand(rawBand, documentationSupport);
+  const allReasons = sortReasons(DIMENSIONS.flatMap(dimension => dimensionAssessments[dimension].reasons)
+    .concat(blockingFaults.filter(fault => fault.category === 'assessment'), warnings, documentationSupport.reasons));
   const dominantDimension = incomplete ? undefined : findDominantDimension(dimensionAssessments);
 
   let confidence: OperationAssessment['confidence'] = 'Complete';
@@ -1226,6 +1227,19 @@ function stableValue(value: unknown): string {
   return JSON.stringify(normalize(value));
 }
 
+function stableDataValue(value: unknown): string {
+  const normalize = (current: unknown): unknown => {
+    if (Array.isArray(current)) return current.map(normalize);
+    if (!current || typeof current !== 'object') return current;
+    return Object.keys(current as AnyRecord).sort()
+      .reduce<Record<string, unknown>>((result, key) => {
+        result[key] = normalize((current as AnyRecord)[key]);
+        return result;
+      }, {});
+  };
+  return JSON.stringify(normalize(value));
+}
+
 function isReadOnlyForRole(
   context: AssessmentContext,
   schema: unknown,
@@ -1422,12 +1436,509 @@ function findDominantDimension(dimensions: Record<ComplexityDimension, Dimension
     .sort((left, right) => BAND_ORDER.indexOf(dimensions[right].level) - BAND_ORDER.indexOf(dimensions[left].level))[0];
 }
 
-function createDocumentationSupport(): DocumentationSupport {
+interface DocumentationCandidate {
+  readonly value: unknown;
+  readonly pointer: string;
+  readonly sourceId: string;
+  readonly role: ConsumerRole;
+  readonly outcome: 'request or input' | 'primary success outcome' | 'alternative or error outcome';
+  readonly schema: unknown;
+  readonly status?: string;
+}
+
+interface DocumentationTarget {
+  readonly target: AnyRecord;
+  readonly sourceId: string;
+  readonly pointer: string;
+}
+
+function assessDocumentationSupport(
+  context: AssessmentContext,
+  operationInfo: OperationInfo,
+  rawBand: ComplexityBand
+): DocumentationSupport {
+  const operationPointer = `/paths/${escapeJsonPointer(operationInfo.path)}/${operationInfo.method}`;
+  const candidates: DocumentationCandidate[] = [];
+  const descriptionPointers = operationDocumentationPointers(operationInfo.pathItem, operationInfo.operation, operationPointer);
+  const hasDescription = descriptionPointers.length > 0;
+  collectParameterDocumentation(context, operationInfo, candidates);
+  collectRequestDocumentation(context, operationInfo.operation.requestBody, `${operationPointer}/requestBody`, candidates);
+  collectResponseDocumentation(context, operationInfo.operation.responses, `${operationPointer}/responses`, candidates);
+
+  const validCandidates = candidates
+    .filter(candidate => exampleMatchesSchema(context, candidate.value, candidate.schema, candidate.role, candidate.sourceId))
+    .filter(candidate => supportsBranchSelection(context, candidate.value, candidate.schema, candidate.role, candidate.sourceId));
+  const covered = new Set<string>();
+  const reasons: AssessmentReason[] = [];
+  const addEvidence = (candidate: DocumentationCandidate) => {
+    if (covered.has(candidate.outcome)) return;
+    covered.add(candidate.outcome);
+    reasons.push(reason(
+      'documentation-example',
+      'documentation',
+      context.scope,
+      candidate.pointer,
+      {outcome: candidate.outcome},
+      candidate.role,
+      candidate.sourceId
+    ));
+  };
+
+  validCandidates
+    .filter(candidate => candidate.outcome === 'request or input')
+    .forEach(addEvidence);
+  validCandidates
+    .filter(candidate => candidate.outcome === 'primary success outcome')
+    .sort((left, right) => (left.status ?? '').localeCompare(right.status ?? ''))
+    .slice(0, 1)
+    .forEach(addEvidence);
+
+  const success = validCandidates
+    .filter(candidate => candidate.outcome === 'primary success outcome')
+    .sort((left, right) => (left.status ?? '').localeCompare(right.status ?? ''))[0];
+  const alternative = validCandidates
+    .filter(candidate => candidate.outcome === 'alternative or error outcome')
+    .find(candidate => candidate.status !== success?.status
+      && stableDataValue(candidate.value) !== stableDataValue(success?.value));
+  if (alternative) addEvidence(alternative);
+
+  const coveredRoles = ['request or input', 'primary success outcome', 'alternative or error outcome']
+    .filter(outcome => covered.has(outcome));
+  const missingCoverage = [
+    ['request or input', 'request or input guidance'],
+    ['primary success outcome', 'primary success outcome'],
+    ['alternative or error outcome', 'alternative or error outcome']
+  ].filter(([outcome]) => !covered.has(outcome)).map(([, missing]) => missing);
+  const strong = coveredRoles.length === 3;
+  const level = strong ? 'Strong' : coveredRoles.length > 0 || hasDescription ? 'Partial' : 'None';
+
+  descriptionPointers.forEach(pointer => reasons.push(reason(
+    'documentation-description',
+    'documentation',
+    context.scope,
+    pointer,
+    {supports: 'partial-guidance'}
+  )));
+  missingCoverage.forEach(missing => reasons.push(reason(
+    'documentation-coverage',
+    'documentation',
+    context.scope,
+    operationPointer,
+    {missing}
+  )));
+
+  const mitigation = strong ? createMitigation(rawBand) : undefined;
+  if (mitigation) reasons.push(reason(
+    'documentation-mitigation',
+    'documentation',
+    context.scope,
+    operationPointer,
+    {from: mitigation.from, to: mitigation.to}
+  ));
+  const support: DocumentationSupport = {
+    level,
+    coveredRoles,
+    missingCoverage,
+    reasons: sortReasons(reasons),
+    ...(mitigation ? {mitigation} : {})
+  };
+  return support;
+}
+
+function createMitigation(rawBand: ComplexityBand): DocumentationSupport['mitigation'] {
+  if (rawBand === 'Low' || rawBand === 'Unknown') {
+    return undefined;
+  }
+  const fromIndex = BAND_ORDER.indexOf(rawBand as DimensionLevel);
+  return {from: rawBand as Exclude<ComplexityBand, 'Low' | 'Unknown'>, to: BAND_ORDER[fromIndex - 1] as Exclude<ComplexityBand, 'Very high' | 'Unknown'>};
+}
+
+function mitigateBand(rawBand: ComplexityBand, support: DocumentationSupport): ComplexityBand {
+  if (support.level !== 'Strong' || rawBand === 'Low' || rawBand === 'Unknown') return rawBand;
+  const index = BAND_ORDER.indexOf(rawBand as DimensionLevel);
+  return BAND_ORDER[index - 1];
+}
+
+function collectParameterDocumentation(
+  context: AssessmentContext,
+  operationInfo: OperationInfo,
+  candidates: DocumentationCandidate[]
+) {
+  const pathItemPointer = `/paths/${escapeJsonPointer(operationInfo.path)}`;
+  const operationPointer = `${pathItemPointer}/${operationInfo.method}`;
+  const parameters = new Map<string, DocumentationTarget>();
+  const declarations = [
+    ...(Array.isArray(operationInfo.pathItem.parameters) ? operationInfo.pathItem.parameters : [])
+      .map((value, index) => ({value, pointer: `${pathItemPointer}/parameters/${index}`})),
+    ...(Array.isArray(operationInfo.operation.parameters) ? operationInfo.operation.parameters : [])
+      .map((value, index) => ({value, pointer: `${operationPointer}/parameters/${index}`}))
+  ];
+  declarations.forEach(({value, pointer}) => {
+    const resolved = resolveDocumentationTarget(context, value, context.scope.sourceId, pointer);
+    if (!resolved || typeof resolved.target.name !== 'string' || typeof resolved.target.in !== 'string') return;
+    parameters.set(`${resolved.target.in}:${resolved.target.name}`, resolved);
+  });
+  parameters.forEach(({target: value, pointer, sourceId}) => {
+    collectExamplesFromContainer(
+      context,
+      value,
+      pointer,
+      sourceId,
+      'request',
+      'request or input',
+      value.schema,
+      candidates
+    );
+    if (value.content) collectContentDocumentation(context, value.content, `${pointer}/content`, sourceId, 'request or input', candidates);
+    if (value.schema) collectSchemaExamples(context, value.schema, `${pointer}/schema`, sourceId, 'request', 'request or input', candidates, new Set());
+  });
+}
+
+function collectRequestDocumentation(
+  context: AssessmentContext,
+  requestBody: unknown,
+  pointer: string,
+  candidates: DocumentationCandidate[]
+) {
+  const resolved = resolveDocumentationTarget(context, requestBody, context.scope.sourceId, pointer);
+  if (!resolved) return;
+  collectContentDocumentation(context, resolved.target.content, `${resolved.pointer || pointer}/content`, resolved.sourceId, 'request or input', candidates);
+}
+
+function collectResponseDocumentation(
+  context: AssessmentContext,
+  responses: unknown,
+  pointer: string,
+  candidates: DocumentationCandidate[]
+) {
+  if (!responses || typeof responses !== 'object') return;
+  Object.entries(responses as AnyRecord).sort(([left], [right]) => left.localeCompare(right)).forEach(([status, response]) => {
+    const responsePointer = `${pointer}/${escapeJsonPointer(status)}`;
+    const resolved = resolveDocumentationTarget(context, response, context.scope.sourceId, responsePointer);
+    if (!resolved) return;
+    const success = /^(?:2\d\d|2XX)$/i.test(status);
+    collectContentDocumentation(
+      context,
+      resolved.target.content,
+      `${resolved.pointer || responsePointer}/content`,
+      resolved.sourceId,
+      success ? 'primary success outcome' : 'alternative or error outcome',
+      candidates,
+      status
+    );
+  });
+}
+
+function collectContentDocumentation(
+  context: AssessmentContext,
+  content: unknown,
+  pointer: string,
+  sourceId: string,
+  outcome: DocumentationCandidate['outcome'],
+  candidates: DocumentationCandidate[],
+  status?: string
+) {
+  if (!content || typeof content !== 'object') return;
+  Object.entries(content as AnyRecord).sort(([left], [right]) => left.localeCompare(right)).forEach(([mediaType, media]) => {
+    const mediaPointer = `${pointer}/${escapeJsonPointer(mediaType)}`;
+    const resolved = resolveDocumentationTarget(context, media, sourceId, mediaPointer);
+    if (!resolved) return;
+    const schema = resolved.target.schema;
+    const sourcePointer = resolved.pointer || mediaPointer;
+    collectExamplesFromContainer(context, resolved.target, sourcePointer, resolved.sourceId, outcome === 'request or input' ? 'request' : 'response', outcome, schema, candidates, status);
+    if (schema) collectSchemaExamples(context, schema, `${mediaPointer}/schema`, resolved.sourceId, outcome === 'request or input' ? 'request' : 'response', outcome, candidates, new Set(), schema, status);
+  });
+}
+
+function collectExamplesFromContainer(
+  context: AssessmentContext,
+  container: AnyRecord,
+  pointer: string,
+  sourceId: string,
+  role: ConsumerRole,
+  outcome: DocumentationCandidate['outcome'],
+  schema: unknown,
+  candidates: DocumentationCandidate[],
+  status?: string
+) {
+  if (Object.prototype.hasOwnProperty.call(container, 'example')) {
+    addDocumentationCandidate(candidates, container.example, `${pointer}/example`, sourceId, role, outcome, schema, status, context);
+  }
+  if (!container.examples || typeof container.examples !== 'object') return;
+  if (Array.isArray(container.examples)) {
+    container.examples.forEach((value: unknown, index: number) => addDocumentationCandidate(
+      candidates, value, `${pointer}/examples/${index}`, sourceId, role, outcome, schema, status, context
+    ));
+    return;
+  }
+  Object.entries(container.examples as AnyRecord).sort(([left], [right]) => left.localeCompare(right)).forEach(([name, value]) => addDocumentationCandidate(
+    candidates, value, `${pointer}/examples/${escapeJsonPointer(name)}`, sourceId, role, outcome, schema, status, context
+  ));
+}
+
+function collectSchemaExamples(
+  context: AssessmentContext,
+  schema: unknown,
+  pointer: string,
+  sourceId: string,
+  role: ConsumerRole,
+  outcome: DocumentationCandidate['outcome'],
+  candidates: DocumentationCandidate[],
+  visited: Set<string>,
+  rootSchema: unknown = schema,
+  status?: string
+) {
+  const resolved = resolveDocumentationTarget(context, schema, sourceId, pointer);
+  if (!resolved) return;
+  const key = `${resolved.sourceId}#${resolved.pointer || stableValue(resolved.target)}`;
+  if (visited.has(key)) return;
+  visited.add(key);
+  collectExamplesFromContainer(context, resolved.target, `${resolved.pointer || pointer}`, resolved.sourceId, role, outcome, rootSchema, candidates, status);
+  ['oneOf', 'anyOf', 'allOf'].forEach(keyword => {
+    if (!Array.isArray(resolved.target[keyword])) return;
+    resolved.target[keyword].forEach((branch: unknown, index: number) => collectSchemaExamples(
+      context,
+      branch,
+      `${resolved.pointer || pointer}/${keyword}/${index}`,
+      resolved.sourceId,
+      role,
+      outcome,
+      candidates,
+      new Set(visited),
+      rootSchema,
+      status
+    ));
+  });
+}
+
+function addDocumentationCandidate(
+  candidates: DocumentationCandidate[],
+  value: unknown,
+  pointer: string,
+  sourceId: string,
+  role: ConsumerRole,
+  outcome: DocumentationCandidate['outcome'],
+  schema: unknown,
+  status: string | undefined,
+  context: AssessmentContext
+) {
+  let example = value;
+  let examplePointer = pointer;
+  let exampleSourceId = sourceId;
+  if (isReference(value)) {
+    const resolved = resolveDocumentationTarget(context, value, sourceId, pointer);
+    if (!resolved) return;
+    example = resolved.target.value;
+    examplePointer = `${resolved.pointer || pointer}/value`;
+    exampleSourceId = resolved.sourceId;
+  } else if (value && typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, 'value')) {
+    example = (value as AnyRecord).value;
+    examplePointer = `${pointer}/value`;
+  } else if (value && typeof value === 'object' && typeof (value as AnyRecord).externalValue === 'string') {
+    return;
+  }
+  if (example === undefined) return;
+  const duplicate = candidates.some(candidate => candidate.role === role
+    && candidate.outcome === outcome
+    && stableDataValue(candidate.value) === stableDataValue(example));
+  if (!duplicate) candidates.push({value: example, pointer: examplePointer, sourceId: exampleSourceId, role, outcome, schema, status});
+}
+
+function operationDocumentationPointers(pathItem: AnyRecord, operation: AnyRecord, operationPointer: string): string[] {
+  const pointers: string[] = [];
+  if (typeof pathItem.summary === 'string' && pathItem.summary.trim()) pointers.push(`${operationPointer.slice(0, operationPointer.lastIndexOf('/'))}/summary`);
+  if (typeof pathItem.description === 'string' && pathItem.description.trim()) pointers.push(`${operationPointer.slice(0, operationPointer.lastIndexOf('/'))}/description`);
+  if (typeof operation.summary === 'string' && operation.summary.trim()) pointers.push(`${operationPointer}/summary`);
+  if (typeof operation.description === 'string' && operation.description.trim()) pointers.push(`${operationPointer}/description`);
+  if (typeof operation.requestBody?.description === 'string' && operation.requestBody.description.trim()) pointers.push(`${operationPointer}/requestBody/description`);
+  if (Array.isArray(operation.parameters)) operation.parameters.forEach((parameter: AnyRecord, index: number) => {
+    if (typeof parameter?.description === 'string' && parameter.description.trim()) pointers.push(`${operationPointer}/parameters/${index}/description`);
+  });
+  if (operation.responses && typeof operation.responses === 'object') {
+    Object.entries(operation.responses as AnyRecord).sort(([left], [right]) => left.localeCompare(right)).forEach(([status, response]) => {
+      if (typeof response?.description === 'string' && response.description.trim()) pointers.push(`${operationPointer}/responses/${escapeJsonPointer(status)}/description`);
+    });
+  }
+  return pointers;
+}
+
+function supportsBranchSelection(
+  context: AssessmentContext,
+  value: unknown,
+  schema: unknown,
+  role: ConsumerRole,
+  sourceId: string,
+  visited = new Set<string>()
+): boolean {
+  const resolved = resolveDocumentationTarget(context, schema, sourceId);
+  if (!resolved) return true;
+  const key = `${resolved.sourceId}#${resolved.pointer || stableValue(resolved.target)}`;
+  if (visited.has(key)) return true;
+  visited.add(key);
+  const polymorphic = ['oneOf', 'anyOf'].find(keyword => Array.isArray(resolved.target[keyword])) as 'oneOf' | 'anyOf' | undefined;
+  if (!polymorphic) {
+    return ['allOf'].every(keyword => !Array.isArray(resolved.target[keyword])
+      || resolved.target[keyword].every((branch: unknown) => supportsBranchSelection(context, value, branch, role, resolved.sourceId, new Set(visited))));
+  }
+  const branches = resolved.target[polymorphic] as unknown[];
+  const matches = branches.filter(branch => exampleMatchesSchema(context, value, branch, role, resolved.sourceId));
+  if (matches.length !== 1) return false;
+  const discriminator = resolved.target.discriminator as AnyRecord | undefined;
+  if (!discriminator) return true;
+  if (!value || typeof value !== 'object' || typeof (value as AnyRecord)[discriminator.propertyName] !== 'string') return false;
+  const mapping = discriminator.mapping as AnyRecord | undefined;
+  const mapped = mapping?.[(value as AnyRecord)[discriminator.propertyName]];
+  return mapped === undefined || typeof mapped !== 'string'
+    || !!resolveDocumentationTarget(context, {$ref: mapped}, resolved.sourceId);
+}
+
+function exampleMatchesSchema(
+  context: AssessmentContext,
+  value: unknown,
+  schema: unknown,
+  role: ConsumerRole,
+  sourceId: string,
+  visited = new Set<string>()
+): boolean {
+  const resolved = resolveDocumentationTarget(context, schema, sourceId);
+  if (!resolved) return false;
+  const key = `${resolved.sourceId}#${resolved.pointer}`;
+  if (visited.has(key)) return true;
+  visited.add(key);
+  const object = resolved.target;
+  if (value === null) return object.nullable === true || (Array.isArray(object.type) && object.type.includes('null'));
+  if (object.const !== undefined && stableDataValue(object.const) !== stableDataValue(value)) return false;
+  if (Array.isArray(object.enum) && !object.enum.some((entry: unknown) => stableDataValue(entry) === stableDataValue(value))) return false;
+  if (typeof value === 'number') {
+    if (typeof object.minimum === 'number' && value < object.minimum) return false;
+    if (typeof object.maximum === 'number' && value > object.maximum) return false;
+    if (typeof object.exclusiveMinimum === 'number' && value <= object.exclusiveMinimum) return false;
+    if (typeof object.exclusiveMaximum === 'number' && value >= object.exclusiveMaximum) return false;
+    if (object.exclusiveMinimum === true && typeof object.minimum === 'number' && value <= object.minimum) return false;
+    if (object.exclusiveMaximum === true && typeof object.maximum === 'number' && value >= object.maximum) return false;
+    if (typeof object.multipleOf === 'number' && Math.abs(value / object.multipleOf - Math.round(value / object.multipleOf)) > Number.EPSILON) return false;
+  }
+  if (typeof value === 'string') {
+    if (typeof object.minLength === 'number' && value.length < object.minLength) return false;
+    if (typeof object.maxLength === 'number' && value.length > object.maxLength) return false;
+    if (typeof object.pattern === 'string') {
+      try {
+        if (!new RegExp(object.pattern).test(value)) return false;
+      } catch {
+        return false;
+      }
+    }
+    if (!validExampleFormat(value, object.format)) return false;
+  }
+  if (Array.isArray(object.allOf) && !object.allOf.every((branch: unknown) => exampleMatchesSchema(context, value, branch, role, resolved.sourceId, new Set(visited)))) return false;
+  if (Array.isArray(object.oneOf)) {
+    if (object.oneOf.filter((branch: unknown) => exampleMatchesSchema(context, value, branch, role, resolved.sourceId, new Set(visited))).length !== 1) return false;
+  }
+  if (Array.isArray(object.anyOf) && !object.anyOf.some((branch: unknown) => exampleMatchesSchema(context, value, branch, role, resolved.sourceId, new Set(visited)))) return false;
+  const type = Array.isArray(object.type) ? object.type.find((item: unknown) => item !== 'null') : object.type;
+  if (type === 'object' || object.properties || object.required) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+    const record = value as AnyRecord;
+    if (typeof object.minProperties === 'number' && Object.keys(record).length < object.minProperties) return false;
+    if (typeof object.maxProperties === 'number' && Object.keys(record).length > object.maxProperties) return false;
+    if (Array.isArray(object.required) && object.required.some((name: string) => {
+      const propertySchema = object.properties?.[name];
+      return !isDocumentationExcluded(context, propertySchema, role, resolved.sourceId)
+        && !Object.prototype.hasOwnProperty.call(record, name);
+    })) return false;
+    if (object.properties && typeof object.properties === 'object') {
+      for (const [name, propertySchema] of Object.entries(object.properties as AnyRecord)) {
+        if (Object.prototype.hasOwnProperty.call(record, name) && !isDocumentationExcluded(context, propertySchema, role, resolved.sourceId)
+          && !exampleMatchesSchema(context, record[name], propertySchema, role, resolved.sourceId, new Set(visited))) return false;
+      }
+    }
+    if (object.additionalProperties === false && object.properties && Object.keys(record).some(name => {
+      return !Object.prototype.hasOwnProperty.call(object.properties, name);
+    })) return false;
+    if (object.additionalProperties && typeof object.additionalProperties === 'object') {
+      for (const [name, propertyValue] of Object.entries(record)) {
+        if (!object.properties || !Object.prototype.hasOwnProperty.call(object.properties, name)) {
+          if (!exampleMatchesSchema(context, propertyValue, object.additionalProperties, role, resolved.sourceId, new Set(visited))) return false;
+        }
+      }
+    }
+    for (const [name, requiredProperties] of Object.entries(object.dependentRequired ?? {})) {
+      if (Object.prototype.hasOwnProperty.call(record, name) && Array.isArray(requiredProperties)
+        && requiredProperties.some((requiredName: string) => !Object.prototype.hasOwnProperty.call(record, requiredName))) return false;
+    }
+  }
+  if (type === 'array') {
+    if (!Array.isArray(value)) return false;
+    if (typeof object.minItems === 'number' && value.length < object.minItems) return false;
+    if (typeof object.maxItems === 'number' && value.length > object.maxItems) return false;
+    if (object.uniqueItems === true && new Set(value.map(stableDataValue)).size !== value.length) return false;
+    if (Array.isArray(object.prefixItems)) {
+      if (value.length < object.prefixItems.length) return false;
+      for (let index = 0; index < object.prefixItems.length; index++) {
+        if (!exampleMatchesSchema(context, value[index], object.prefixItems[index], role, resolved.sourceId, new Set(visited))) return false;
+      }
+      if (object.items === false && value.length > object.prefixItems.length) return false;
+    }
+    const items = Array.isArray(object.prefixItems) ? value.slice(object.prefixItems.length) : value;
+    if (object.items && !items.every(entry => exampleMatchesSchema(context, entry, object.items, role, resolved.sourceId, new Set(visited)))) return false;
+  }
+  if (type === 'string' && typeof value !== 'string' || type === 'boolean' && typeof value !== 'boolean'
+    || type === 'integer' && (!Number.isInteger(value)) || type === 'number' && (typeof value !== 'number' || !Number.isFinite(value))) return false;
+  return true;
+}
+
+function validExampleFormat(value: string, format: unknown): boolean {
+  if (typeof format !== 'string') return true;
+  if (format === 'date') return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
+  if (format === 'date-time') return !Number.isNaN(Date.parse(value));
+  if (format === 'email') return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
+  if (format === 'uuid') return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  return true;
+}
+
+function isDocumentationExcluded(
+  context: AssessmentContext,
+  schema: unknown,
+  role: ConsumerRole,
+  sourceId: string
+): boolean {
+  return !!schema && isReadOnlyForRole(context, schema, role, sourceId);
+}
+
+function resolveDocumentationTarget(context: AssessmentContext, value: unknown, sourceId: string, pointer = ''): DocumentationTarget | undefined {
+  if (!isReference(value)) {
+    return value && typeof value === 'object' ? {target: value as AnyRecord, sourceId, pointer} : undefined;
+  }
+  const resource = context.scope.resourceSet.find(entry => entry.sourceId === sourceId) ?? context.scope.resourceSet[0];
+  if (!resource) return undefined;
+  const hashIndex = value.$ref.indexOf('#');
+  const uriPart = hashIndex >= 0 ? value.$ref.slice(0, hashIndex) : value.$ref;
+  const fragment = hashIndex >= 0 ? value.$ref.slice(hashIndex + 1) : '';
+  let targetUri: string;
+  try {
+    targetUri = canonicalDocumentUri(uriPart || resource.baseUri, resource.baseUri);
+  } catch {
+    return undefined;
+  }
+  const targetResource = context.scope.resourceSet.find(entry => {
+    try {
+      return canonicalDocumentUri(entry.sourceId, entry.baseUri) === targetUri
+        || canonicalDocumentUri(entry.baseUri, entry.baseUri) === targetUri;
+    } catch {
+      return entry.sourceId === targetUri || entry.baseUri === targetUri;
+    }
+  });
+  if (!targetResource) return undefined;
+  const tokens = decodeReferencePointer(fragment);
+  const target = tokens.reduce<unknown>((current, token) => {
+    if (!current || typeof current !== 'object') return undefined;
+    return (current as AnyRecord)[token];
+  }, targetResource.document);
+  if (!target || typeof target !== 'object') return undefined;
   return {
-    level: 'None',
-    coveredRoles: [],
-    missingCoverage: ['request or input guidance', 'primary success outcome', 'alternative or error outcome'],
-    reasons: []
+    target: target as AnyRecord,
+    sourceId: targetResource.sourceId,
+    pointer: tokens.length === 0 ? '' : `/${tokens.map(escapeJsonPointer).join('/')}`
   };
 }
 
