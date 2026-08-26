@@ -241,7 +241,7 @@ describe('The Home Page', () => {
 
       accordionHeader('API Paths').click()
       cy.get('#perform-search-node').should('be.visible')
-        .find('.operation-complexity', {timeout: 20000})
+      cy.get('#perform-search-node .operation-complexity', {timeout: 20000})
         .should(($label) => {
           expect($label.text()).not.to.contain('assessing')
         })
@@ -563,7 +563,13 @@ describe('The Home Page', () => {
         expect(parseFloat(getComputedStyle($children[0]).marginLeft)).to.be.greaterThan(0)
       })
 
-      cy.get('.path-node').first().focus().type('{enter}')
+      cy.get('#listPets-node .operation-complexity', {timeout: 20000})
+        .should(($label) => {
+          expect($label.text()).not.to.contain('assessing')
+        })
+      cy.get('.path-node').first().should('have.attr', 'aria-expanded', 'true')
+      cy.get('.path-node').first().focus()
+      cy.get('.path-node').first().type('{enter}')
       cy.get('.path-node').first().should('have.attr', 'aria-expanded', 'false')
       cy.get('.operation-node').should('not.exist')
     })
@@ -703,7 +709,7 @@ describe('The Home Page', () => {
 
       accordionHeader('API Paths').click()
       cy.get('#updatePet-node').should('be.visible')
-        .find('.operation-complexity', {timeout: 20000})
+      cy.get('#updatePet-node .operation-complexity', {timeout: 20000})
         .should(($label) => {
           expect($label.text()).not.to.contain('assessing')
         })
