@@ -155,6 +155,16 @@ function assessOperation(
   if (operation['x-multi-segment'] !== undefined) {
     addBlocking(context, 'known-contract-affecting-extension', 'assessment', `${operationPointer}/x-multi-segment`, undefined, {extension: 'x-multi-segment'});
   }
+  if (operation['x-prose-defined-language'] !== undefined) {
+    addWarning(context, 'prose-defined-language', 'assessment', `${operationPointer}/x-prose-defined-language`, undefined, {
+      extension: 'x-prose-defined-language'
+    });
+  }
+  if (proseDefinesLanguage(operation)) {
+    addWarning(context, 'prose-defined-language', 'assessment', operationPointer, undefined, {
+      source: 'operation description'
+    });
+  }
 
   collectParameters(
     context,
@@ -574,6 +584,9 @@ function collectSchemaNode(
   if (context.openApiVersion === '3.0' && Array.isArray(schemaObject.type)) {
     addBlocking(context, 'unsupported-schema-keyword', 'assessment', `${pointer}/type`, role, {keyword: 'type'}, sourceId);
   }
+  if (schemaObject.type !== undefined && !isValidSchemaType(schemaObject.type)) {
+    addBlocking(context, 'invalid-schema', 'assessment', `${pointer}/type`, role, {}, sourceId);
+  }
 
   if (effective.readOnly && role === 'request' || effective.writeOnly && role === 'response') {
     return;
@@ -980,6 +993,23 @@ function schemaTypes(schema: AnyRecord): Set<string> | undefined {
   if (schema.type === undefined) return undefined;
   const values = Array.isArray(schema.type) ? schema.type : [schema.type];
   return new Set(values.filter((value): value is string => typeof value === 'string' && value !== 'null'));
+}
+
+function isValidSchemaType(value: unknown): boolean {
+  return typeof value === 'string'
+    || (Array.isArray(value) && value.length > 0 && value.every(entry => typeof entry === 'string'));
+}
+
+function proseDefinesLanguage(operation: AnyRecord): boolean {
+  const descriptions = [operation.description, operation.summary, ...Object.values(operation.parameters ?? {})]
+    .flatMap(value => {
+      if (!value || typeof value !== 'object') return [];
+      const item = value as AnyRecord;
+      return [item.description, item.schema?.description];
+    })
+    .concat(operation.description, operation.summary)
+    .filter((value): value is string => typeof value === 'string');
+  return descriptions.some(description => /\b(?:lucene|solr)\b.*\b(?:syntax|query|language)\b/i.test(description));
 }
 
 function collectProtocol(context: AssessmentContext, document: AnyRecord, operation: AnyRecord, pointer: string, sourceId: string) {
