@@ -761,6 +761,71 @@ describe('assessLoadedDocument', () => {
     expect(equalHotspots[0].tier).toBe(equalHotspots[1].tier);
     expect(differentHotspot?.tier).not.toBe(equalHotspots[0].tier);
   });
+
+  it('covers malformed discriminators, version-specific conditionals, and role references', () => {
+    const report = assessLoadedDocument(scope({
+      openapi: '3.0.3',
+      info: {title: 'Malformed shapes', version: '1.0.0'},
+      paths: {
+        '/invalid-discriminator': {
+          post: {
+            requestBody: {content: {'application/json': {schema: {discriminator: {}}}}},
+            responses: {'204': {description: 'Accepted'}}
+          }
+        },
+        '/broken-discriminator': {
+          post: {
+            requestBody: {content: {'application/json': {schema: {
+              discriminator: {propertyName: 'kind', mapping: {missing: '#/components/schemas/Missing'}}
+            }}}},
+            responses: {'204': {description: 'Accepted'}}
+          }
+        },
+        '/invalid-response': {
+          get: {responses: {'200': null, '201': {content: 'invalid'}}}
+        },
+        '/conditional': {
+          post: {
+            requestBody: {content: {'application/json': {schema: {
+              type: ['string', 'null'],
+              dependencies: {
+                creditCard: ['billingAddress'],
+                nested: {type: 'object', properties: {address: {type: 'string'}}}
+              }
+            }}}},
+            responses: {'204': {description: 'Accepted'}}
+          }
+        },
+        '/roles': {
+          post: {
+            requestBody: {content: {'application/json': {schema: {
+              type: 'object', properties: {id: {$ref: '#/components/schemas/ReadOnly'}}
+            }}}},
+            responses: {'200': {content: {'application/json': {schema: {
+              type: 'object', properties: {secret: {$ref: '#/components/schemas/WriteOnly'}}
+            }}}}}
+          }
+        }
+      },
+      components: {schemas: {
+        ReadOnly: {type: 'string', readOnly: true},
+        WriteOnly: {type: 'string', writeOnly: true}
+      }}
+    }));
+
+    const invalidDiscriminator = report.assessments.find(assessment => assessment.identity.path === '/invalid-discriminator');
+    const brokenDiscriminator = report.assessments.find(assessment => assessment.identity.path === '/broken-discriminator');
+    const invalidResponse = report.assessments.find(assessment => assessment.identity.path === '/invalid-response');
+    const conditional = report.assessments.find(assessment => assessment.identity.path === '/conditional');
+    const roles = report.assessments.find(assessment => assessment.identity.path === '/roles');
+    expect(invalidDiscriminator?.blockingFaults.some(reason => reason.code === 'invalid-discriminator')).toBeTrue();
+    expect(brokenDiscriminator?.blockingFaults.some(reason => reason.code === 'broken-discriminator-mapping')).toBeTrue();
+    expect(invalidResponse?.blockingFaults.map(reason => reason.code)).toEqual(['invalid-response', 'invalid-content']);
+    expect(conditional?.blockingFaults.some(reason => reason.code === 'unsupported-schema-keyword')).toBeTrue();
+    expect(conditional?.reasons.some(reason => reason.code === 'dependent-conditional-rule')).toBeTrue();
+    expect(roles?.reasons.some(reason => reason.source.pointer.endsWith('/properties/id'))).toBeFalse();
+    expect(roles?.reasons.some(reason => reason.source.pointer.endsWith('/properties/secret'))).toBeFalse();
+  });
 });
 
 function deepSchema(): Record<string, unknown> {
