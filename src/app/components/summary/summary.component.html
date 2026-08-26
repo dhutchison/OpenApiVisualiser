@@ -2,27 +2,115 @@
   @if (getComplexityAssessmentStatus(); as assessmentStatus) {
     <output aria-live="polite" aria-atomic="true">{{ assessmentStatus }}</output>
   }
+
   <table id="method-summary">
     <caption>HTTP methods in use</caption>
     <colgroup>
-    <col class="method-column">
-    <col class="count-column">
-  </colgroup>
-  <tbody>
-    @for (entry of methodSummary | keyvalue; track entry.key) {
+      <col class="method-column">
+      <col class="count-column">
+    </colgroup>
+    <tbody>
+      @for (entry of methodSummary | keyvalue; track entry.key) {
+        <tr>
+          <th
+            id="method-header-{{ entry.key | lowercase }}"
+            class="method-header method-header-{{ entry.key | lowercase }}">
+            {{entry.key}}
+          </th>
+          <td class="method-count">{{entry.value}}</td>
+        </tr>
+      }
       <tr>
-        <th
-          id="method-header-{{ entry.key | lowercase }}"
-          class="method-header method-header-{{ entry.key | lowercase }}">
-          {{entry.key}}
-        </th>
-        <td class="method-count">{{entry.value}}</td>
+        <th id="method-header-total" class="method-header method-header-total">Total</th>
+        <td class="method-count">{{ apiPathNodes?.length }}</td>
       </tr>
-    }
-    <tr>
-      <th id="method-header-total" class="method-header method-header-total">Total</th>
-      <td class="method-count">{{ apiPathNodes?.length }}</td>
-    </tr>
-  </tbody>
-</table>
+    </tbody>
+  </table>
+
+  @if (scopeSummaries.length) {
+    <section class="complexity-summary" aria-labelledby="complexity-summary-heading">
+      <h2 id="complexity-summary-heading">Operation contract complexity</h2>
+      <p>
+        Hotspot tiers are relative to each document. Absolute complexity bands remain stable and are not recalculated from the other operations or loaded documents.
+      </p>
+
+      @for (scope of scopeSummaries; track scope.scopeId) {
+        <section class="complexity-scope" [attr.aria-labelledby]="'complexity-scope-' + scope.scopeId">
+          <h3 [id]="'complexity-scope-' + scope.scopeId">{{ scope.title }}</h3>
+
+          @if (scope.status === 'Pending') {
+            <p role="status" aria-live="polite">Assessing operation complexity…</p>
+          } @else if (scope.status === 'Unavailable') {
+            <p role="alert">Complexity assessment unavailable.</p>
+            @if (getFailureMessage(scope); as failureMessage) {
+              <p>{{ failureMessage }}</p>
+            }
+          } @else if (scope.report) {
+            <p>
+              Coverage: {{ scope.report.coverage.knownOperations }} known of {{ scope.report.coverage.totalOperations }} operations;
+              {{ scope.report.coverage.incompleteOperations }} need assessment.
+            </p>
+
+            <table class="complexity-distribution">
+              <caption>Absolute final-band distribution</caption>
+              <thead>
+                <tr><th scope="col">Band</th><th scope="col">Operations</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Low</th><td>{{ scope.report.distribution.Low }}</td></tr>
+                <tr><th scope="row">Moderate</th><td>{{ scope.report.distribution.Moderate }}</td></tr>
+                <tr><th scope="row">High</th><td>{{ scope.report.distribution.High }}</td></tr>
+                <tr><th scope="row">Very high</th><td>{{ scope.report.distribution['Very high'] }}</td></tr>
+                <tr><th scope="row">Unknown</th><td>{{ scope.report.distribution.Unknown }}</td></tr>
+              </tbody>
+            </table>
+
+            <section class="complexity-scope__section" [attr.aria-labelledby]="'hotspots-' + scope.scopeId">
+              <h4 [id]="'hotspots-' + scope.scopeId">Hotspots</h4>
+              @if (scope.hotspots.length) {
+                <ol [id]="'hotspot-list-' + scope.scopeId">
+                  @for (hotspot of scope.visibleHotspots; track hotspot.identity.key) {
+                    <li data-hotspot>
+                      <strong>Tier {{ hotspot.tier }}</strong>
+                      <span>{{ hotspot.label }}</span>
+                      <span>{{ hotspot.finalBand }} (raw {{ hotspot.rawBand }})</span>
+                    </li>
+                  }
+                </ol>
+                @if (scope.additionalTiedHotspots) {
+                  <p role="note">
+                    {{ scope.additionalTiedHotspots }} additional
+                    {{ scope.additionalTiedHotspots === 1 ? 'operation shares' : 'operations share' }}
+                    hotspot tier {{ scope.hotspots[9].tier }} at the cutoff.
+                  </p>
+                }
+                @if (!scope.showAll && scope.hotspots.length > 10) {
+                  <button
+                    type="button"
+                    class="app-button app-button--secondary"
+                    [attr.aria-controls]="'hotspot-list-' + scope.scopeId"
+                    (click)="showAll(scope)">
+                    Show all
+                  </button>
+                }
+              } @else {
+                <p>No known operation hotspots are available.</p>
+              }
+            </section>
+
+            @if (scope.needsAssessment.length) {
+              <section class="complexity-scope__section" [attr.aria-labelledby]="'needs-assessment-' + scope.scopeId">
+                <h4 [id]="'needs-assessment-' + scope.scopeId">Needs assessment</h4>
+                <ul>
+                  @for (operation of scope.needsAssessment; track operation.key) {
+                    <li>{{ describeOperation(operation) }}</li>
+                  }
+                </ul>
+              </section>
+            }
+          }
+        </section>
+      }
+    </section>
+  }
 </div>

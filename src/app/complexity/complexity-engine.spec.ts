@@ -1296,6 +1296,77 @@ describe('assessLoadedDocument', () => {
     expect(assessment.documentationSupport.mitigation).toEqual({from: 'Very high', to: 'High'});
     expect(assessment.reasons.some(reason => reason.code === 'field')).toBeTrue();
   });
+
+  it('publishes dense tiers for equal tuples and keeps display ordering deterministic', () => {
+    const report = assessLoadedDocument(scope({
+      openapi: '3.1.0',
+      info: {title: 'Tied operations', version: '1.0.0'},
+      paths: {
+        '/z': {get: {responses: {'204': {description: 'Done'}}}},
+        '/a': {post: {responses: {'204': {description: 'Done'}}}}
+      }
+    }));
+
+    expect(report.hotspots.map(hotspot => hotspot.tier)).toEqual([1, 1]);
+    expect(report.hotspots.map(hotspot => `${hotspot.identity.path}:${hotspot.identity.method}`)).toEqual([
+      '/a:post', '/z:get'
+    ]);
+  });
+
+  it('keeps all unknown operations in needs assessment rather than the hotspot list', () => {
+    const report = assessLoadedDocument(scope({
+      openapi: '3.1.0',
+      info: {title: 'Unknown operations', version: '1.0.0'},
+      paths: {
+        '/first': {get: {'x-multi-segment': true, responses: {'204': {description: 'Done'}}}},
+        '/second': {get: {'x-multi-segment': true, responses: {'204': {description: 'Done'}}}}
+      }
+    }));
+
+    expect(report.availability).toBe('Available');
+    expect(report.distribution.Unknown).toBe(2);
+    expect(report.hotspots).toEqual([]);
+    expect(report.needsAssessment.map(operation => operation.path)).toEqual(['/first', '/second']);
+    expect(report.coverage).toEqual({totalOperations: 2, knownOperations: 0, incompleteOperations: 2});
+  });
+
+  it('reports the full tied tier at the tenth known operation', () => {
+    const highParameters = Array.from({length: 8}, (_, index) => ({
+      name: `parameter${index}`,
+      in: 'query',
+      schema: {type: 'string'}
+    }));
+    const paths: Record<string, any> = Object.fromEntries(Array.from({length: 11}, (_, index) => [
+      `/high/${index}`,
+      {get: {parameters: highParameters, responses: {'204': {description: 'Done'}}}}
+    ]));
+    paths['/low'] = {get: {responses: {'204': {description: 'Done'}}}};
+
+    const report = assessLoadedDocument(scope({
+      openapi: '3.1.0',
+      info: {title: 'Cutoff', version: '1.0.0'},
+      paths
+    }));
+
+    expect(report.hotspots).toHaveSize(12);
+    expect(report.hotspots.slice(0, 11).every(hotspot => hotspot.tier === 1)).toBeTrue();
+    expect(report.hotspots[11].tier).toBe(2);
+  });
+
+  it('keeps distributions and operation identities isolated between scopes', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Scoped', version: '1.0.0'},
+      paths: {'/health': {get: {responses: {'204': {description: 'Healthy'}}}}}
+    };
+    const first = assessLoadedDocument(scope(document, undefined, 'assessment-scope:first', 'file:///first.yaml'));
+    const second = assessLoadedDocument(scope(document, undefined, 'assessment-scope:second', 'file:///second.yaml'));
+
+    expect(first.distribution).toEqual(second.distribution);
+    expect(first.hotspots[0].identity.key).not.toBe(second.hotspots[0].identity.key);
+    expect(first.hotspots[0].identity.scopeId).toBe('assessment-scope:first');
+    expect(second.hotspots[0].identity.scopeId).toBe('assessment-scope:second');
+  });
 });
 
 function deepSchema(): Record<string, unknown> {
@@ -1306,12 +1377,17 @@ function deepSchema(): Record<string, unknown> {
   return schema;
 }
 
-function scope(document: Record<string, unknown>, resourceSet?: AssessmentScopeInput['resourceSet']): AssessmentScopeInput {
+function scope(
+  document: Record<string, unknown>,
+  resourceSet?: AssessmentScopeInput['resourceSet'],
+  scopeId = 'assessment-scope:test',
+  sourceId = 'file:///test/openapi.yaml'
+): AssessmentScopeInput {
   return {
-    scopeId: 'assessment-scope:test',
-    sourceId: 'file:///test/openapi.yaml',
-    baseUri: 'file:///test/openapi.yaml',
+    scopeId,
+    sourceId,
+    baseUri: sourceId,
     document,
-    resourceSet: resourceSet ?? [{sourceId: 'file:///test/openapi.yaml', baseUri: 'file:///test/openapi.yaml', document}]
+    resourceSet: resourceSet ?? [{sourceId, baseUri: sourceId, document}]
   };
 }

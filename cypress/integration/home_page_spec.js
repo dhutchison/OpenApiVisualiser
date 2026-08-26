@@ -735,4 +735,44 @@ describe('The Home Page', () => {
       dialogByName('PUT /pet').find('.swagger-ui', {timeout: 20000})
         .should('contain.text', 'Update an existing pet.')
     })
+
+    it('keeps Petstore and USPTO hotspot summaries in separate assessment scopes', () => {
+      cy.visit('/')
+
+      cy.readFile('sample_openapi/petstore3.json').then((petstore) => {
+        cy.readFile('sample_openapi/uspto.yaml').then((uspto) => {
+          cy.get('#file-input').selectFile([
+            {
+              contents: Cypress.Buffer.from(JSON.stringify(petstore)),
+              fileName: 'petstore3.json',
+              mimeType: 'application/json'
+            },
+            {
+              contents: Cypress.Buffer.from(uspto),
+              fileName: 'uspto.yaml',
+              mimeType: 'text/yaml'
+            }
+          ], {force: true})
+        })
+      })
+
+      accordionHeader('Summary').click()
+      cy.get('.complexity-scope').should('have.length', 2)
+
+      cy.contains('.complexity-scope h3', 'Swagger Petstore - OpenAPI 3.0')
+        .closest('.complexity-scope')
+        .within(() => {
+          cy.get('.complexity-distribution').should('exist')
+          cy.get('[data-hotspot]').should('contain.text', 'PUT /pet')
+          cy.get('[data-hotspot]').should('not.contain.text', 'POST /{dataset}/{version}/records')
+        })
+
+      cy.contains('.complexity-scope h3', 'USPTO Data Set API')
+        .closest('.complexity-scope')
+        .within(() => {
+          cy.get('.complexity-distribution').should('exist')
+          cy.get('[data-hotspot]').should('contain.text', 'POST /{dataset}/{version}/records')
+          cy.get('[data-hotspot]').should('not.contain.text', 'PUT /pet')
+        })
+    })
   })
