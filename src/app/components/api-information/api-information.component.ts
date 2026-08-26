@@ -43,7 +43,7 @@ export class ApiInformationComponent implements OnInit {
   ngOnInit() {
     this.fileReaderService.apiChanged.subscribe(value => {
       /* Add this specification to our current state */
-      this.apiDefinitions.push(value);
+      this.apiDefinitions.push(value.document);
     });
 
     this.fileReaderService.resetFiles.subscribe(v => {

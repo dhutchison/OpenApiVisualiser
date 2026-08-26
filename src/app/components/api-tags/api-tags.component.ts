@@ -45,7 +45,7 @@ export class ApiTagsComponent implements OnInit {
   ngOnInit() {
     this.fileReaderService.apiChanged.subscribe(value => {
       /* Add this specification to our current state */
-      this.tagSummaries = this.createTagSummaries(value);
+      this.tagSummaries = this.createTagSummaries(value.document);
     });
 
     this.fileReaderService.resetFiles.subscribe(v => {

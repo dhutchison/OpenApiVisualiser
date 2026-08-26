@@ -3,6 +3,8 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { ApiOperationNode, ApiPathTreeNode } from '../../models/hierarchy.models';
+import { FileReaderService } from '../../services/file-reader.service';
+import { createLoadedDocument } from '../../models/loaded-document.models';
 
 import { ApiPathTreeComponent } from './api-path-tree.component';
 import { EndpointSwaggerComponent } from '../endpoint-swagger/endpoint-swagger.component';
@@ -38,6 +40,28 @@ describe('ApiPathTreeComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('migrates a loaded-document envelope into the existing path tree', async () => {
+    const fileReaderService = TestBed.inject(FileReaderService);
+    fileReaderService.apiChanged.next(createLoadedDocument({
+      openapi: '3.1.0',
+      info: {title: 'Pets', version: '1.0.0'},
+      paths: {
+        '/pets': {
+          get: {
+            summary: 'List pets',
+            responses: {}
+          }
+        }
+      }
+    } as any));
+    fixture.componentRef.changeDetectorRef.markForCheck();
+    fixture.detectChanges(false);
+    await fixture.whenStable();
+    fixture.detectChanges(false);
+
+    expect(fixture.nativeElement.textContent).toContain('/pets');
   });
 
   it('renders the application-owned CDK tree contract', () => {
@@ -213,6 +237,17 @@ describe('ApiPathTreeComponent', () => {
     component.endpointDialogVisible = true;
     component.selectedOperationNode = {} as ApiOperationNode;
     component.openEndpointDetail(pathNode);
+
+    expect(component.endpointDialogVisible).toBeFalse();
+    expect(component.selectedOperationNode).toBeUndefined();
+  });
+
+  it('clears endpoint state when files are reset', () => {
+    const fileReaderService = TestBed.inject(FileReaderService);
+    component.endpointDialogVisible = true;
+    component.selectedOperationNode = {} as ApiOperationNode;
+
+    fileReaderService.resetFiles.next();
 
     expect(component.endpointDialogVisible).toBeFalse();
     expect(component.selectedOperationNode).toBeUndefined();

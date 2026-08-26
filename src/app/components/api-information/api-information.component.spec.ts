@@ -5,6 +5,7 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { PipesModule } from '../../pipes/pipes.module';
 import { FileReaderService } from '../../services/file-reader.service';
+import { createLoadedDocument } from '../../models/loaded-document.models';
 
 describe('ApiInformationComponent', () => {
   let component: ApiInformationComponent;
@@ -37,7 +38,7 @@ describe('ApiInformationComponent', () => {
   });
 
   it('renders the API panel and information groups with native semantics', async () => {
-    fileReaderService.apiChanged.next({
+    fileReaderService.apiChanged.next(createLoadedDocument({
       openapi: '3.1.0',
       info: {
         title: 'Pets API',
@@ -48,7 +49,7 @@ describe('ApiInformationComponent', () => {
       },
       paths: {},
       externalDocs: {url: 'https://example.test/docs'}
-    });
+    }));
     fixture.componentRef.changeDetectorRef.markForCheck();
     fixture.detectChanges(false);
     await fixture.whenStable();
@@ -62,7 +63,7 @@ describe('ApiInformationComponent', () => {
   });
 
   it('renders only non-empty reusable component summaries', async () => {
-    fileReaderService.apiChanged.next({
+    fileReaderService.apiChanged.next(createLoadedDocument({
       openapi: '3.1.0',
       info: {title: 'Pets API', version: '1.0.0'},
       paths: {},
@@ -84,7 +85,7 @@ describe('ApiInformationComponent', () => {
           apiKey: {type: 'apiKey', name: 'X-API-Key', in: 'header'}
         }
       }
-    });
+    }));
     fixture.componentRef.changeDetectorRef.markForCheck();
     fixture.detectChanges(false);
     await fixture.whenStable();
@@ -148,11 +149,11 @@ describe('ApiInformationComponent', () => {
   });
 
   it('resets API definitions when files are reset', () => {
-    fileReaderService.apiChanged.next({
+    fileReaderService.apiChanged.next(createLoadedDocument({
       openapi: '3.1.0',
       info: {title: 'Pets API', version: '1.0.0'},
       paths: {}
-    });
+    }));
 
     fileReaderService.resetFiles.next();
 

@@ -7,6 +7,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { PipesModule } from '../../pipes/pipes.module';
 import { FileReaderService } from '../../services/file-reader.service';
 import { OpenAPIObject } from 'openapi3-ts/oas31';
+import { createLoadedDocument } from '../../models/loaded-document.models';
 
 describe('ApiTagsComponent', () => {
   let component: ApiTagsComponent;
@@ -40,11 +41,11 @@ describe('ApiTagsComponent', () => {
   });
 
   it('renders an empty state when the API has no tags or operations', async () => {
-    fileReaderService.apiChanged.next({
+    fileReaderService.apiChanged.next(createLoadedDocument({
       openapi: '3.1.0',
       info: {title: 'Empty API', version: '1.0.0'},
       paths: {}
-    });
+    }));
     fixture.componentRef.changeDetectorRef.markForCheck();
     fixture.detectChanges(false);
     await fixture.whenStable();
@@ -80,7 +81,7 @@ describe('ApiTagsComponent', () => {
       }
     } as OpenAPIObject;
 
-    fileReaderService.apiChanged.next(api);
+    fileReaderService.apiChanged.next(createLoadedDocument(api));
     fixture.componentRef.changeDetectorRef.markForCheck();
     fixture.detectChanges(false);
     await fixture.whenStable();
@@ -121,11 +122,11 @@ describe('ApiTagsComponent', () => {
   });
 
   it('clears tag summaries when files are reset', async () => {
-    fileReaderService.apiChanged.next({
+    fileReaderService.apiChanged.next(createLoadedDocument({
       openapi: '3.1.0',
       info: {title: 'Tagged API', version: '1.0.0'},
       paths: {'/pets': {get: {tags: ['pets']}}}
-    });
+    }));
     fixture.componentRef.changeDetectorRef.markForCheck();
     fixture.detectChanges(false);
     await fixture.whenStable();
