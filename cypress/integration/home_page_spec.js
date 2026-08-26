@@ -697,7 +697,12 @@ describe('The Home Page', () => {
       })
 
       accordionHeader('API Paths').click()
-      cy.get('#updatePet-node').should('be.visible').click()
+      cy.get('#updatePet-node').should('be.visible')
+        .find('.operation-complexity', {timeout: 20000})
+        .should(($label) => {
+          expect($label.text()).not.to.contain('assessing')
+        })
+      cy.get('#updatePet-node').click()
       dialogByName('PUT /pet').should('be.visible')
 
       cy.get('#updatePet-node .operation-complexity', {timeout: 20000})
