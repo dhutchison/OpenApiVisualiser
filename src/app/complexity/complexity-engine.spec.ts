@@ -418,6 +418,7 @@ describe('assessLoadedDocument', () => {
         '/invalid': {
           servers: [{}, {}],
           get: {
+            servers: [{}, {}],
             parameters: [
               {$ref: '#/components/parameters/Id'},
               {},
@@ -439,8 +440,7 @@ describe('assessLoadedDocument', () => {
                 links: {next: {}}
               }
             },
-            callbacks: {changed: {}},
-            servers: [{}]
+            callbacks: {changed: {}}
           }
         },
         '/invalid-body': {
