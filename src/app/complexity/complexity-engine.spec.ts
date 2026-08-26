@@ -78,6 +78,46 @@ describe('assessLoadedDocument', () => {
     expect(assessment.finalBand).toBe('High');
   });
 
+  it('applies parameter inheritance and normalizes equivalent media types', () => {
+    const sharedSchema = {type: 'object', properties: {id: {type: 'string'}}};
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Effective surface', version: '1.0.0'},
+      paths: {
+        '/records': {
+          parameters: [
+            {name: 'limit', in: 'query', required: true, schema: {type: 'integer'}},
+            {name: 'cursor', in: 'query', schema: {type: 'string'}}
+          ],
+          post: {
+            parameters: [{name: 'limit', in: 'query', schema: {type: 'string'}}],
+            requestBody: {content: {
+              'application/json': {schema: sharedSchema},
+              'Application/JSON': {schema: sharedSchema}
+            }},
+            responses: {
+              '200': {content: {'application/json': {schema: sharedSchema}}},
+              '2XX': {headers: {trace: {schema: {type: 'string'}}}},
+              default: {description: 'Other'}
+            }
+          }
+        }
+      }
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.blockingFaults).toHaveSize(0);
+    expect(assessment.dimensions.interactionSurface.units).toBe(8);
+    const parameters = assessment.reasons.filter(reason => reason.code === 'parameter');
+    expect(parameters).toHaveSize(2);
+    expect(parameters.some(reason => reason.source.pointer === '/paths/~1records/parameters/1')).toBeTrue();
+    expect(parameters.some(reason => reason.source.pointer === '/paths/~1records/post/parameters/0')).toBeTrue();
+    expect(assessment.reasons.filter(reason => reason.code === 'request-representation')).toHaveSize(1);
+    expect(assessment.reasons.filter(reason => reason.code === 'response-case')).toHaveSize(3);
+    expect(assessment.reasons.filter(reason => reason.code === 'response-header')).toHaveSize(1);
+  });
+
   it('resolves reachable local references without multiplying structural burden', () => {
     const report = assessLoadedDocument(scope({
       openapi: '3.1.0',
@@ -478,6 +518,196 @@ describe('assessLoadedDocument', () => {
       && reason.source.pointer.endsWith('/ack'))).toBeTrue();
   });
 
+  it('counts each canonical callback operation once, including nested callback cycles', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Callback operations', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        callbacks: {onPet: {$ref: '#/components/callbacks/PetCallback'}},
+        responses: {'202': {description: 'Accepted'}}
+      }}},
+      components: {callbacks: {
+        PetCallback: {'{$request.body#/callbackUrl}': {
+          post: {
+            callbacks: {nested: {$ref: '#/components/callbacks/PetCallback'}},
+            responses: {'204': {description: 'Accepted'}}
+          },
+          get: {responses: {'204': {description: 'Accepted'}}}
+        }}
+      }}
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.blockingFaults).toHaveSize(0);
+    expect(assessment.reasons.filter(reason => reason.code === 'callback-operation')).toHaveSize(2);
+    expect(assessment.dimensions.protocolObligations.units).toBe(8);
+    expect(assessment.dimensions.protocolObligations.level).toBe('High');
+  });
+
+  it('resolves callback expression Path Item references before visiting operations', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Referenced callback path item', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        callbacks: {onPet: {'{$request.body#/callbackUrl}': {$ref: '#/components/pathItems/PetCallback'}}},
+        responses: {'202': {description: 'Accepted'}}
+      }}},
+      components: {pathItems: {
+        PetCallback: {post: {responses: {'204': {description: 'Accepted'}}}}
+      }}
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.blockingFaults).toHaveSize(0);
+    expect(assessment.reasons.filter(reason => reason.code === 'callback-operation')).toHaveSize(1);
+    expect(assessment.dimensions.protocolObligations.units).toBe(4);
+  });
+
+  it('resolves inherited security schemes and honours an operation security override', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Security inheritance', version: '1.0.0'},
+      security: [{rootKey: []}],
+      components: {securitySchemes: {
+        rootKey: {type: 'apiKey', in: 'header', name: 'X-Root'},
+        operationKey: {$ref: '#/components/securitySchemes/OAuth'},
+        OAuth: {type: 'oauth2', flows: {
+          authorizationCode: {
+            authorizationUrl: 'https://example.test/authorize',
+            tokenUrl: 'https://example.test/token',
+            scopes: {petsRead: 'Read pets'}
+          }
+        }}
+      }},
+      paths: {'/pets': {get: {
+        security: [{operationKey: ['pets:read']}],
+        responses: {'200': {description: 'Pets'}}
+      }}}
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.blockingFaults).toHaveSize(0);
+    expect(assessment.reasons.filter(reason => reason.code === 'security-scheme')
+      .map(reason => reason.values.name)).toEqual(['operationKey']);
+    expect(assessment.reasons.some(reason => reason.code === 'security-flow'
+      && reason.values.flow === 'authorizationCode')).toBeTrue();
+    expect(assessment.reasons.some(reason => reason.code === 'security-scope'
+      && reason.values.scope === 'pets:read')).toBeTrue();
+    expect(assessment.reasons.some(reason => reason.code === 'security-scheme'
+      && reason.values.name === 'rootKey')).toBeFalse();
+  });
+
+  it('counts operation servers and response links without inventing security', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Protocol surface', version: '1.0.0'},
+      security: [{apiKey: []}],
+      components: {securitySchemes: {apiKey: {type: 'apiKey', in: 'header', name: 'X-Key'}}},
+      paths: {'/pets': {get: {
+        security: [],
+        servers: [
+          {url: 'https://one.example.test/{version}', variables: {version: {default: 'v1'}}},
+          {url: 'https://two.example.test/{version}', variables: {version: {default: 'v2'}}}
+        ],
+        responses: {'200': {links: {
+          next: {operationId: 'listPets'},
+          self: {operationId: 'getPet'}
+        }}}
+      }}}
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.blockingFaults).toHaveSize(0);
+    expect(assessment.reasons.some(reason => reason.code === 'security-scheme')).toBeFalse();
+    expect(assessment.reasons.filter(reason => reason.code === 'server-variable')).toHaveSize(2);
+    expect(assessment.reasons.filter(reason => reason.code === 'server-alternative')).toHaveSize(1);
+    expect(assessment.reasons.filter(reason => reason.code === 'response-link')).toHaveSize(2);
+    expect(assessment.dimensions.protocolObligations.units).toBe(5);
+    expect(assessment.dimensions.protocolObligations.level).toBe('Moderate');
+  });
+
+  it('raises protocol obligations for three schemes required together and deduplicates equivalent alternatives', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Security combinations', version: '1.0.0'},
+      components: {securitySchemes: {
+        first: {type: 'apiKey', in: 'header', name: 'X-First'},
+        second: {type: 'apiKey', in: 'header', name: 'X-Second'},
+        third: {type: 'apiKey', in: 'header', name: 'X-Third'}
+      }},
+      paths: {'/pets': {get: {
+        security: [
+          {first: ['b', 'a'], second: [], third: []},
+          {first: ['a', 'b'], second: [], third: []}
+        ],
+        responses: {'200': {description: 'Pets'}}
+      }}}
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.blockingFaults).toHaveSize(0);
+    expect(assessment.reasons.filter(reason => reason.code === 'security-or-alternative')).toHaveSize(0);
+    expect(assessment.reasons.filter(reason => reason.code === 'security-scheme')).toHaveSize(3);
+    expect(assessment.reasons.filter(reason => reason.code === 'security-and-scheme')).toHaveSize(2);
+    expect(assessment.reasons.filter(reason => reason.code === 'security-scope').map(reason => reason.values.scope)).toEqual(['a', 'b']);
+    expect(assessment.dimensions.protocolObligations.level).toBe('High');
+    expect(assessment.dimensions.protocolObligations.escalations).toContain('three-required-security-schemes');
+  });
+
+  it('attributes inherited security evidence to the root declaration', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Inherited security location', version: '1.0.0'},
+      security: [{apiKey: []}],
+      components: {securitySchemes: {apiKey: {type: 'apiKey', in: 'header', name: 'X-Key'}}},
+      paths: {'/pets': {get: {responses: {'200': {description: 'Pets'}}}}}
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.reasons.some(reason => reason.code === 'security-scheme'
+      && reason.source.pointer === '/security/0/apiKey')).toBeTrue();
+  });
+
+  it('keeps bodyless responses valid but blocks a reachable representation without a schema', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Representation completeness', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        requestBody: {content: {'application/json': {}}},
+        responses: {'204': {description: 'No content'}}
+      }}}
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.finalBand).toBe('Unknown');
+    expect(assessment.blockingFaults.filter(reason => reason.code === 'missing-media-schema')).toHaveSize(1);
+    expect(assessment.blockingFaults.some(reason => reason.code === 'unsupported-response-body')).toBeFalse();
+    expect(assessment.reasons.filter(reason => reason.code === 'response-case')).toHaveSize(1);
+  });
+
+  it('marks an unresolved reachable callback as incomplete', () => {
+    const document = {
+      openapi: '3.1.0',
+      info: {title: 'Unresolved callback', version: '1.0.0'},
+      paths: {'/pets': {post: {
+        callbacks: {onPet: {$ref: '#/components/callbacks/Missing'}},
+        responses: {'202': {description: 'Accepted'}}
+      }}}
+    };
+
+    const assessment = assessLoadedDocument(scope(document)).assessments[0];
+
+    expect(assessment.finalBand).toBe('Unknown');
+    expect(assessment.blockingFaults.some(reason => reason.code === 'unavailable-reference')).toBeTrue();
+  });
+
   it('counts optional request bodies without allowing defaults to erase obligations', () => {
     const schema = {type: 'object', required: ['name'], properties: {name: {type: 'string', default: 'pet'}}};
     const document = {
@@ -628,7 +858,7 @@ describe('assessLoadedDocument', () => {
     const report = assessLoadedDocument(scope({
       openapi: '3.1.0',
       info: {title: 'Invalid shapes', version: '1.0.0'},
-      security: [{}, {}],
+      security: [{}, {apiKey: []}],
       paths: {
         '/invalid': {
           servers: [{}, {}],
@@ -655,7 +885,10 @@ describe('assessLoadedDocument', () => {
                 links: {next: {}}
               }
             },
-            callbacks: {changed: {}}
+            callbacks: {
+              changed: {event: null},
+              valid: {event: {post: {responses: {'204': {description: 'Accepted'}}}}}
+            }
           }
         },
         '/invalid-body': {

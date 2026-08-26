@@ -160,6 +160,7 @@ function assessOperation(
     operationInfo.pathItem,
     operation,
     operationPointer,
+    operationPointer.slice(0, operationPointer.lastIndexOf('/')),
     scope.sourceId
   );
   collectRequestBody(context, operation.requestBody, `${operationPointer}/requestBody`, scope.sourceId);
@@ -314,6 +315,7 @@ function collectParameters(
   pathItem: AnyRecord,
   operation: AnyRecord,
   pointer: string,
+  pathItemPointer: string,
   sourceId: string,
   role: ConsumerRole = 'request'
 ) {
@@ -321,7 +323,22 @@ function collectParameters(
   const pathParameters = Array.isArray(pathItem.parameters) ? pathItem.parameters : [];
   const operationParameters = Array.isArray(operation.parameters) ? operation.parameters : [];
 
-  [...pathParameters, ...operationParameters].forEach((parameter, index) => {
+  pathParameters.forEach((parameter, index) => {
+    const parameterPointer = `${pathItemPointer}/parameters/${index}`;
+    let parameterSourceId = sourceId;
+    if (isReference(parameter)) {
+      const resolved = resolveReference(context, parameter.$ref, parameterSourceId, parameterPointer, role, 0);
+      if (!resolved) return;
+      parameter = resolved.target;
+      parameterSourceId = resolved.sourceId;
+    }
+    if (!parameter || typeof parameter !== 'object' || typeof parameter.name !== 'string' || typeof parameter.in !== 'string') {
+      addBlocking(context, 'invalid-parameter', 'assessment', parameterPointer, role, {});
+      return;
+    }
+    parameters.set(`${parameter.in}:${parameter.name}`, {parameter, pointer: parameterPointer, sourceId: parameterSourceId});
+  });
+  operationParameters.forEach((parameter, index) => {
     const parameterPointer = `${pointer}/parameters/${index}`;
     let parameterSourceId = sourceId;
     if (isReference(parameter)) {
@@ -331,7 +348,7 @@ function collectParameters(
       parameterSourceId = resolved.sourceId;
     }
     if (!parameter || typeof parameter !== 'object' || typeof parameter.name !== 'string' || typeof parameter.in !== 'string') {
-      addBlocking(context, 'invalid-parameter', 'assessment', parameterPointer, 'request', {});
+      addBlocking(context, 'invalid-parameter', 'assessment', parameterPointer, role, {});
       return;
     }
     parameters.set(`${parameter.in}:${parameter.name}`, {parameter, pointer: parameterPointer, sourceId: parameterSourceId});
@@ -354,7 +371,7 @@ function collectParameters(
         collectSchema(context, parameter.schema, `${parameterPointer}/schema`, role, 0, parameterSourceId);
         return;
       }
-      addBlocking(context, 'unsupported-parameter-shape', 'assessment', parameterPointer, 'request', {name: parameter.name});
+      addBlocking(context, 'unsupported-parameter-shape', 'assessment', parameterPointer, role, {name: parameter.name});
     });
 
 }
@@ -460,7 +477,18 @@ function collectContent(context: AssessmentContext, content: unknown, pointer: s
     .forEach(([mediaType, media]) => {
       const mediaPointer = `${pointer}/${escapeJsonPointer(mediaType)}`;
       let mediaSourceId = sourceId;
-      addUnit(context, 'interactionSurface', 1, role === 'request' ? 'request-representation' : 'response-representation', role, mediaPointer, {mediaType}, sourceId);
+      const normalizedMediaType = normalizeMediaType(mediaType);
+      addUnit(
+        context,
+        'interactionSurface',
+        1,
+        role === 'request' ? 'request-representation' : 'response-representation',
+        role,
+        mediaPointer,
+        {mediaType: normalizedMediaType},
+        sourceId,
+        `representation:${pointer}|${normalizedMediaType}`
+      );
       if (isReference(media)) {
         const resolved = resolveReference(context, media.$ref, mediaSourceId, mediaPointer, role, 0);
         if (!resolved) return;
@@ -956,24 +984,43 @@ function schemaTypes(schema: AnyRecord): Set<string> | undefined {
 function collectProtocol(context: AssessmentContext, document: AnyRecord, operation: AnyRecord, pointer: string, sourceId: string) {
   const security = operation.security === undefined ? document.security : operation.security;
   if (Array.isArray(security)) {
-    security.forEach((requirement: unknown, alternative: number) => {
-      if (!requirement || typeof requirement !== 'object') return;
+    const requirements = security
+      .map((requirement, index) => ({requirement, index}))
+      .filter(({requirement}) => !!requirement && typeof requirement === 'object')
+      .filter(({requirement}, index, values) => values.findIndex(candidate =>
+        canonicalSecurityRequirement(candidate.requirement as AnyRecord)
+          === canonicalSecurityRequirement(requirement as AnyRecord)) === index);
+    requirements.forEach(({requirement, index: sourceIndex}, alternative) => {
+      const securityKey = canonicalSecurityRequirement(requirement as AnyRecord);
       const schemes = Object.entries(requirement as AnyRecord).sort(([left], [right]) => left.localeCompare(right));
-      if (schemes.length === 0 && security.length > 1) {
-        addProtocolUnit(context, 1, 'anonymous-auth-choice', `${pointer}/security/${alternative}`, {alternative}, sourceId);
+      const securityPointer = `${operation.security === undefined ? '' : pointer}/security/${sourceIndex}`;
+      if (schemes.length === 0 && requirements.length > 1) {
+        addProtocolUnit(context, 1, 'anonymous-auth-choice', securityPointer, {alternative}, sourceId, `anonymous:${securityKey}`);
       }
-      if (alternative > 0) addProtocolUnit(context, 1, 'security-or-alternative', `${pointer}/security/${alternative}`, {alternative}, sourceId);
+      if (alternative > 0) addProtocolUnit(context, 1, 'security-or-alternative', securityPointer, {alternative}, sourceId, `or:${securityKey}`);
       if (schemes.length >= 3) setMinimum(context, 'protocolObligations', 'High', 'three-required-security-schemes');
       schemes.forEach(([name, scopes], index) => {
-        addProtocolUnit(context, 1, 'security-scheme', `${pointer}/security/${alternative}/${escapeJsonPointer(name)}`, {name}, sourceId, `scheme:${name}`);
-        if (index > 0) addProtocolUnit(context, 1, 'security-and-scheme', `${pointer}/security/${alternative}/${escapeJsonPointer(name)}`, {name}, sourceId);
+        const schemePointer = `${securityPointer}/${escapeJsonPointer(name)}`;
+        addProtocolUnit(context, 1, 'security-scheme', schemePointer, {name}, sourceId, `scheme:${name}`);
+        if (index > 0) addProtocolUnit(context, 1, 'security-and-scheme', schemePointer, {name}, sourceId, `and:${securityKey}:${name}`);
         const scopeValues = Array.isArray(scopes) ? scopes : [];
-        scopeValues.forEach(scopeName => addProtocolUnit(context, 1, 'security-scope', `${pointer}/security/${alternative}/${escapeJsonPointer(name)}`, {name, scope: String(scopeName)}, sourceId, `scope:${name}:${String(scopeName)}`));
-        const securityScheme = document.components && typeof document.components === 'object'
+        [...scopeValues].map(scopeName => String(scopeName)).sort().forEach(scopeName => addProtocolUnit(context, 1, 'security-scope', schemePointer, {name, scope: scopeName}, sourceId, `scope:${name}:${scopeName}`));
+        let securityScheme = document.components && typeof document.components === 'object'
           ? (document.components as AnyRecord).securitySchemes?.[name] as AnyRecord | undefined
           : undefined;
+        if (isReference(securityScheme)) {
+          const resolved = resolveReference(
+            context,
+            securityScheme.$ref,
+            sourceId,
+            schemePointer,
+            'request',
+            0
+          );
+          securityScheme = resolved?.target;
+        }
         if (securityScheme?.flows && typeof securityScheme.flows === 'object') {
-          Object.keys(securityScheme.flows).sort((left, right) => left.localeCompare(right)).forEach(flow => addProtocolUnit(context, 1, 'security-flow', `${pointer}/security/${alternative}/${escapeJsonPointer(name)}`, {name, flow}, sourceId, `flow:${name}:${flow}`));
+          Object.keys(securityScheme.flows).sort().forEach(flow => addProtocolUnit(context, 1, 'security-flow', schemePointer, {name, flow}, sourceId, `flow:${name}:${flow}`));
         }
       });
     });
@@ -995,9 +1042,9 @@ function collectProtocol(context: AssessmentContext, document: AnyRecord, operat
       if (isReference(callbackValue)) {
         const resolved = resolveReference(context, callbackValue.$ref, sourceId, callbackPointer, 'request', 0);
         if (!resolved) return;
-        collectCallback(context, resolved.target, resolved.canonicalKey, callbackPointer, resolved.sourceId);
+        collectCallback(context, document, resolved.target, resolved.canonicalKey, callbackPointer, resolved.sourceId);
       } else {
-        collectCallback(context, callbackValue, `inline-callback:${callbackPointer}`, callbackPointer, sourceId);
+        collectCallback(context, document, callbackValue, `inline-callback:${callbackPointer}`, callbackPointer, sourceId);
       }
     });
   }
@@ -1005,35 +1052,49 @@ function collectProtocol(context: AssessmentContext, document: AnyRecord, operat
 
 function collectCallback(
   context: AssessmentContext,
+  document: AnyRecord,
   callback: unknown,
   callbackKey: string,
   pointer: string,
   sourceId: string
 ) {
-  if (context.callbackTargets.has(callbackKey)) return;
-  context.callbackTargets.add(callbackKey);
-  addProtocolUnit(context, 4, 'callback-operation', pointer, {target: callbackKey}, sourceId, `callback:${callbackKey}`);
-  setMinimum(context, 'protocolObligations', 'High', 'callback-obligation');
   if (!callback || typeof callback !== 'object') {
     addBlocking(context, 'unavailable-callback', 'assessment', pointer, undefined, {target: callbackKey}, sourceId);
     return;
   }
 
+  let operationCount = 0;
   Object.entries(callback as AnyRecord).sort(([left], [right]) => left.localeCompare(right)).forEach(([expression, pathItem]) => {
+    const callbackPath = `${pointer}/${escapeJsonPointer(expression)}`;
+    let callbackSourceId = sourceId;
+    if (isReference(pathItem)) {
+      const resolved = resolveReference(context, pathItem.$ref, sourceId, callbackPath, 'response', 0);
+      if (!resolved) return;
+      pathItem = resolved.target;
+      callbackSourceId = resolved.sourceId;
+    }
     if (!pathItem || typeof pathItem !== 'object') {
       addBlocking(context, 'invalid-callback', 'assessment', `${pointer}/${escapeJsonPointer(expression)}`, undefined, {}, sourceId);
       return;
     }
-    const callbackPath = `${pointer}/${escapeJsonPointer(expression)}`;
     HTTP_METHODS.filter(method => pathItem[method] && typeof pathItem[method] === 'object').forEach(method => {
+      operationCount++;
       const operation = pathItem[method] as AnyRecord;
       const operationPointer = `${callbackPath}/${method}`;
-      collectParameters(context, pathItem as AnyRecord, operation, operationPointer, sourceId, 'response');
-      collectRequestBody(context, operation.requestBody, `${operationPointer}/requestBody`, sourceId, 'response');
-      collectResponses(context, operation.responses, `${operationPointer}/responses`, sourceId, 'request');
-      collectProtocol(context, {}, operation, operationPointer, sourceId);
+      const operationKey = `${callbackKey}|${expression}|${method}`;
+      if (context.callbackTargets.has(operationKey)) return;
+      context.callbackTargets.add(operationKey);
+      addProtocolUnit(context, 4, 'callback-operation', operationPointer, {target: operationKey}, callbackSourceId, `callback:${operationKey}`);
+      setMinimum(context, 'protocolObligations', 'High', 'callback-obligation');
+      collectParameters(context, pathItem as AnyRecord, operation, operationPointer, callbackPath, callbackSourceId, 'response');
+      collectRequestBody(context, operation.requestBody, `${operationPointer}/requestBody`, callbackSourceId, 'response');
+      collectResponses(context, operation.responses, `${operationPointer}/responses`, callbackSourceId, 'request');
+      collectProtocol(context, document, operation, operationPointer, callbackSourceId);
     });
   });
+  if (operationCount === 0) {
+    addBlocking(context, 'invalid-callback', 'assessment', pointer, undefined, {}, sourceId);
+  }
 }
 
 function addProtocolUnit(
@@ -1231,6 +1292,27 @@ function isNonDefaultSerialization(parameter: AnyRecord): boolean {
     || (parameter.explode !== undefined && parameter.explode !== defaultValue.explode);
 }
 
+function normalizeMediaType(mediaType: string): string {
+  const [type, ...parameters] = mediaType.split(';').map(part => part.trim()).filter(Boolean);
+  const normalizedParameters = parameters
+    .map(parameter => {
+      const separator = parameter.indexOf('=');
+      if (separator < 0) return parameter.toLowerCase();
+      return `${parameter.slice(0, separator).trim().toLowerCase()}=${parameter.slice(separator + 1).trim()}`;
+    })
+    .sort((left, right) => left.localeCompare(right));
+  return [type.toLowerCase(), ...normalizedParameters].join('; ');
+}
+
+function canonicalSecurityRequirement(requirement: AnyRecord): string {
+  return JSON.stringify(Object.keys(requirement).sort().map(name => [
+    name,
+    Array.isArray(requirement[name])
+      ? [...requirement[name]].map(value => String(value)).sort()
+      : requirement[name]
+  ]));
+}
+
 function addUnit(
   context: AssessmentContext,
   dimension: ComplexityDimension,
@@ -1418,7 +1500,12 @@ function sortReasons(reasons: readonly AssessmentReason[]): AssessmentReason[] {
     const sourceDifference = left.source.sourceId.localeCompare(right.source.sourceId);
     if (sourceDifference) return sourceDifference;
     const pointerDifference = left.source.pointer.localeCompare(right.source.pointer);
-    return pointerDifference || left.code.localeCompare(right.code);
+    if (pointerDifference) return pointerDifference;
+    const codeDifference = left.code.localeCompare(right.code);
+    if (codeDifference) return codeDifference;
+    const roleDifference = (left.consumerRole ?? '').localeCompare(right.consumerRole ?? '');
+    if (roleDifference) return roleDifference;
+    return stableValue(left.values).localeCompare(stableValue(right.values));
   });
 }
 
