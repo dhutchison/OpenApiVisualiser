@@ -336,7 +336,11 @@ describe('The Home Page', () => {
 
       cy.get('#listPets-node').click()
       dialogByName('GET /pets').should('be.visible')
-      cy.get('#listPets-node .operation-complexity').invoke('text').then((compactLabel) => {
+      cy.get('#listPets-node .operation-complexity', {timeout: 20000})
+        .should(($label) => {
+          expect($label.text()).not.to.contain('assessing')
+        })
+        .invoke('text').then((compactLabel) => {
         const finalBand = compactLabel.replace('Complexity:', '').replace(/[()]/g, '').trim()
 
         dialogByName('GET /pets').find('.complexity-explanation')
@@ -696,8 +700,10 @@ describe('The Home Page', () => {
       cy.get('#updatePet-node').should('be.visible').click()
       dialogByName('PUT /pet').should('be.visible')
 
-      cy.get('#updatePet-node .operation-complexity')
-        .should('not.contain.text', 'assessing')
+      cy.get('#updatePet-node .operation-complexity', {timeout: 20000})
+        .should(($label) => {
+          expect($label.text()).not.to.contain('assessing')
+        })
         .invoke('text').then((compactLabel) => {
         const finalBand = compactLabel.replace('Complexity:', '').replace(/[()]/g, '').trim()
 

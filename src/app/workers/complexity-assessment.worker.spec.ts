@@ -38,4 +38,17 @@ describe('complexity assessment worker message handling', () => {
     expect(messages).toHaveSize(1);
     expect(messages[0]).toEqual(jasmine.objectContaining({type: 'complete', requestId: 'request-2'}));
   });
+
+  it('processes worker messages without an origin', () => {
+    const messages: unknown[] = [];
+
+    handleAssessmentMessage(
+      {origin: '', data: {type: 'assess', requestId: 'request-3', scope}} as MessageEvent,
+      message => messages.push(message),
+      'https://app.example'
+    );
+
+    expect(messages).toHaveSize(1);
+    expect(messages[0]).toEqual(jasmine.objectContaining({type: 'complete', requestId: 'request-3'}));
+  });
 });
