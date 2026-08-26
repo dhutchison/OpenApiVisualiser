@@ -87,7 +87,7 @@ describe('OpenapiTreenodeConverterService', () => {
 
     expect(operationNode && isApiOperationNode(operationNode)).toBeTrue();
     if (operationNode && isApiOperationNode(operationNode)) {
-      expect(operationNode.tooltip).toBe('List pets\n\nComplexity: 1');
+      expect(operationNode.tooltip).toBe('List pets');
     }
   });
 

@@ -30,7 +30,9 @@ describe('createApiTreeSvg', () => {
                   info: {title: 'Pets', version: '1.0.0'},
                   paths: {}
                 },
-                complexity: 0
+                scopeId: 'assessment-scope:test',
+                assessmentKey: 'assessment-scope:test:get:/pets',
+                assessmentState: 'Pending'
               }
             ]
           }
@@ -93,7 +95,9 @@ describe('createApiTreeSvg', () => {
               info: {title: 'Pets', version: '1.0.0'},
               paths: {}
             },
-            complexity: 0
+            scopeId: 'assessment-scope:test',
+            assessmentKey: 'assessment-scope:test:get:/pets',
+            assessmentState: 'Pending'
           }
         ]
       }
@@ -151,7 +155,9 @@ describe('createApiTreeSvg', () => {
         info: {title: 'Pets', version: '1.0.0'},
         paths: {}
       },
-      complexity: 0
+      scopeId: 'assessment-scope:test',
+      assessmentKey: 'assessment-scope:test:get:/pets',
+      assessmentState: 'Pending'
     } as any);
 
     const svg = createApiTreeSvg([

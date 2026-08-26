@@ -80,7 +80,9 @@ describe('ApiPathTreeComponent', () => {
         info: {title: 'Pets', version: '1.0.0'},
         paths: {}
       },
-      complexity: 0
+      scopeId: 'assessment-scope:test',
+      assessmentKey: 'assessment-scope:test:get:/pets',
+      assessmentState: 'Pending'
     } as ApiOperationNode;
     const pathNode: ApiPathTreeNode = {
       kind: 'path',
@@ -166,7 +168,9 @@ describe('ApiPathTreeComponent', () => {
         info: {title: 'Pets', version: '1.0.0'},
         paths: {}
       },
-      complexity: 0
+      scopeId: 'assessment-scope:test',
+      assessmentKey: 'assessment-scope:test:get:/pets',
+      assessmentState: 'Pending'
     } as ApiOperationNode;
 
     component.openEndpointDetail(operationNode);
@@ -214,7 +218,9 @@ describe('ApiPathTreeComponent', () => {
         info: {title: 'Pets', version: '1.0.0'},
         paths: {}
       },
-      complexity: 0
+      scopeId: 'assessment-scope:test',
+      assessmentKey: 'assessment-scope:test:get:/pets',
+      assessmentState: 'Pending'
     } as ApiOperationNode;
     const event = jasmine.createSpyObj<Event>('event', ['stopPropagation']);
     const scheduleMeasurementSpy = spyOn<any>(component, 'schedulePathTreeMeasurement');

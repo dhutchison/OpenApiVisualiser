@@ -1,4 +1,7 @@
 <div>
+  @if (getComplexityAssessmentStatus(); as assessmentStatus) {
+    <output aria-live="polite" aria-atomic="true">{{ assessmentStatus }}</output>
+  }
   <table id="method-summary">
     <caption>HTTP methods in use</caption>
     <colgroup>
