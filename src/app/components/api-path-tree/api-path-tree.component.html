@@ -127,6 +127,11 @@
     [title]="selectedOperationNode.method + ' ' + selectedOperationNode.path"
     [(open)]="endpointDialogVisible"
     size="large">
+      <app-complexity-explanation
+        [assessmentState]="selectedOperationNode.assessmentState"
+        [assessment]="selectedOperationNode.assessment"
+        [assessmentFailure]="selectedOperationNode.assessmentFailure">
+      </app-complexity-explanation>
       <app-endpoint-swagger
         [apiSpec]="selectedOperationNode.apiDefinition"
         [path]="selectedOperationNode.path"

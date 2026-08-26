@@ -18,7 +18,7 @@ export function handleAssessmentMessage(
   postMessage: (message: unknown) => void,
   workerOrigin: string
 ) {
-  if (event.origin !== workerOrigin) {
+  if (event.origin && event.origin !== workerOrigin) {
     return;
   }
   if (event.data.type !== 'assess') {
@@ -41,7 +41,7 @@ export function handleAssessmentMessage(
 }
 
 workerScope.addEventListener('message', event => {
-  if (event.origin !== workerScope.origin) {
+  if (event.origin && event.origin !== workerScope.origin) {
     return;
   }
   handleAssessmentMessage(event, message => workerScope.postMessage(message), workerScope.origin);

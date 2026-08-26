@@ -1,0 +1,102 @@
+<section
+  class="complexity-explanation"
+  [attr.data-assessment-state]="explanation.state"
+  aria-labelledby="complexity-explanation-heading">
+  <header class="complexity-explanation__header">
+    <p class="complexity-explanation__eyebrow">Operation complexity</p>
+    <h3 id="complexity-explanation-heading">{{ explanation.heading }}</h3>
+    <p class="complexity-explanation__conclusion">{{ explanation.conclusion }}</p>
+    @if (explanation.dominantBurden; as dominantBurden) {
+      <p class="complexity-explanation__dominant">{{ dominantBurden }}</p>
+    }
+  </header>
+
+  @if (explanation.facts.length) {
+    <dl class="complexity-explanation__facts">
+      @for (fact of explanation.facts; track fact.label) {
+        <div>
+          <dt>{{ fact.label }}</dt>
+          <dd>{{ fact.value }}</dd>
+        </div>
+      }
+    </dl>
+  }
+
+  @if (explanation.dimensions.length) {
+    <section class="complexity-explanation__section" aria-labelledby="complexity-dimension-heading">
+      <h4 id="complexity-dimension-heading">Dimension profile</h4>
+      <div class="complexity-explanation__dimensions">
+        @for (dimension of explanation.dimensions; track dimension.key) {
+          <details class="complexity-explanation__dimension" [attr.data-level]="dimension.level" [open]="dimension.isDominant">
+            <summary>
+              <span>
+                <strong>{{ dimension.label }}</strong>
+                @if (dimension.isDominant) {
+                  <span class="complexity-explanation__tag">Dominant burden</span>
+                }
+              </span>
+              <span class="complexity-explanation__level">{{ dimension.level }}</span>
+            </summary>
+            <div class="complexity-explanation__dimension-body">
+              <p>{{ dimension.evidence }}</p>
+              @if (dimension.reasons.length) {
+                <ul>
+                  @for (reason of dimension.reasons; track reason.sourceId + reason.pointer + reason.meaning) {
+                    <li>{{ reason.meaning }}</li>
+                  }
+                </ul>
+              }
+            </div>
+          </details>
+        }
+      </div>
+    </section>
+  }
+
+  @if (explanation.documentation.headline) {
+    <section class="complexity-explanation__section complexity-explanation__documentation" aria-labelledby="complexity-documentation-heading">
+      <h4 id="complexity-documentation-heading">What helps</h4>
+      <p><strong>{{ explanation.documentation.headline }}</strong></p>
+      <p>{{ explanation.documentation.detail }}</p>
+      @if (explanation.documentation.mitigation; as mitigation) {
+        <p>{{ mitigation }}</p>
+      }
+    </section>
+  }
+
+  @if (explanation.diagnostics.length) {
+    <section class="complexity-explanation__section" aria-labelledby="complexity-diagnostics-heading">
+      <h4 id="complexity-diagnostics-heading">Assessment diagnostics</h4>
+      <div class="complexity-explanation__reasons">
+        @for (reason of explanation.diagnostics; track reason.sourceId + reason.pointer + reason.meaning) {
+          <details>
+            <summary>{{ reason.meaning }}</summary>
+            <dl>
+              <div><dt>Role</dt><dd>{{ reason.role }}</dd></div>
+              <div><dt>Source</dt><dd>{{ reason.sourceId }}</dd></div>
+              <div><dt>JSON Pointer</dt><dd><code>{{ reason.pointer }}</code></dd></div>
+            </dl>
+          </details>
+        }
+      </div>
+    </section>
+  }
+
+  @if (explanation.reasons.length) {
+    <details class="complexity-explanation__section complexity-explanation__reason-disclosure">
+      <summary><h4>Evidence and source details</h4></summary>
+      <div class="complexity-explanation__reasons">
+        @for (reason of explanation.reasons; track reason.sourceId + reason.pointer + reason.meaning) {
+          <details>
+            <summary>{{ reason.meaning }}</summary>
+            <dl>
+              <div><dt>Role</dt><dd>{{ reason.role }}</dd></div>
+              <div><dt>Source</dt><dd>{{ reason.sourceId }}</dd></div>
+              <div><dt>JSON Pointer</dt><dd><code>{{ reason.pointer }}</code></dd></div>
+            </dl>
+          </details>
+        }
+      </div>
+    </details>
+  }
+</section>
