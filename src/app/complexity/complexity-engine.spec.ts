@@ -858,7 +858,7 @@ describe('assessLoadedDocument', () => {
     const report = assessLoadedDocument(scope({
       openapi: '3.1.0',
       info: {title: 'Invalid shapes', version: '1.0.0'},
-      security: [{}, {}],
+      security: [{}, {apiKey: []}],
       paths: {
         '/invalid': {
           servers: [{}, {}],
@@ -885,7 +885,10 @@ describe('assessLoadedDocument', () => {
                 links: {next: {}}
               }
             },
-            callbacks: {changed: {}}
+            callbacks: {
+              changed: {event: null},
+              valid: {event: {post: {responses: {'204': {description: 'Accepted'}}}}}
+            }
           }
         },
         '/invalid-body': {
